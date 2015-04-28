@@ -1,19 +1,28 @@
 {
-  "name": "casseblocks",
-  "version": "1.0.0",
+  "name": "caseblocks",
+  "version": "0.1.0",
   "description": "Module to interact with the CaseBlocks API",
   "main": "index.js",
   "scripts": {
-    "test": "test"
+    "test": "make test"
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/emergeadapt/caseblocks_node.git"
+    "url": "git://git.emergeadapt.com:developers/caseblocks_node.git"
   },
   "author": "Stewart McKee <stewart@emergeadapt.com> (http://www.emergeadapt.com/)",
-  "license": "ISC",
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "https://git.emergeadapt.com/developers/caseblocks_node/blob/master/LICENSE-MIT"
+    }
+  ],
   "bugs": {
-    "url": "https://github.com/emergeadapt/caseblocks_node/issues"
+    "url": "https://git.emergeadapt.com/developers/caseblocks_node/issues"
   },
-  "homepage": "https://github.com/emergeadapt/caseblocks_node#readme"
+  "homepage": "https://git.emergeadapt.com/developers/caseblocks_node#readme",
+  "devDependencies": {
+    "chai": "^2.3.0",
+    "mocha": "^2.2.4"
+  }
 }
