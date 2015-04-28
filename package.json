@@ -1,0 +1,19 @@
+{
+  "name": "casseblocks",
+  "version": "1.0.0",
+  "description": "Module to interact with the CaseBlocks API",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/emergeadapt/caseblocks_node.git"
+  },
+  "author": "Stewart McKee <stewart@emergeadapt.com> (http://www.emergeadapt.com/)",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/emergeadapt/caseblocks_node/issues"
+  },
+  "homepage": "https://github.com/emergeadapt/caseblocks_node#readme"
+}
