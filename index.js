@@ -1,3 +1,8 @@
+
+
+var Case = require('./case.js')
+
+
 /**
  * Escape special characters in the given string of html.
  *
@@ -5,6 +10,15 @@
  * @return {String}
  */
 module.exports = {
+
+  findCase: function(case_type_name, id) {
+    console.log("testing");
+    var kase = new Case()
+    promise = kase.find(case_type_name, id);
+
+    return promise;
+  },
+
   escape: function(html) {
     return String(html)
       .replace(/&/g, '&amp;')
