@@ -11,7 +11,7 @@ var Tasklist = function(attributes) {
   }
 }
 
-Tasklist.find = function(id) {
+Tasklist.get = function(id) {
   if (!Tasklist.Caseblocks)
     throw "Must call Caseblocks.setup";
 
@@ -26,7 +26,7 @@ Tasklist.find = function(id) {
   });
 }
 
-Tasklist.findAll = function(tasklist_ids) {
+Tasklist.getAll = function(tasklist_ids) {
   if (!Tasklist.Caseblocks)
     throw "Must call Caseblocks.setup";
 

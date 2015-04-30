@@ -11,7 +11,7 @@ var Task = function(attributes) {
 }
 
 
-Task.find = function(id) {
+Task.get = function(id) {
   if (!Task.Caseblocks)
     throw "Must call Caseblocks.setup";
 
@@ -25,7 +25,7 @@ Task.find = function(id) {
   });
 }
 
-Task.findAll = function(ids) {
+Task.getAll = function(ids) {
   if (!Task.Caseblocks)
     throw "Must call Caseblocks.setup";
 
