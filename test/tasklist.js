@@ -1,10 +1,16 @@
 
 var should = require('chai').should(),
-    caseblocks = require('../index'),
-    Tasklist = require('../tasklist.js')
-
+    Tasklist = require('../tasklist.js'),
+    Caseblocks = require('../index')
 
 describe('tasklists', function() {
+
+  beforeEach(function() {
+    this.timeout(5000);
+    Caseblocks.setup("http://localhost:8888", "tnqhvzxYaRnVt7zRWYhr")
+
+  });
+
   it("document should find one tasklist", function(done) {
     this.timeout(5000);
 
