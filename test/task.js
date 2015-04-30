@@ -8,7 +8,7 @@ describe('tasks', function() {
   it("document should find task", function(done) {
     this.timeout(5000);
 
-    Task.find("5540a4b28419761f40000098").then(function(task) {
+    Task.find("550c40d1841976debf000004").then(function(task) {
       task.description.should.equal("Create Pull Request")
       done();
     }).catch(function(err){
@@ -19,7 +19,7 @@ describe('tasks', function() {
   it("document should find many tasklist", function(done) {
     this.timeout(5000);
 
-    Task.findAll(["5540a4b28419761f40000098","5540a4b28419761f40000099","5540a4b28419761f4000009a","5540a4b28419761f4000009b","5540a4b28419761f4000009c","5540a4b28419761f4000009d"]).then(function(tasks) {
+    Task.findAll(["550c40d1841976debf000004","550c40d1841976debf000005","550c40d1841976debf000006","550c40d1841976debf000007","550c40d1841976debf000008","550c40d1841976debf000009"]).then(function(tasks) {
       tasks.length.should.equal(6)
       tasks[2].description.should.equal("Merge in Github")
       done();

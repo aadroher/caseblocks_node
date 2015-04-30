@@ -1,45 +1,32 @@
 
 
 var Case = require('./case.js')
+var Tasklist = require('./tasklist.js')
+var Task = require('./task.js')
 
+var Caseblocks = function(host, token) {
+  this.host = host
+  this.token = token
+}
 
-/**
- * Escape special characters in the given string of html.
- *
- * @param  {String} html
- * @return {String}
- */
-module.exports = {
+Caseblocks.prototype.buildUrl = function(path) {
+  var url = this.host+path
+  if (url.indexOf("?") > 0)
+    url = url + "&auth_token="+this.token
+  else
+    url = url + "?auth_token="+this.token
+  return url
+}
 
-  findCase: function(case_type_name, id) {
-    console.log("testing");
-    var kase = new Case()
-    promise = kase.find(case_type_name, id);
+Caseblocks.setup = function(host, token) {
+  caseblocks = new Caseblocks(host, token)
 
-    return promise;
-  },
+  Case.Caseblocks = caseblocks
+  Tasklist.Caseblocks = caseblocks
+  Task.Caseblocks = caseblocks
+}
 
-  escape: function(html) {
-    return String(html)
-      .replace(/&/g, '&amp;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#39;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;');
-  },
-
-  /**
-   * Unescape special characters in the given string of html.
-   *
-   * @param  {String} html
-   * @return {String}
-   */
-  unescape: function(html) {
-    return String(html)
-      .replace(/&amp;/g, '&')
-      .replace(/&quot;/g, '"')
-      .replace(/&#39;/g, '\'')
-      .replace(/&lt;/g, '<')
-      .replace(/&gt;/g, '>');
-  }
-};
+module.exports.setup = Caseblocks.setup
+module.exports.Case = Case;
+module.exports.Tasklist = Tasklist;
+module.exports.Task = Task;

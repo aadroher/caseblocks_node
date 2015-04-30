@@ -8,7 +8,7 @@ describe('tasklists', function() {
   it("document should find one tasklist", function(done) {
     this.timeout(5000);
 
-    Tasklist.find("5540a4b28419761f4000009e").then(function(tasklist) {
+    Tasklist.find("550c40d1841976debf00000a").then(function(tasklist) {
       tasklist.name.should.equal("Development Tasks")
       done();
     }).catch(function(err){
@@ -19,7 +19,7 @@ describe('tasklists', function() {
   it("document should find many tasklist", function(done) {
     this.timeout(5000);
 
-    Tasklist.findAll(["5540a4b28419761f4000009e", "5540a4b28419761f400000a0", "5540a4b28419761f400000a2"]).then(function(tasklists) {
+    Tasklist.findAll(["550c40d1841976debf00000a", "550c40d1841976debf00000c", "550c40d1841976debf00000e"]).then(function(tasklists) {
       tasklists.length.should.equal(3)
       tasklists[2].name.should.equal("Admin Tasks")
       done();

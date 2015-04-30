@@ -2,9 +2,6 @@
 //var rest = require('rest')
 var rest = require('restler-q');
 var inflection = require( 'inflection' );
-
-token = "tnqhvzxYaRnVt7zRWYhr"
-host = "http://localhost:8888"
 var Q = require('q');
 
 
@@ -15,7 +12,11 @@ var Tasklist = function(attributes) {
 }
 
 Tasklist.find = function(id) {
-  url = host+"/case_blocks/tasklists?ids%5B%5D="+ id + "&auth_token="+token
+  if (!Tasklist.Caseblocks)
+    throw "Must call Caseblocks.setup";
+
+  url = Tasklist.Caseblocks.buildUrl("/case_blocks/tasklists?ids%5B%5D="+ id)
+
   return Q.fcall(function(data) {
     return rest.get(url).then(function (payload) {
       payload = JSON.parse(payload).tasklists
@@ -26,8 +27,10 @@ Tasklist.find = function(id) {
 }
 
 Tasklist.findAll = function(tasklist_ids) {
-  url = host+"/case_blocks/tasklists?" + tasklist_ids.map(function(id) {return "ids%5B%5D="+id}).join("&")
-  url = url + "&auth_token="+token
+  if (!Tasklist.Caseblocks)
+    throw "Must call Caseblocks.setup";
+
+  url = Tasklist.Caseblocks.buildUrl("/case_blocks/tasklists?" + tasklist_ids.map(function(id) {return "ids%5B%5D="+id}).join("&"))
   return Q.fcall(function(data) {
     return rest.get(url).then(function (payload) {
       payload = JSON.parse(payload).tasklists
