@@ -22,7 +22,9 @@ Library of functions for interacting with the CaseBlocks API
 
 ### Public Methods
 
-#### create
+**create**
+
+Creates a case document in the supplied case type (case_type_code and case_type_id) with the data supplied.
 
     Caseblocks.Case.create("support_requests", 42, {title: 'test1'}).then(function(doc) {
       console.log(doc.attributes.title)
@@ -31,7 +33,10 @@ Library of functions for interacting with the CaseBlocks API
     });
 
 
-#### get
+**get**
+
+Retrieves a case from caseblocks supplying the case type code and the id of the document.
+
 
     Caseblocks.Case.get("support_requests", "550c40d1841976debf000003").then(function(doc) {
       doc.attributes._id.should.equal("550c40d1841976debf000003")
@@ -41,7 +46,9 @@ Library of functions for interacting with the CaseBlocks API
       console.log(err)
     });
 
-#### search
+**search**
+
+Provides the ability to search for docuemnts and return an array of matching cases.  Each case is a Case object the same as you get from the __get__ method.
 
     Caseblocks.Case.search(case_type_id, 'search term').then(function(docs) {
       console.log("Found " + docs.length + " Results!")
@@ -52,7 +59,9 @@ Library of functions for interacting with the CaseBlocks API
 
 ### Instance Methods
 
-#### save
+**save**
+
+Saves any changes made to the current document.
 
     Caseblocks.Case.get("support_requests", "550c40d1841976debf000003").then(function(doc) {
       var d = new Date();
@@ -66,11 +75,13 @@ Library of functions for interacting with the CaseBlocks API
 
     })
 
-#### delete
+**delete**
+
 
   **Not implemented yet**
 
-#### related
+**related**
+
 
   **Not implemented yet**
 
@@ -79,7 +90,9 @@ Library of functions for interacting with the CaseBlocks API
 
 ### Public Methods
 
-#### get
+**get**
+
+Retrieve a tasklist matching the __id__ supplied.
 
     Caseblocks.Tasklist.get("550c40d1841976debf00000a").then(function(tasklist) {
       tasklist.name.should.equal("Development Tasks")
@@ -89,7 +102,9 @@ Library of functions for interacting with the CaseBlocks API
     })
 
 
-#### getAll
+**getAll**
+
+Retrieves multiple tasklists in one go.  Pass in an array of string id's and the matching Tasklists will be returned in an array.
 
     Caseblocks.Tasklist.getAll(["550c40d1841976debf00000a", "550c40d1841976debf00000c", "550c40d1841976debf00000e"]).then(function(tasklists) {
       tasklists.length.should.equal(3)
@@ -103,7 +118,9 @@ Library of functions for interacting with the CaseBlocks API
 
 ### Public Methods
 
-#### get
+**get**
+
+Retrieves a task matching the __id__ supplied
 
     Caseblocks.Task.get("550c40d1841976debf000004").then(function(task) {
       task.description.should.equal("Create Pull Request")
@@ -112,7 +129,9 @@ Library of functions for interacting with the CaseBlocks API
       done(err);
     })
 
-#### getAll
+**getAll**
+
+Retrieves multiple tasks in one go.  Pass in an array of string id's and the matching Tasks will be returned in an array.
 
     Caseblocks.Task.getAll(["550c40d1841976debf000004","550c40d1841976debf000005","550c40d1841976debf000006","550c40d1841976debf000007","550c40d1841976debf000008","550c40d1841976debf000009"]).then(function(tasks) {
       tasks.length.should.equal(6)
