@@ -28,6 +28,7 @@ describe('tasks', function() {
     Caseblocks.Task.getAll(["550c40d1841976debf000004","550c40d1841976debf000005","550c40d1841976debf000006","550c40d1841976debf000007","550c40d1841976debf000008","550c40d1841976debf000009"]).then(function(tasks) {
       tasks.length.should.equal(6)
       tasks[2].description.should.equal("Merge in Github")
+      tasks[2].status.should.equal("not_started")
       done();
     }).catch(function(err){
       done(err);
