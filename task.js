@@ -44,4 +44,19 @@ Task.getAll = function(ids) {
 
 }
 
+Task.prototype.execute = function() {
+  if (!Task.Caseblocks)
+    throw "Must call Caseblocks.setup";
+
+  url = Task.Caseblocks.buildUrl("/case_blocks/tasks/" + this.id)
+  _this = this
+  _this.status = "in_progress"
+  payload = {task: _this}
+  return Q.fcall(function(data) {
+    return rest.putJson(url, payload).then(function(data) {
+      return _this
+    })
+  })
+}
+
 module.exports = Task;

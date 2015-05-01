@@ -11,7 +11,7 @@ describe('tasks', function() {
 
   });
 
-  it("document should find task", function(done) {
+  it("should find task", function(done) {
     this.timeout(5000);
 
     Caseblocks.Task.get("550c40d1841976debf000004").then(function(task) {
@@ -22,7 +22,7 @@ describe('tasks', function() {
     })
 
   });
-  it("document should find many tasklist", function(done) {
+  it("should find many tasklist", function(done) {
     this.timeout(5000);
 
     Caseblocks.Task.getAll(["550c40d1841976debf000004","550c40d1841976debf000005","550c40d1841976debf000006","550c40d1841976debf000007","550c40d1841976debf000008","550c40d1841976debf000009"]).then(function(tasks) {
@@ -33,4 +33,20 @@ describe('tasks', function() {
       done(err);
     });
   });
+  it("should execute a task", function(done) {
+    this.timeout(5000);
+
+    Caseblocks.Task.get("550c40d1841976debf000008").then(function(task) {
+      task.execute().then(function(newTask) {
+        newTask.status.should.equal("in_progress")
+        done();
+      }).catch(function(err) {
+        done(err);
+      });
+    }).catch(function(err){
+      done(err);
+    })
+
+  });
+
 });
