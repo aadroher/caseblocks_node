@@ -10,6 +10,7 @@ var Case = function(attributes) {
   for(k in attributes) {
     this.attributes[k] = attributes[k]
   }
+  this.id = this.attributes["_id"];
 }
 
 Case.create = function(case_type_name, case_type_id, properties) {
@@ -102,10 +103,38 @@ Case.prototype.delete = function() {
 
 }
 
-Case.prototype.related = function(case_type_code) {
-  if (!Case.Caseblocks)
+Case.prototype.related = function(related_case_type_code, relation_id) {
+  if (!Case.Caseblocks) {
     throw "Must call Caseblocks.setup";
+  }
 
+  path = "/case_blocks/"+related_case_type_code
+  page_size = 100000
+  page = 0
+
+  params = {relation_id: relation_id, relationship_type: "CaseBlocks::CaseTypeDirectRelationship", case_from_id: this.id, page_size: page_size, page:page}
+  first = true
+  for(k in params) {
+    if (first)
+      path += "?"
+    else
+      path += "&"
+
+    first = false
+
+    path += "related_cases["+k+"]="+params[k]
+  }
+
+
+  url = Case.Caseblocks.buildUrl(path)
+  _this = this
+  return Q.fcall(function(data) {
+    return rest.get(url).then(function(data) {
+      return data[related_case_type_code].map(function(d) {
+        return new Case(d)
+      })
+    })
+  });
 
 }
 

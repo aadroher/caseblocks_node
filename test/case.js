@@ -55,19 +55,19 @@ describe('case', function() {
   })
 
   it ("should find related documents", function(done) {
-    var case_id = "5319b0ea841976d9c000007f"
-
-    done()
+    var case_id = "54524f696b949172a7000001"
+    Caseblocks.Case.get("customers", "54524f696b949172a7000001").then(function(doc) {
+      doc.related("web_enquiries", 28).then(function(related_docs) {
+        related_docs.length.should.equal(1);
+        related_docs[0].id.should.equal("554379ab841976f73700011c");
+        done()
+      }).catch(function(err) {
+        done(err);
+      })
+    }).catch(function(err) {
+      done(err);
+    })
 
   })
-
-  // it("should delete a document", function(done) {
-  //   Case.create("support_requests", 42, {title: 'test1'}).then(function(doc) {
-  //     done()
-  //   }).catch(function(err){
-  //     done(err);
-  //   });
-  //
-  // })
 
 })
