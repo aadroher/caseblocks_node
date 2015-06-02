@@ -43,4 +43,21 @@ Tasklist.getAll = function(tasklist_ids) {
   });
 }
 
+Tasklist.prototype.tasks = function() {
+  if (!Tasklist.Caseblocks)
+    throw "Must call Caseblocks.setup";
+
+  url = Tasklist.Caseblocks.buildUrl("/case_blocks/tasks?" + this.tasks.map(function(task) {return "ids%5B%5D="+id}).join("&"))
+  _this = this
+  return Q.fcall(function(data) {
+    return rest.get(url).then(function(payload) {
+      var tasks = []
+      for(t in payload.tasks) {
+        tasks.push(new Task(payload.tasks[t]))
+      }
+      return tasks
+    })
+  })
+}
+
 module.exports = Tasklist;

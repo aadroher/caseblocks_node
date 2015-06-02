@@ -33,15 +33,13 @@ Task.getAll = function(ids) {
 
   return Q.fcall(function(data) {
     return rest.get(url).then(function (payload) {
-      payload = payload.tasks
-      tasks = []
-      for(t in payload) {
-        tasks.push(new Task(payload[t]))
+      var tasks = []
+      for(t in payload.tasks) {
+        tasks.push(new Task(payload.tasks[t]))
       }
       return tasks
     })
   });
-
 }
 
 Task.prototype.execute = function() {

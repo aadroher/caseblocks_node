@@ -13,7 +13,7 @@ describe('tasklists', function() {
 
   it("document should find one tasklist", function(done) {
 
-    Caseblocks.Tasklist.get("550c40d1841976debf00000a").then(function(tasklist) {
+    Caseblocks.Tasklist.get("550c40d9841976debf000018").then(function(tasklist) {
       tasklist.name.should.equal("Development Tasks")
       done();
     }).catch(function(err){
@@ -23,7 +23,7 @@ describe('tasklists', function() {
   });
   it("document should find many tasklist", function(done) {
 
-    Caseblocks.Tasklist.getAll(["550c40d1841976debf00000a", "550c40d1841976debf00000c", "550c40d1841976debf00000e"]).then(function(tasklists) {
+    Caseblocks.Tasklist.getAll(["550c40d9841976debf000018", "550c40d9841976debf00001a", "550c40d9841976debf00001c"]).then(function(tasklists) {
       tasklists.length.should.equal(3)
       tasklists[2].name.should.equal("Admin Tasks")
       done();

@@ -114,6 +114,30 @@ Retrieves multiple tasklists in one go.  Pass in an array of string id's and the
       done(err);
     });
 
+**tasks**
+
+Retrieves all tasks associated with this tasklist, returns a promise with an array of tasks.
+
+    Caseblocks.Tasklist.getAll(["550c40d9841976debf000018", "550c40d9841976debf00001a", "550c40d9841976debf00001c"]).then(function(tasklists) {
+      var tasklists_returned = tasklists.length
+      tasklists.forEach(function(tasklist) {
+        tasklist.tasks.then(function(tasks) {
+          tasks.forEach(function(task) {
+            all_tasks.push(task)
+          });
+          tasklists_count++;
+          if (tasklists_returned == tasklists_count) {
+            done();
+          }
+        }).catch(function(err){
+          done(err);
+        });
+      })
+    }).catch(function(err){
+      done(err);
+    });
+
+
 ## Task
 
 ### Public Methods
