@@ -35,36 +35,6 @@ describe('tasks', function() {
     });
   });
 
-  it("should find tasks from many tasklists", function(done) {
-    this.timeout(5000);
-
-    var all_tasks = [];
-    var tasklists_count = 0;
-
-    Caseblocks.Tasklist.getAll(["550c40d9841976debf000018", "550c40d9841976debf00001a", "550c40d9841976debf00001c"]).then(function(tasklists) {
-      var tasklists_returned = tasklists.length
-      tasklists.forEach(function(tasklist) {
-        tasklist.tasks.then(function(tasks) {
-          tasks.forEach(function(task) {
-            all_tasks.push(task)
-          });
-          tasklists_count++;
-          if (tasklists_returned == tasklists_count) {
-            // console.log("------------------------------------------------------------")
-            console.log(all_tasks, "all_tasks")
-            done();
-          }
-        }).catch(function(err){
-          done(err);
-        });
-      })
-    }).catch(function(err){
-      done(err);
-    });
-
-  });
-
-
   it("should execute a task", function(done) {
     this.timeout(5000);
 

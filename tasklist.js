@@ -2,12 +2,17 @@
 //var rest = require('rest')
 var rest = require('restler-q');
 var inflection = require( 'inflection' );
-var Q = require('q');
+var Task = require('./task.js');
+// var Q = require('q');
 
 
 var Tasklist = function(attributes) {
   for(var k in attributes) {
-    this[k] = attributes[k]
+    if (k != "tasks") {
+      this[k] = attributes[k]
+    } else {
+      this["_tasks"] = attributes["tasks"]
+    }
   }
 }
 
@@ -17,13 +22,13 @@ Tasklist.get = function(id) {
 
   url = Tasklist.Caseblocks.buildUrl("/case_blocks/tasklists?ids%5B%5D="+ id)
 
-  return Q.fcall(function(data) {
+  // return Q.fcall(function(data) {
     return rest.get(url).then(function (payload) {
       payload = JSON.parse(payload).tasklists
       tasklist = new Tasklist(payload[0])
       return tasklist
     })
-  });
+  // });
 }
 
 Tasklist.getAll = function(tasklist_ids) {
@@ -31,7 +36,7 @@ Tasklist.getAll = function(tasklist_ids) {
     throw "Must call Caseblocks.setup";
 
   url = Tasklist.Caseblocks.buildUrl("/case_blocks/tasklists?" + tasklist_ids.map(function(id) {return "ids%5B%5D="+id}).join("&"))
-  return Q.fcall(function(data) {
+  // return Q.fcall(function(data) {
     return rest.get(url).then(function (payload) {
       payload = JSON.parse(payload).tasklists
       tasklists = []
@@ -40,16 +45,16 @@ Tasklist.getAll = function(tasklist_ids) {
       }
       return tasklists
     })
-  });
+  // });
 }
 
 Tasklist.prototype.tasks = function() {
   if (!Tasklist.Caseblocks)
     throw "Must call Caseblocks.setup";
 
-  url = Tasklist.Caseblocks.buildUrl("/case_blocks/tasks?" + this.tasks.map(function(task) {return "ids%5B%5D="+id}).join("&"))
+  url = Tasklist.Caseblocks.buildUrl("/case_blocks/tasks?" + this._tasks.map(function(id) {return "ids%5B%5D="+id}).join("&"))
   _this = this
-  return Q.fcall(function(data) {
+  // return Q.fcall(function(data) {
     return rest.get(url).then(function(payload) {
       var tasks = []
       for(t in payload.tasks) {
@@ -57,7 +62,7 @@ Tasklist.prototype.tasks = function() {
       }
       return tasks
     })
-  })
+  // })
 }
 
 module.exports = Tasklist;
