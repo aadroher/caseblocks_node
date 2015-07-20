@@ -19,8 +19,6 @@ Case.create = function(case_type_name, case_type_id, properties) {
 
     _this = new Case()
 
-
-
     _this.payload = {case: {}}
     properties.case_type_id = case_type_id
     _this.payload["case"][case_type_name] = properties
@@ -57,7 +55,9 @@ Case.get = function(case_type_name, id) {
         break
       }
       return _this
-    })
+    }).fail(function(err) {
+      throw new Error("Error getting case");
+    });
   });
 }
 
@@ -67,13 +67,17 @@ Case.search = function(case_type_id, query) {
 
   return Q.fcall(function(data) {
     return rest.get(Case.Caseblocks.buildUrl("/case_blocks/search?query="+query)).then(function(data) {
-      case_type_fields = data.filter(function(ct) {
+      case_type_results = data.filter(function(ct) {
         return ct.case_type_id == case_type_id
-      })[0].cases
-      return case_type_fields.map(function(d) {
-        return new Case(d)
-      })
-
+      })[0]
+      if (typeof(case_type_results) != 'undefined') {
+        case_type_fields = case_type_results.cases
+        return case_type_fields.map(function(d) {
+          return new Case(d)
+        })
+      } else {
+        return [];
+      }
     })
   });
 }
@@ -89,7 +93,10 @@ Case.prototype.save = function() {
     payload[_this.case_type_code] = _this.attributes
     delete payload[_this.case_type_code].tasklists
     delete payload[_this.case_type_code]._documents
-    return rest.putJson(Case.Caseblocks.buildUrl("/case_blocks/"+this.case_type_name+"/"+this.id), payload).then(function(data) {
+
+
+
+    return rest.putJson(Case.Caseblocks.buildUrl("/case_blocks/"+_this.case_type_name+"/"+_this.id), payload).then(function(data) {
 
       return _this
     })

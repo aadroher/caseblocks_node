@@ -47,8 +47,6 @@ describe('tasklists', function() {
           });
           tasklists_count++;
           if (tasklists_returned == tasklists_count) {
-            // console.log("------------------------------------------------------------")
-            console.log(all_tasks, "all_tasks")
             done();
           }
         }).catch(function(err){

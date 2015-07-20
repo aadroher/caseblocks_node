@@ -5,23 +5,24 @@ var should = require('chai').should(),
 describe('case', function() {
 
   beforeEach(function() {
-    this.timeout(5000);
     Caseblocks.setup("http://localhost:8888", "tnqhvzxYaRnVt7zRWYhr")
 
   });
 
   it("document should include id", function(done) {
-    Caseblocks.Case.get("support_requests", "550c40d1841976debf000003").then(function(doc) {
-      doc.attributes._id.should.equal("550c40d1841976debf000003")
+    Caseblocks.Case.get("support_requests", "550c40d9841976debf000011").then(function(doc) {
+      doc.attributes._id.should.equal("550c40d9841976debf000011")
       done();
     }).catch(function(err){
+      console.log(err);
       done(err);
     });
   });
 
   it("should update a document", function(done) {
-    Caseblocks.Case.get("support_requests", "550c40d1841976debf000003").then(function(doc) {
-      doc.attributes._id.should.equal("550c40d1841976debf000003")
+    this.timeout(5000);
+    Caseblocks.Case.get("support_requests", "550c40d9841976debf000011").then(function(doc) {
+      doc.attributes._id.should.equal("550c40d9841976debf000011")
       var d = new Date();
       var n = d.toUTCString();
       doc.attributes.systems_involved = n
@@ -30,8 +31,9 @@ describe('case', function() {
       }).catch(function(err){
         done(err);
       });
-
-    })
+    }).catch(function(err){
+      done(err);
+    });
   })
 
   it("should create a document", function(done) {
@@ -43,10 +45,20 @@ describe('case', function() {
 
   })
 
-  it("should search for a document", function(done) {
+  it("should search for a document and return match", function(done) {
     Caseblocks.Case.search(42, 'test1').then(function(docs) {
       docs.length.should.to.be.above(1)
       docs[0].attributes.title.should.equal("test1")
+      done()
+    }).catch(function(err){
+      done(err);
+    });
+
+  })
+
+  it("should search for a document and return no matches", function(done) {
+    Caseblocks.Case.search(42, 'test2').then(function(docs) {
+      docs.length.should.equal(0)
       done()
     }).catch(function(err){
       done(err);
