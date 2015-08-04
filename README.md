@@ -82,8 +82,16 @@ Saves any changes made to the current document.
 
 **related**
 
+Retrieves related cases from caseblocks supplying the case type code and the id of the document.
 
-  **Not implemented yet**
+Caseblocks.Case.get("support_requests", "550c40d1841976debf000003").then(function(doc) {
+  doc.related(related_case_type_code, relation_id).then(function(related_docs) {
+    console.log(related_docs[0].id)
+    console.log(related_docs[0].attributes.title)
+  })
+}).catch(function(err){
+  console.log(err)
+});
 
 
 ## Tasklist
