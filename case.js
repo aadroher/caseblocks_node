@@ -56,7 +56,7 @@ Case.get = function(case_type_name, id) {
       }
       return _this
     }).fail(function(err) {
-      throw new Error("Error getting case");
+      throw err;
     });
   });
 }
@@ -78,7 +78,9 @@ Case.search = function(case_type_id, query) {
       } else {
         return [];
       }
-    })
+    }).fail(function(err) {
+      throw err;
+    });
   });
 }
 
@@ -94,12 +96,16 @@ Case.prototype.save = function() {
     delete payload[_this.case_type_code].tasklists
     delete payload[_this.case_type_code]._documents
 
-
-
-    return rest.putJson(Case.Caseblocks.buildUrl("/case_blocks/"+_this.case_type_name+"/"+_this.id), payload).then(function(data) {
-
+    return rest.putJson(Case.Caseblocks.buildUrl("/case_blocks/"+_this.case_type_name+"/"+_this.id), payload).then(function(caseData) {
+      for (var k in caseData) {
+        _this.case_type_code = k
+        _this.attributes = caseData[k]
+        break
+      }
       return _this
-    })
+    }).fail(function(err) {
+      throw err;
+    });
   });
 }
 
@@ -108,6 +114,7 @@ Case.prototype.delete = function() {
   if (!Case.Caseblocks)
     throw "Must call Caseblocks.setup";
 
+  throw "Not implemented"
 }
 
 Case.prototype.related = function(related_case_type_code, relation_id) {
@@ -129,7 +136,7 @@ Case.prototype.related = function(related_case_type_code, relation_id) {
 
     first = false
 
-    path += "related_cases["+k+"]="+params[k]
+    path += "related_cases%5B"+k+"%5D="+encodeURIComponent(params[k])
   }
 
 
@@ -140,7 +147,9 @@ Case.prototype.related = function(related_case_type_code, relation_id) {
       return data[related_case_type_code].map(function(d) {
         return new Case(d)
       })
-    })
+    }).fail(function(err) {
+      throw err;
+    });
   });
 
 }

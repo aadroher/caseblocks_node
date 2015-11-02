@@ -1,12 +1,14 @@
+var helper = require("./spec_helper")
+
 var should = require('chai').should(),
     Caseblocks = require('../index')
-
 
 describe('case', function() {
 
   beforeEach(function() {
-    Caseblocks.setup("http://localhost:8888", "tnqhvzxYaRnVt7zRWYhr")
+    Caseblocks.setup("http://test-caseblocks-location", "tnqhvzxYaRnVt7zRWYhr")
 
+    helper.nockHttp()
   });
 
   it("document should include id", function(done) {
@@ -23,10 +25,10 @@ describe('case', function() {
     this.timeout(5000);
     Caseblocks.Case.get("support_requests", "550c40d9841976debf000011").then(function(doc) {
       doc.attributes._id.should.equal("550c40d9841976debf000011")
-      var d = new Date();
-      var n = d.toUTCString();
-      doc.attributes.systems_involved = n
-      doc.save().then(function(doc) {
+      doc.attributes.systems_involved.should.equal("1")
+      doc.attributes.systems_involved = "2"
+      doc.save().then(function(doc2) {
+        doc2.attributes.systems_involved.should.equal("2")
         done();
       }).catch(function(err){
         done(err);
@@ -46,7 +48,7 @@ describe('case', function() {
   })
 
   it("should search for a document and return match", function(done) {
-    Caseblocks.Case.search(42, 'test1').then(function(docs) {
+    Caseblocks.Case.search(42, 'match-result').then(function(docs) {
       docs.length.should.to.be.above(1)
       docs[0].attributes.title.should.equal("test1")
       done()
@@ -57,7 +59,7 @@ describe('case', function() {
   })
 
   it("should search for a document and return no matches", function(done) {
-    Caseblocks.Case.search(42, 'test2').then(function(docs) {
+    Caseblocks.Case.search(42, 'no-match-result').then(function(docs) {
       docs.length.should.equal(0)
       done()
     }).catch(function(err){
