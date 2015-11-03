@@ -1,4 +1,8 @@
 var nock = require("nock");
+var chai = require("chai");
+var chaiAsPromised = require("chai-as-promised");
+
+chai.use(chaiAsPromised);
 
 
 var nockHttp = function() {
@@ -12,8 +16,16 @@ var nockHttp = function() {
     .put('/case_blocks/support_requests/550c40d9841976debf000011', {"support_request":{"_id":"550c40d9841976debf000011","systems_involved":"2"}})
     .query({auth_token: 'tnqhvzxYaRnVt7zRWYhr'})
     .reply(200, {
-      "support_request": {_id: '550c40d9841976debf000011', systems_involved: "2"}
+      "support_request": {_id: '550c40d9841976debf000011', systems_involved: "2", calculated_field1: "calculated-result1", calculated_field2: "calculated-result2"}
      });
+
+  nock('http://test-caseblocks-location')
+    .put('/case_blocks/support_requests/550c40d9841976debf000011', {"support_request":{"_id":"550c40d9841976debf000011","systems_involved":"1","validated_field":"invalid-format"}})
+    .query({auth_token: 'tnqhvzxYaRnVt7zRWYhr'})
+    .reply(400, {
+      "support_request": {_id: '550c40d9841976debf000011', systems_involved: "1"}
+     });
+
   nock('http://test-caseblocks-location')
     .post('/case_blocks/support_requests', {"case":{"support_requests":{"title":"test1","case_type_id":42}}})
     .query({auth_token: 'tnqhvzxYaRnVt7zRWYhr'})
