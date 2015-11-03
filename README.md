@@ -173,6 +173,87 @@ Retrieves multiple tasks in one go.  Pass in an array of string id's and the mat
       done(err);
     });
 
+## Email
+
+The email functions allow you to send an email either through mandrill or smtp.  You can also use the mandrill templating features.
+
+Instantiate a new Caseblocks.Email object passing in your initial configuration, like keys and server details, then you can add recipients and setup your from address, subject, and body (html or text).
+
+Mandrill is set as default and requires 'key' to be passed in when instantiating the object.
+
+Other properties available are
+  * serverType - 'mandrillapp' or 'smtp' values are valid.
+  * smtpServer - required if serverType is smtp and is host of smtp server to use
+  * key        - required if serverType is mandrill and is they access token key for your account
+
+
+Example:
+
+    var email = new Caseblocks.Email({"key": "sample-key"})
+    email.to("to-address@example.com")
+    email.to("second-to-address@example.com")
+    email.bcc("bcc-address@example.com")
+    email.from("from-address@example.com")
+    email.subject("This is a sample Subject")
+    email.body("<html><body style='text-align: center;'><h1>Hello World</h1></body></html>")
+
+    email.send().then(function(result) {
+      exit(result);
+    })
+
+The above example sets up the key for mandrill then adds a to address, bcc address, sets up the from address, subject and then adds an html body, then sends the email.
+
+### Public Methods
+
+**to(email, name)**
+
+You can call to many times to add recipients to the email.  Name is an optional parameter.
+
+**cc(email, name)**
+
+You can call cc many times to add recipients to the email.  Name is an optional parameter.
+
+**bcc(email, name)**
+
+You can call bcc many times to add recipients to the email.  Name is an optional parameter.
+
+**from(email, name)**
+
+The from function, sets the from address of the email.  Again, name is optional.
+
+**subject(text)**
+
+Sets the subject for the email, text should be a string that will be used as the subject in the email.
+
+**body(data)**
+
+Sets the html body of the email, which will also automatically set the text using an html-to-text conversion tool.
+
+**html(data)**
+
+Alias of **body**
+
+**text(data)**
+
+Sets the text only version of the email.  This should be set after html as setting html overwrites this value.
+
+
+**send()**
+
+This function sends an email using either mandrill or smtp (to be implemented).  The above example shows how to setup an email before you call send.
+
+**sendTemplate(template, data)**
+
+Sends an email using a mandrill template.  The first parameter is a string that should match an existing mandrill template you wish to use.  The second parameter is a hash of data to be used with the template, eg
+
+    {
+      "title": "Have a merry Christmas",
+      "body": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce aliquam mattis turpis, sit amet vestibulum justo tristique vitae. Proin."
+    }
+
+This data will then be used with the fields in the mandrill template to render the email.
+
+
 ## Tests
 
   npm test

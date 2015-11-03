@@ -4,7 +4,6 @@ var chaiAsPromised = require("chai-as-promised");
 
 chai.use(chaiAsPromised);
 
-
 var nockHttp = function() {
   nock('http://test-caseblocks-location')
     .get('/case_blocks/support_requests/550c40d9841976debf000011')
@@ -93,6 +92,21 @@ var nockHttp = function() {
 
 
 
+  // mandrillapp
+
+  nock('https://mandrillapp.com')
+    .put("/api/1.0/messages/send.json", { key: 'valid-mandrill-key', message: { subject: 'Test Email', from_email: 'stewart@emergeadapt.com', from_name: 'CaseBlocks', to: [ {"email":"stewart@theizone.co.uk","type":"to"} ], html: 'test content', text: 'test content' }})
+    .reply(200, "success-mandrill-response")
+
+  nock('https://mandrillapp.com')
+    .put("/api/1.0/messages/send.json", { key: 'valid-mandrill-key', message: { subject: 'Simulate Error', from_email: 'stewart@emergeadapt.com', from_name: 'CaseBlocks', to: [ {"email":"stewart@theizone.co.uk","type":"to"} ], html: 'test content', text: 'test content' }})
+    .reply(500, "failure-mandrill-response")
+
+  nock('https://mandrillapp.com')
+    .put("/api/1.0/messages/send-template.json", {"key":"valid-mandrill-key","message":{"subject":"Simulate Success","from_email":"stewart@emergeadapt.com","from_name":"CaseBlocks","to":[{"email":"stewart@theizone.co.uk","type":"to"}],"template_content":[{"name":"name","content":"Test Name"},{"name":"productName","content":"product name in email"}]}}
+)
+    .reply(200, "success-mandrill-template-response")
 }
 
 exports.nockHttp = nockHttp;
+exports.expect = chai.expect;
