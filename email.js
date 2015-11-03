@@ -2,15 +2,42 @@
 //var rest = require('rest')
 var rest = require('restler-q');
 var inflection = require( 'inflection' );
-
+var htmlToText = require('html-to-text');
 var Q = require('q');
 
 var Email = function(attributes) {
+
+  reservedFields = ["to", "cc", "bcc", "subject", "body"]
+
+  this.serverType = "mandrillapp"
+  this.format = "html"
+
+  for(k in attributes) {
+    if (reservedFields.indexOf(k) < 0) {
+      this[k] = attributes[k]
+    }
+  }
+
+  // check required fields
+
+  if (this.serverType == "mandrillapp")
+    if (this.key === undefined)
+      throw new Error("'key' is a required field for serverType mandrillapp")
+
+  if (this.serverType == "smtp")
+    if (this.smtpServer === undefined)
+      throw new Error("smtpServer is a required field for serverType smtp")
+
+
+  // setup
+
   this.to_addresses = []
-  this.cc_addressses = []
+  this.cc_addresses = []
   this.bcc_addresses = []
-  this.internal_subject = ""
-  this.internal_body = ""
+  this.from_address = {email: "no-reply@caseblocks.com", name: "CaseBlocks"}
+  this.internal_subject = undefined
+  this.internal_text = undefined
+  this.internal_html = undefined
 
 }
 
@@ -18,128 +45,126 @@ Email.prototype.to = function(email, name) {
   this.to_addresses.push({"email": email, "name": name})
 }
 Email.prototype.cc = function(email, name) {
-  this.cc_addressses.push({"email": email, "name": name})
+  this.cc_addresses.push({"email": email, "name": name})
 }
 Email.prototype.bcc = function(email, name) {
   this.bcc_addresses.push({"email": email, "name": name})
 }
 
+Email.prototype.from = function(email, name) {
+  this.from_address = {"email": email, "name": name}
+}
 
+Email.prototype.subject = function(subject) {
+  this.internal_subject = subject
+}
 
-Email.prototype.send = function() {
+Email.prototype.text = function(textBody) {
+  this.internal_text = textBody
+}
 
-  recipients = []
-  if (addresses.constructor == String) {
-    recipients.push({"email": addresses, "type": "to"})
-  } else if (addresses.constructor == Array) {
-    for(var i = 0; i < addresses.length; i++){
-      recipients.push({"email": addresses[i], "type": "to"})
-    }
-  } else if (address.constructor == Object) {
-    if (addresses.to !== undefined && addresses.to.constructor == Array) {
-      for(var i = 0; i < addresses.to.length; i++){
-        recipients.push({"email": addresses.to[i], "type": "to"})
-      }
-    }
-    if (addresses.cc !== undefined && addresses.cc.constructor == Array) {
-      for(var i = 0; i < addresses.cc.length; i++){
-        recipients.push({"email": addresses.cc[i], "type": "cc"})
-      }
-    }
-    if (addresses.bcc !== undefined && addresses.bcc.constructor == Array) {
-      for(var i = 0; i < addresses.bcc.length; i++){
-        recipients.push({"email": addresses.bcc[i], "type": "bcc"})
-      }
-    }
+Email.prototype.html = function(htmlBody) {
+  this.internal_html = htmlBody
+  this.internal_text = htmlToText.fromString(htmlBody, {wordwrap: 130});
+}
 
-    var data = {
-      "key": "QOEMTZUsNGUIaa1TOjsbpw",
-      "message": {
-        "html": htmlBody,
-        "text": textBody,
-        "subject": subject,
-        "from_email": "no-reply@caseblocks.com",
-        "from_name": "CaseBlocks",
-        "to": recipients
-      }
-    };
+Email.prototype.body = function(body) {
+  this.html(body)
+}
 
-    return Q.fcall(function(data) {
-      return rest.putJson("https://mandrillapp.com/api/1.0/messages/send.json", data, {}).then(function(result, response) {
-        if (result instanceof Error) {
-          return false;
-        } else {
-          return true;
-        }
-      });
-    });
-
-
-
-  } else {
-    throw "Invalid type for addresses: " + addresses.constructor.toString()
+Email.prototype.sendTemplate = function(templateName, data) {
+  if (this.to_addresses.length == 0) {
+    throw new Error("A 'to' address is required")
   }
 
-
-  // var data = {};
-
-  recipients = [];
-  for(var i = 0; i < to.length; i ++){
-    recipients.push({"email": to[i], "type": "to"})
-  }
-
-  for(var i = 0; i < cc.length; i ++){
-    recipients.push({"email": cc[i], "type": "cc"})
-  }
-
-  for(var i = 0; i < bcc.length; i ++){
-    recipients.push({"email": bcc[i], "type": "bcc"})
-  }
-
-  var data = {
+  var recipients = generateRecipients(this.to_addresses, this.cc_addresses, this.bcc_addresses)
+  var message_data = {
     "key": "QOEMTZUsNGUIaa1TOjsbpw",
     "message": {
-      "html": htmlBody,
-      "text": textBody,
-      "subject": subject,
+      "subject": this.internal_subject,
       "from_email": "no-reply@caseblocks.com",
       "from_name": "CaseBlocks",
       "to": recipients
     }
   };
 
-  return rest.putJson("https://mandrillapp.com/api/1.0/messages/send.json", data, {}).on('complete', function(result,response) {
-    if (result instanceof Error) {
-      failure(error);
-    } else {
-      success(result);
-    }
+  message_data.message.template_content = []
+  for(k in data) {
+    message_data.message.template_content.push({name: k, content: data[k]})
+  }
+
+  message_data.message.from_email = this.from_address.email
+  if (this.from_address.name !== undefined)
+    message_data.message.from_name = this.from_address.name
+
+  return Q.fcall(function(data) {
+    return rest.putJson("https://mandrillapp.com/api/1.0/messages/send-template.json", message_data).then(function(response) {
+      return response;
+    }).fail(function(err) {
+      throw err;
+    });
   });
-
-
 }
 
+Email.prototype.send = function() {
+  if (this.to_addresses.length == 0) {
+    throw new Error("A 'to' address is required")
+  }
 
-// Case.prototype.save = function() {
-//   if (!Case.Caseblocks)
-//     throw "Must call Caseblocks.setup";
-//
-// // save current data to caseblocks
-//   _this = this
-//   return Q.fcall(function(data) {
-//     payload = {}
-//     payload[_this.case_type_code] = _this.attributes
-//     delete payload[_this.case_type_code].tasklists
-//     delete payload[_this.case_type_code]._documents
-//
-//
-//
-//     return rest.putJson(Case.Caseblocks.buildUrl("/case_blocks/"+_this.case_type_name+"/"+_this.id), payload).then(function(data) {
-//
-//       return _this
-//     })
-//   });
-// }
-//
+  var recipients = generateRecipients(this.to_addresses, this.cc_addresses, this.bcc_addresses)
+  var message_data = {
+    "key": "QOEMTZUsNGUIaa1TOjsbpw",
+    "message": {
+      "subject": this.internal_subject,
+      "from_email": "no-reply@caseblocks.com",
+      "from_name": "CaseBlocks",
+      "to": recipients
+    }
+  };
+
+  if (this.internal_html !== undefined)
+    message_data.message.html = this.internal_html
+  if (this.internal_text !== undefined)
+    message_data.message.text = this.internal_text
+
+  message_data.message.from_email = this.from_address.email
+  if (this.from_address.name !== undefined)
+    message_data.message.from_name = this.from_address.name
+
+  return Q.fcall(function(data) {
+    return rest.putJson("https://mandrillapp.com/api/1.0/messages/send.json", message_data).then(function(response) {
+      return response;
+    }).fail(function(err) {
+      throw err;
+    });
+  });
+}
+
+function generateRecipients(to, cc, bcc) {
+  recipients = []
+  to.forEach(function(address) {
+    if (address.name === undefined) {
+      recipients.push({"email": address.email, "type": "to"})
+    } else {
+      recipients.push({"email": address.email, "name": address.name, "type": "to"})
+    }
+  })
+  cc.forEach(function(address) {
+    if (address.name === undefined) {
+      recipients.push({"email": address.email, "type": "cc"})
+    } else {
+      recipients.push({"email": address.email, "name": address.name, "type": "cc"})
+    }
+  })
+  bcc.forEach(function(address) {
+    if (address.name === undefined) {
+      recipients.push({"email": address.email, "type": "bcc"})
+    } else {
+      recipients.push({"email": address.email, "name": address.name, "type": "bcc"})
+    }
+  })
+  return recipients;
+}
+
 
 module.exports = Email;
