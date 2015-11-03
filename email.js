@@ -82,8 +82,6 @@ Email.prototype.sendTemplate = function(templateName, data) {
     "key": this.key,
     "message": {
       "subject": this.internal_subject,
-      "from_email": "no-reply@caseblocks.com",
-      "from_name": "CaseBlocks",
       "to": recipients
     }
   };
@@ -116,8 +114,6 @@ Email.prototype.send = function() {
     "key": this.key,
     "message": {
       "subject": this.internal_subject,
-      "from_email": "no-reply@caseblocks.com",
-      "from_name": "CaseBlocks",
       "to": recipients
     }
   };
