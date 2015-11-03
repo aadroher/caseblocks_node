@@ -23,7 +23,6 @@ Case.create = function(case_type_name, case_type_id, properties) {
     properties.case_type_id = case_type_id
     _this.payload["case"][case_type_name] = properties
 
-
   _this.case_type_name = case_type_name
   return Q.fcall(function(data) {
     return rest.postJson(Case.Caseblocks.buildUrl("/case_blocks/"+case_type_name), _this.payload).then(function (caseData) {
@@ -100,11 +99,10 @@ Case.prototype.save = function() {
       for (var k in caseData) {
         _this.case_type_code = k
         _this.attributes = caseData[k]
-        break
       }
       return _this
     }).fail(function(err) {
-      throw err;
+      throw new Error("Error saving case");
     });
   });
 }
