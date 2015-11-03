@@ -8,6 +8,7 @@ var Task = function(attributes) {
   for(var k in attributes) {
     this[k] = attributes[k]
   }
+  this.id = attributes["_id"]
 }
 
 
@@ -16,12 +17,13 @@ Task.get = function(id) {
     throw "Must call Caseblocks.setup";
 
   url = Task.Caseblocks.buildUrl("/case_blocks/tasks?ids%5B%5D="+id)
-
   return Q.fcall(function(data) {
     return rest.get(url).then(function (payload) {
       payload = payload.tasks
       return new Task(payload[0])
-    })
+    }).fail(function(err) {
+      throw err;
+    });
   });
 }
 
@@ -38,7 +40,9 @@ Task.getAll = function(ids) {
         tasks.push(new Task(payload.tasks[t]))
       }
       return tasks
-    })
+    }).fail(function(err) {
+      throw err;
+    });
   });
 }
 
@@ -53,7 +57,9 @@ Task.prototype.execute = function() {
   return Q.fcall(function(data) {
     return rest.putJson(url, payload).then(function(data) {
       return _this
-    })
+    }).fail(function(err) {
+      throw err;
+    });
   })
 }
 

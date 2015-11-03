@@ -1,12 +1,15 @@
+var helper = require("./spec_helper")
+
 var should = require('chai').should(),
     Caseblocks = require('../index')
+
 
 
 describe('bucket', function() {
 
   beforeEach(function() {
     this.timeout(5000);
-    Caseblocks.setup("http://localhost:8888", "tnqhvzxYaRnVt7zRWYhr")
+    Caseblocks.setup("http://test-caseblocks-location", "tnqhvzxYaRnVt7zRWYhr")
 
   });
 

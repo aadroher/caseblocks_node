@@ -1,12 +1,14 @@
+var helper = require("./spec_helper")
+
 var should = require('chai').should(),
     Caseblocks = require('../index')
-
 
 describe('case', function() {
 
   beforeEach(function() {
-    Caseblocks.setup("http://localhost:8888", "tnqhvzxYaRnVt7zRWYhr")
+    Caseblocks.setup("http://test-caseblocks-location", "tnqhvzxYaRnVt7zRWYhr")
 
+    helper.nockHttp()
   });
 
   it("document should include id", function(done) {
@@ -19,22 +21,56 @@ describe('case', function() {
     });
   });
 
-  it("should update a document", function(done) {
-    this.timeout(5000);
-    Caseblocks.Case.get("support_requests", "550c40d9841976debf000011").then(function(doc) {
-      doc.attributes._id.should.equal("550c40d9841976debf000011")
-      var d = new Date();
-      var n = d.toUTCString();
-      doc.attributes.systems_involved = n
-      doc.save().then(function(doc) {
-        done();
+  describe("updating", function(done) {
+    it("should update a document", function(done) {
+      Caseblocks.Case.get("support_requests", "550c40d9841976debf000011").then(function(doc) {
+        doc.attributes._id.should.equal("550c40d9841976debf000011")
+        doc.attributes.systems_involved.should.equal("1")
+        doc.attributes.systems_involved = "2"
+        doc.save().then(function(doc2) {
+          doc2.attributes.systems_involved.should.equal("2")
+          done();
+        }).catch(function(err){
+          done(err);
+        });
       }).catch(function(err){
         done(err);
       });
-    }).catch(function(err){
-      done(err);
-    });
-  })
+    })
+
+    it("updates multiple local values with updated calculated fields values that were not altered directly by client", function(done) {
+      Caseblocks.Case.get("support_requests", "550c40d9841976debf000011").then(function(doc) {
+        doc.attributes._id.should.equal("550c40d9841976debf000011")
+        doc.attributes.systems_involved.should.equal("1")
+        doc.attributes.systems_involved = "2"
+        doc.save().then(function(returned_doc) {
+          doc.attributes.systems_involved.should.equal("2")
+          doc.attributes.calculated_field1.should.equal("calculated-result1")
+          doc.attributes.calculated_field2.should.equal("calculated-result2")
+          done();
+        }).catch(function(err){
+          done(err);
+        });
+      }).catch(function(err){
+        done(err);
+      });
+    })
+    it("does not alter local document if update fails", function(done) {
+      Caseblocks.Case.get("support_requests", "550c40d9841976debf000011").then(function(doc) {
+        doc.attributes.validated_field = "invalid-format"
+
+        // adding chai-as-promised to detect failed call... need to detect error as currently no mock error being given which causes test to pass
+
+        doc.save().should.be.rejectedWith("Error saving case").and.notify(done);
+
+      }).catch(function(err){
+        done(err);
+      });
+
+    })
+
+
+  });
 
   it("should create a document", function(done) {
     Caseblocks.Case.create("support_requests", 42, {title: 'test1'}).then(function(doc) {
@@ -46,7 +82,7 @@ describe('case', function() {
   })
 
   it("should search for a document and return match", function(done) {
-    Caseblocks.Case.search(42, 'test1').then(function(docs) {
+    Caseblocks.Case.search(42, 'match-result').then(function(docs) {
       docs.length.should.to.be.above(1)
       docs[0].attributes.title.should.equal("test1")
       done()
@@ -57,7 +93,7 @@ describe('case', function() {
   })
 
   it("should search for a document and return no matches", function(done) {
-    Caseblocks.Case.search(42, 'test2').then(function(docs) {
+    Caseblocks.Case.search(42, 'no-match-result').then(function(docs) {
       docs.length.should.equal(0)
       done()
     }).catch(function(err){
