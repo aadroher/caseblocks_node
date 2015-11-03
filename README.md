@@ -173,15 +173,23 @@ Retrieves multiple tasks in one go.  Pass in an array of string id's and the mat
       done(err);
     });
 
-## email
+## Email
 
 The email functions allow you to send an email either through mandrill or smtp.  You can also use the mandrill templating features.
 
-Instansiate a new Caseblocks.Email object passing in your initial configuration, like keys and server details, then you can add recipients and setup your from address, subject, and body (html or text).
+Instantiate a new Caseblocks.Email object passing in your initial configuration, like keys and server details, then you can add recipients and setup your from address, subject, and body (html or text).
+
+Mandrill is set as default and requires 'key' to be passed in when instantiating the object.
+
+Other properties available are
+  * serverType - 'mandrill' or 'smtp' values are valid.
+  * smtpServer - required if serverType is smtp and is host of smtp server to use
+  * key        - required if serverType is mandrill and is they access token key for your account
+
 
 Example:
 
-    var email = new Caseblocks.Email({"key": "QOEMTZUsNGUIaa1TOjsbpw"})
+    var email = new Caseblocks.Email({"key": "sample-key"})
     email.to("to-address@example.com")
     email.to("second-to-address@example.com")
     email.bcc("bcc-address@example.com")
