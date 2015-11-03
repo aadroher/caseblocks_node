@@ -79,7 +79,7 @@ Email.prototype.sendTemplate = function(templateName, data) {
 
   var recipients = generateRecipients(this.to_addresses, this.cc_addresses, this.bcc_addresses)
   var message_data = {
-    "key": "QOEMTZUsNGUIaa1TOjsbpw",
+    "key": this.key,
     "message": {
       "subject": this.internal_subject,
       "from_email": "no-reply@caseblocks.com",
@@ -113,7 +113,7 @@ Email.prototype.send = function() {
 
   var recipients = generateRecipients(this.to_addresses, this.cc_addresses, this.bcc_addresses)
   var message_data = {
-    "key": "QOEMTZUsNGUIaa1TOjsbpw",
+    "key": this.key,
     "message": {
       "subject": this.internal_subject,
       "from_email": "no-reply@caseblocks.com",
