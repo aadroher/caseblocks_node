@@ -218,7 +218,7 @@ describe.only('email', function() {
         email = new Caseblocks.Email({key: "valid-mandrill-key"})
         email.to("stewart@theizone.co.uk")
         email.from("stewart@emergeadapt.com")
-        email.subject("Simulate Error")
+        email.subject("Simulate Success")
         email.body("test content")
 
         email.sendTemplate("template-name", {name: "Test Name", productName: "product name in email"}).should.eventually.equal("success-mandrill-template-response").and.notify(done)
