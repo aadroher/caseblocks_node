@@ -182,7 +182,7 @@ Instantiate a new Caseblocks.Email object passing in your initial configuration,
 Mandrill is set as default and requires 'key' to be passed in when instantiating the object.
 
 Other properties available are
-  * serverType - 'mandrill' or 'smtp' values are valid.
+  * serverType - 'mandrillapp' or 'smtp' values are valid.
   * smtpServer - required if serverType is smtp and is host of smtp server to use
   * key        - required if serverType is mandrill and is they access token key for your account
 
