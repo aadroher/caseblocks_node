@@ -86,11 +86,12 @@ Email.prototype.sendTemplate = function(templateName, data) {
     }
   };
 
-  message_data.message.template_content = []
-  for(k in data) {
-    message_data.message.template_content.push({name: k, content: data[k]})
-  }
+  message_data.template_name = templateName;
 
+  message_data.template_content = []
+  for(k in data) {
+    message_data.template_content.push({name: k, content: data[k]})
+  }
   message_data.message.from_email = this.from_address.email
   if (this.from_address.name !== undefined)
     message_data.message.from_name = this.from_address.name

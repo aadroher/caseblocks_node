@@ -194,11 +194,11 @@ describe.only('email', function() {
       done();
     })
 
-    describe("mandrillapp", function() {
+    describe.only("mandrillapp", function() {
       it("can send email with valid subject and body", function(done) {
         email = new Caseblocks.Email({key: "valid-mandrill-key"})
         email.to("stewart@theizone.co.uk")
-        email.from("stewart@emergeadapt.com")
+        email.from("stewart@emergeadapt.com", "CaseBlocks")
         email.subject("Test Email")
         email.body("test content")
 
@@ -207,7 +207,7 @@ describe.only('email', function() {
       it("handles errors correctly", function(done) {
         email = new Caseblocks.Email({key: "valid-mandrill-key"})
         email.to("stewart@theizone.co.uk")
-        email.from("stewart@emergeadapt.com")
+        email.from("stewart@emergeadapt.com", "CaseBlocks")
         email.subject("Simulate Error")
         email.body("test content")
 
@@ -221,7 +221,7 @@ describe.only('email', function() {
         email.subject("Simulate Success")
         email.body("test content")
 
-        email.sendTemplate("template-name", {name: "Test Name", productName: "product name in email"}).should.eventually.equal("success-mandrill-template-response").and.notify(done)
+        email.sendTemplate("test-template", {title: "Test Name", productName: "product name in email"}).should.eventually.equal("success-mandrill-template-response").and.notify(done)
       })
 
     })
