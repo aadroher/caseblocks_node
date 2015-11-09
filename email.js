@@ -72,7 +72,10 @@ Email.prototype.body = function(body) {
   this.html(body)
 }
 
-Email.prototype.sendTemplate = function(templateName, data) {
+Email.prototype.sendTemplate = function(templateName, data, options) {
+  if (options === undefined) {
+    options = {}
+  }
   if (this.to_addresses.length == 0) {
     throw new Error("A 'to' address is required")
   }
@@ -92,6 +95,11 @@ Email.prototype.sendTemplate = function(templateName, data) {
   for(k in data) {
     message_data.template_content.push({name: k, content: data[k]})
   }
+  message_data.message.global_merge_vars = []
+  for(k in data) {
+    message_data.message.global_merge_vars.push({name: k, content: data[k]})
+  }
+
   message_data.message.from_email = this.from_address.email
   if (this.from_address.name !== undefined)
     message_data.message.from_name = this.from_address.name
