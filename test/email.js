@@ -3,7 +3,7 @@ var helper = require("./spec_helper")
 var should = require('chai').should(),
     Caseblocks = require('../index')
 
-describe.only('email', function() {
+describe('email', function() {
 
   beforeEach(function() {
     Caseblocks.setup("http://test-caseblocks-location", "tnqhvzxYaRnVt7zRWYhr")
@@ -194,7 +194,7 @@ describe.only('email', function() {
       done();
     })
 
-    describe.only("mandrillapp", function() {
+    describe("mandrillapp", function() {
       it("can send email with valid subject and body", function(done) {
         email = new Caseblocks.Email({key: "valid-mandrill-key"})
         email.to("stewart@theizone.co.uk")
