@@ -16,7 +16,7 @@ Caseblocks.prototype.buildUrl = function(path) {
     url = url + "&auth_token="+this.token
   else
     url = url + "?auth_token="+this.token
-    
+
   return url
 }
 

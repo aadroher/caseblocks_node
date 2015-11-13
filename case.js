@@ -25,7 +25,7 @@ Case.create = function(case_type_name, case_type_id, properties) {
 
   _this.case_type_name = case_type_name
   return Q.fcall(function(data) {
-    return rest.postJson(Case.Caseblocks.buildUrl("/case_blocks/"+case_type_name), _this.payload).then(function (caseData) {
+    return rest.postJson(Case.Caseblocks.buildUrl("/case_blocks/"+case_type_name), _this.payload, {headers: {"Accept": "application/json"}}).then(function (caseData) {
       for (var k in caseData) {
         _this.case_type_code = k
         _this.attributes = caseData[k]
@@ -47,7 +47,7 @@ Case.get = function(case_type_name, id) {
   _this.case_type_name = case_type_name
   _this.id = id
   return Q.fcall(function(data) {
-    return rest.get(Case.Caseblocks.buildUrl("/case_blocks/"+case_type_name+"/"+id)).then(function (caseData) {
+    return rest.get(Case.Caseblocks.buildUrl("/case_blocks/"+case_type_name+"/"+id), {headers: {"Accept": "application/json"}}).then(function (caseData) {
       for (var k in caseData) {
         _this.case_type_code = k
         _this.attributes = caseData[k]
@@ -65,7 +65,7 @@ Case.search = function(case_type_id, query) {
     throw "Must call Caseblocks.setup";
 
   return Q.fcall(function(data) {
-    return rest.get(Case.Caseblocks.buildUrl("/case_blocks/search?query="+query)).then(function(data) {
+    return rest.get(Case.Caseblocks.buildUrl("/case_blocks/search?query="+query), {headers: {"Accept": "application/json"}}).then(function(data) {
       case_type_results = data.filter(function(ct) {
         return ct.case_type_id == case_type_id
       })[0]
@@ -95,7 +95,7 @@ Case.prototype.save = function() {
     delete payload[_this.case_type_code].tasklists
     delete payload[_this.case_type_code]._documents
 
-    return rest.putJson(Case.Caseblocks.buildUrl("/case_blocks/"+_this.case_type_name+"/"+_this.id), payload).then(function(caseData) {
+    return rest.putJson(Case.Caseblocks.buildUrl("/case_blocks/"+_this.case_type_name+"/"+_this.id), payload, {headers: {"Accept": "application/json"}}).then(function(caseData) {
       for (var k in caseData) {
         _this.case_type_code = k
         _this.attributes = caseData[k]
@@ -141,7 +141,7 @@ Case.prototype.related = function(related_case_type_code, relation_id) {
   url = Case.Caseblocks.buildUrl(path)
   _this = this
   return Q.fcall(function(data) {
-    return rest.get(url).then(function(data) {
+    return rest.get(url, {headers: {"Accept": "application/json"}}).then(function(data) {
       return data[related_case_type_code].map(function(d) {
         return new Case(d)
       })

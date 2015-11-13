@@ -18,7 +18,7 @@ Task.get = function(id) {
 
   url = Task.Caseblocks.buildUrl("/case_blocks/tasks?ids%5B%5D="+id)
   return Q.fcall(function(data) {
-    return rest.get(url).then(function (payload) {
+    return rest.get(url, {headers: {"Accept": "application/json"}}).then(function (payload) {
       payload = payload.tasks
       return new Task(payload[0])
     }).fail(function(err) {
@@ -34,7 +34,7 @@ Task.getAll = function(ids) {
   url = Task.Caseblocks.buildUrl("/case_blocks/tasks?" + ids.map(function(id) {return "ids%5B%5D="+id}).join("&"))
 
   return Q.fcall(function(data) {
-    return rest.get(url).then(function (payload) {
+    return rest.get(url, {headers: {"Accept": "application/json"}}).then(function (payload) {
       var tasks = []
       for(t in payload.tasks) {
         tasks.push(new Task(payload.tasks[t]))
@@ -55,7 +55,7 @@ Task.prototype.execute = function() {
   _this.status = "in_progress"
   payload = {task: _this}
   return Q.fcall(function(data) {
-    return rest.putJson(url, payload).then(function(data) {
+    return rest.putJson(url, payload, {headers: {"Accept": "application/json"}}).then(function(data) {
       return _this
     }).fail(function(err) {
       throw err;

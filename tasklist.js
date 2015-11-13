@@ -22,7 +22,7 @@ Tasklist.get = function(id) {
   url = Tasklist.Caseblocks.buildUrl("/case_blocks/tasklists?ids%5B%5D="+ id)
 
   return Q.fcall(function(data) {
-    return rest.get(url).then(function (payload) {
+    return rest.get(url, {headers: {"Accept": "application/json"}}).then(function (payload) {
       payload = payload.tasklists
       tasklist = new Tasklist(payload[0])
       return tasklist
@@ -38,7 +38,7 @@ Tasklist.getAll = function(tasklist_ids) {
 
   url = Tasklist.Caseblocks.buildUrl("/case_blocks/tasklists?" + tasklist_ids.map(function(id) {return "ids%5B%5D="+id}).join("&"))
   return Q.fcall(function(data) {
-    return rest.get(url).then(function (payload) {
+    return rest.get(url, {headers: {"Accept": "application/json"}}).then(function (payload) {
       payload = payload.tasklists
       tasklists = []
       for(t in payload) {
@@ -59,7 +59,7 @@ Tasklist.prototype.tasks = function() {
     url = Tasklist.Caseblocks.buildUrl("/case_blocks/tasks?" + this._tasks.map(function(id) {return "ids%5B%5D="+id}).join("&"))
     _this = this
     return Q.fcall(function(data) {
-      return rest.get(url).then(function(payload) {
+      return rest.get(url, {headers: {"Accept": "application/json"}}).then(function(payload) {
         var tasks = []
         for(t in payload.tasks) {
           tasks.push(new Task(payload.tasks[t]))
