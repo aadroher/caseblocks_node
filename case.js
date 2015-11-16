@@ -19,9 +19,9 @@ Case.create = function(case_type_name, case_type_id, properties) {
 
     _this = new Case()
 
-    _this.payload = {case: {}}
+    _this.payload = {}
     properties.case_type_id = case_type_id
-    _this.payload["case"][case_type_name] = properties
+    _this.payload[case_type_name] = properties
 
   _this.case_type_name = case_type_name
   return Q.fcall(function(data) {
