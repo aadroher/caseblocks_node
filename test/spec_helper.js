@@ -26,7 +26,7 @@ var nockHttp = function() {
      });
 
   nock('http://test-caseblocks-location', {reqheaders: {'accept': 'application/json'}})
-    .post('/case_blocks/support_requests', {"support_requests":{"title":"test1","case_type_id":42}})
+    .post('/case_blocks/support_requests', {"case":{"title":"test1","case_type_id":42}})
     .query({auth_token: 'tnqhvzxYaRnVt7zRWYhr'})
     .reply(201, {
       "support_request": {_id: '550c40d9841976debf000011', title: "test1", case_type_id: 42}

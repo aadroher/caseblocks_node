@@ -21,9 +21,8 @@ Case.create = function(case_type_name, case_type_id, properties) {
 
     _this.payload = {}
     properties.case_type_id = case_type_id
-    _this.payload[case_type_name] = properties
+    _this.payload["case"] = properties
 
-  _this.case_type_name = case_type_name
   return Q.fcall(function(data) {
     return rest.postJson(Case.Caseblocks.buildUrl("/case_blocks/"+case_type_name), _this.payload, {headers: {"Accept": "application/json"}}).then(function (caseData) {
       for (var k in caseData) {
