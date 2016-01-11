@@ -16,7 +16,7 @@ Task.get = function(id) {
   if (!Task.Caseblocks)
     throw "Must call Caseblocks.setup";
 
-  url = Task.Caseblocks.buildUrl("/case_blocks/tasks?ids%5B%5D="+id)
+  url = Task.Caseblocks.buildUrl("/case_blocks/tasks.json?ids%5B%5D="+id)
   return Q.fcall(function(data) {
     return rest.get(url, {headers: {"Accept": "application/json"}}).then(function (payload) {
       payload = payload.tasks
@@ -31,7 +31,7 @@ Task.getAll = function(ids) {
   if (!Task.Caseblocks)
     throw "Must call Caseblocks.setup";
 
-  url = Task.Caseblocks.buildUrl("/case_blocks/tasks?" + ids.map(function(id) {return "ids%5B%5D="+id}).join("&"))
+  url = Task.Caseblocks.buildUrl("/case_blocks/tasks.json?" + ids.map(function(id) {return "ids%5B%5D="+id}).join("&"))
 
   return Q.fcall(function(data) {
     return rest.get(url, {headers: {"Accept": "application/json"}}).then(function (payload) {
@@ -50,7 +50,7 @@ Task.prototype.execute = function() {
   if (!Task.Caseblocks)
     throw "Must call Caseblocks.setup";
 
-  url = Task.Caseblocks.buildUrl("/case_blocks/tasks/" + this.id)
+  url = Task.Caseblocks.buildUrl("/case_blocks/tasks/" + this.id + ".json")
   _this = this
   _this.status = "in_progress"
   payload = {task: _this}

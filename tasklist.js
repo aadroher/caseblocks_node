@@ -19,7 +19,7 @@ Tasklist.get = function(id) {
   if (!Tasklist.Caseblocks)
     throw "Must call Caseblocks.setup";
 
-  url = Tasklist.Caseblocks.buildUrl("/case_blocks/tasklists?ids%5B%5D="+ id)
+  url = Tasklist.Caseblocks.buildUrl("/case_blocks/tasklists.json?ids%5B%5D="+ id)
 
   return Q.fcall(function(data) {
     return rest.get(url, {headers: {"Accept": "application/json"}}).then(function (payload) {
@@ -36,7 +36,7 @@ Tasklist.getAll = function(tasklist_ids) {
   if (!Tasklist.Caseblocks)
     throw "Must call Caseblocks.setup";
 
-  url = Tasklist.Caseblocks.buildUrl("/case_blocks/tasklists?" + tasklist_ids.map(function(id) {return "ids%5B%5D="+id}).join("&"))
+  url = Tasklist.Caseblocks.buildUrl("/case_blocks/tasklists.json?" + tasklist_ids.map(function(id) {return "ids%5B%5D="+id}).join("&"))
   return Q.fcall(function(data) {
     return rest.get(url, {headers: {"Accept": "application/json"}}).then(function (payload) {
       payload = payload.tasklists
@@ -56,7 +56,7 @@ Tasklist.prototype.tasks = function() {
     throw "Must call Caseblocks.setup";
 
   if (this._tasks !== undefined && this._tasks.length > 0) {
-    url = Tasklist.Caseblocks.buildUrl("/case_blocks/tasks?" + this._tasks.map(function(id) {return "ids%5B%5D="+id}).join("&"))
+    url = Tasklist.Caseblocks.buildUrl("/case_blocks/tasks.json?" + this._tasks.map(function(id) {return "ids%5B%5D="+id}).join("&"))
     _this = this
     return Q.fcall(function(data) {
       return rest.get(url, {headers: {"Accept": "application/json"}}).then(function(payload) {
