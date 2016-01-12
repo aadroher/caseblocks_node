@@ -1,6 +1,6 @@
 {
   "name": "caseblocks",
-  "version": "0.1.14",
+  "version": "0.1.15",
   "description": "Module to interact with the CaseBlocks API",
   "main": "index.js",
   "scripts": {
