@@ -41,20 +41,31 @@ describe('tasklists', function() {
     var tasklists_count = 0;
 
     Caseblocks.Tasklist.getAll(["550c40d9841976debf000018", "550c40d9841976debf00001a", "550c40d9841976debf00001c"]).then(function(tasklists) {
-      var tasklists_returned = tasklists.length
-      tasklists.forEach(function(tasklist) {
-        tasklist.tasks().then(function(tasks) {
-          tasks.forEach(function(task) {
-            all_tasks.push(task)
-          });
-          tasklists_count++;
-          if (tasklists_returned == tasklists_count) {
+
+      var taskCounter = 0;
+      for(var i=0; i< tasklists.length; i++){
+        tasklists[i].tasks().then(function (tasks) {
+          if (taskCounter==0) {
+            tasks.length.should.equal(1)
+            tasks[0].description = "Create Pull Request"
+
+          } else if (taskCounter==1) {
+            tasks.length.should.equal(6)
+            tasks[0].description = "asdf"
+
+          } else if (taskCounter==2) {
+            tasks.length.should.equal(1)
+            tasks[0].description = "test task"
+
             done();
+
           }
+          taskCounter++;
         }).catch(function(err){
           done(err);
-        });
-      })
+        })
+      }
+
     }).catch(function(err){
       done(err);
     });

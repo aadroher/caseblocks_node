@@ -69,14 +69,14 @@ var nockHttp = function() {
 
   nock('http://test-caseblocks-location', {reqheaders: {'accept': 'application/json'}})
     .get('/case_blocks/tasks.json?ids%5B%5D=550c40d9841976debf000012&ids%5B%5D=550c40d9841976debf000013&ids%5B%5D=550c40d9841976debf000014&ids%5B%5D=550c40d9841976debf000015&ids%5B%5D=550c40d9841976debf000016&ids%5B%5D=550c40d9841976debf000017&auth_token=tnqhvzxYaRnVt7zRWYhr')
-    .reply(200, {tasks: [{_id: '550c40d9841976debf000012', asdf: "asdf"}, {_id: '550c40d9841976debf000013'}, {_id: '550c40d9841976debf000014', description: "Merge in Github", status: "not_started"}, {_id: '550c40d9841976debf000015'}, {_id: '550c40d9841976debf000016'}, {_id: '550c40d9841976debf000017'}]});
+    .reply(200, {tasks: [{_id: '550c40d9841976debf000012', description: "asdf"}, {_id: '550c40d9841976debf000013'}, {_id: '550c40d9841976debf000014', description: "Merge in Github", status: "not_started"}, {_id: '550c40d9841976debf000015'}, {_id: '550c40d9841976debf000016'}, {_id: '550c40d9841976debf000017'}]});
 
   nock('http://test-caseblocks-location', {reqheaders: {'accept': 'application/json'}})
     .get('/case_blocks/tasks.json?ids%5B%5D=550c40d9841976debf000019&auth_token=tnqhvzxYaRnVt7zRWYhr')
-    .reply(200, {tasks: [{_id: '550c40d9841976debf000019'}]});
+    .reply(200, {tasks: [{_id: '550c40d9841976debf000019', description: "test task"}]});
 
   nock('http://test-caseblocks-location', {reqheaders: {'accept': 'application/json'}})
-    .put('/case_blocks/tasks/550c40d9841976debf000019.json', {"task":{"_id":"550c40d9841976debf000019","id":"550c40d9841976debf000019","status":"in_progress"}})
+    .put('/case_blocks/tasks/550c40d9841976debf000019.json', {"task":{"_id":"550c40d9841976debf000019","description":"test task","id":"550c40d9841976debf000019","status":"in_progress"}})
     .query({auth_token: "tnqhvzxYaRnVt7zRWYhr"})
     .reply(200, {tasks: [{_id: '550c40d9841976debf000019', status: "in_progress"}]});
 
@@ -84,7 +84,7 @@ var nockHttp = function() {
 
   nock('http://test-caseblocks-location', {reqheaders: {'accept': 'application/json'}})
     .get('/case_blocks/tasklists.json?ids%5B%5D=550c40d9841976debf000018&ids%5B%5D=550c40d9841976debf00001a&ids%5B%5D=550c40d9841976debf00001c&auth_token=tnqhvzxYaRnVt7zRWYhr')
-    .reply(200, {tasklists: [{_id: '550c40d9841976debf000018', _tasks: []}, {_id: '550c40d9841976debf00001a', _tasks: []}, {_id: '550c40d9841976debf00001c', name: "Admin Tasks", _tasks: []}]});
+    .reply(200, {tasklists: [{_id: '550c40d9841976debf000018', _tasks: ['550c40d9841976debf000012']}, {_id: '550c40d9841976debf00001a', _tasks: ['550c40d9841976debf000012', '550c40d9841976debf000013', '550c40d9841976debf000014', '550c40d9841976debf000015', '550c40d9841976debf000016', '550c40d9841976debf000017']}, {_id: '550c40d9841976debf00001c', name: "Admin Tasks", _tasks: ['550c40d9841976debf000019']}]});
 
   nock('http://test-caseblocks-location', {reqheaders: {'accept': 'application/json'}})
     .get('/case_blocks/tasklists.json?ids%5B%5D=550c40d9841976debf000018&auth_token=tnqhvzxYaRnVt7zRWYhr')

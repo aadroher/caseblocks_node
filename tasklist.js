@@ -10,7 +10,7 @@ var Tasklist = function(attributes) {
     if (k != "tasks") {
       this[k] = attributes[k]
     } else {
-      this["_tasks"] = attributes["tasks"]
+      this._tasks = attributes["tasks"]
     }
   }
 }
@@ -56,7 +56,8 @@ Tasklist.prototype.tasks = function() {
     throw "Must call Caseblocks.setup";
 
   if (this._tasks !== undefined && this._tasks.length > 0) {
-    url = Tasklist.Caseblocks.buildUrl("/case_blocks/tasks.json?" + this._tasks.map(function(id) {return "ids%5B%5D="+id}).join("&"))
+
+    var url = Tasklist.Caseblocks.buildUrl("/case_blocks/tasks.json?" + this._tasks.map(function(id) {return "ids%5B%5D="+id}).join("&"))
     _this = this
     return Q.fcall(function(data) {
       return rest.get(url, {headers: {"Accept": "application/json"}}).then(function(payload) {
