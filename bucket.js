@@ -4,45 +4,60 @@ var inflection = require( 'inflection' );
 var Q = require('q');
 
 var Bucket = function(attributes) {
-  this.attributes = {}
-  for(k in attributes) {
-    this.attributes[k] = attributes[k]
+  this.attributes = {};
+  for(var k in attributes) {
+    this.attributes[k] = attributes[k];
   }
-  this.id = this.attributes["_id"];
-}
+  this.id = this.attributes._id;
+};
 
-// Case.create = function(case_type_name, case_type_id, properties) {
-//   if (!Case.Caseblocks)
-//     throw "Must call Caseblocks.setup";
-//
-//     _this = new Case()
-//
-//
-//
-//     _this.payload = {case: {}}
-//     properties.case_type_id = case_type_id
-//     _this.payload["case"][case_type_name] = properties
-//
-//
-//   _this.case_type_name = case_type_name
-//   return Q.fcall(function(data) {
-//     return rest.postJson(Case.Caseblocks.buildUrl("/case_blocks/"+case_type_name), _this.payload).then(function (caseData) {
-//       for (var k in caseData) {
-//         _this.case_type_code = k
-//         _this.attributes = caseData[k]
-//
-//         _this.id = _this.attributes._id
-//         break
-//       }
-//       return _this
-//     })
-//   });
-//
-// }
-//
 Bucket.get = function(account, id) {
-  console.warn("Bucket.get: Not implemented yet")
-}
+  return Q.fcall(function(data) {
+    return rest.get(Case.Caseblocks.buildUrl("/case_blocks/buckets/" + id)).then(function(data) {
+      return new Bucket(data);
+    });
+  });
+};
+
+Bucket.prototype.contents = function() {
+  if (!Case.Caseblocks)
+    throw "Must call Caseblocks.setup";
+  var _this = this;
+  return Q.fcall(function(data) {
+    payload = _this.attributes;
+    return rest.putJson(Case.Caseblocks.buildUrl("/case_blocks/buckets/" + _this.short_code + "/j")).then(function(data) {
+      return data;
+    });
+  });
+
+};
+
+Bucket.prototype.save = function() {
+
+  var _this = this;
+  return Q.fcall(function(data) {
+    payload = _this.attributes;
+    return rest.putJson(Case.Caseblocks.buildUrl("/case_blocks/buckets/" + id), payload).then(function(data) {
+      return _this;
+    });
+  });
+};
+
+Bucket.prototype.delete = function() {
+  if (!Case.Caseblocks)
+    throw "Must call Caseblocks.setup";
+
+  var _this = this;
+  return Q.fcall(function(data) {
+    payload = _this.attributes;
+    return rest.del(Case.Caseblocks.buildUrl("/case_blocks/buckets/" + id)).then(function(data) {
+      return true;
+    });
+  });
+};
+
+
+
 //
 // Case.search = function(case_type_id, query) {
 //   if (!Case.Caseblocks)
