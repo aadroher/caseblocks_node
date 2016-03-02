@@ -13,14 +13,20 @@ var Case = function(attributes) {
   this.id = this.attributes["_id"];
 }
 
-Case.create = function(case_type_name, case_type_id, properties) {
+Case.create = function(case_type_name, case_type_id, properties, options) {
   if (!Case.Caseblocks)
     throw "Must call Caseblocks.setup";
 
     _this = new Case()
 
+    if (typeof options == "undefined")
+      options = {}
+
     _this.payload = {}
     properties.case_type_id = case_type_id
+    if (typeof options !== 'undefined' && typeof options.unique !== 'undefined') {
+      _this.payload["unique"] = options.unique
+    }
     _this.payload["case"] = properties
 
   return Q.fcall(function(data) {
@@ -35,7 +41,6 @@ Case.create = function(case_type_name, case_type_id, properties) {
       return _this
     })
   });
-
 }
 
 Case.get = function(case_type_name, id) {

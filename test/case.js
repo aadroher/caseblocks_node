@@ -81,6 +81,14 @@ describe('case', function() {
 
   })
 
+  it("should create a unique document", function(done) {
+    Caseblocks.Case.create("support_requests", 42, {title: 'test1'}, {unique: true}).then(function(doc) {
+      done()
+    }).catch(function(err){
+      done(err);
+    });
+  })
+
   it("should search for a document and return match", function(done) {
     Caseblocks.Case.search(42, 'match-result').then(function(docs) {
       docs.length.should.to.be.above(1)

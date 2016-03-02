@@ -33,6 +33,13 @@ var nockHttp = function() {
      });
 
   nock('http://test-caseblocks-location', {reqheaders: {'accept': 'application/json'}})
+   .post('/case_blocks/support_requests.json', {"case":{"title":"test1","case_type_id":42},"unique": true})
+   .query({auth_token: 'tnqhvzxYaRnVt7zRWYhr'})
+   .reply(201, {
+     "support_request": {_id: '550c40d9841976debf000011', title: "test1", case_type_id: 42}
+    });
+
+  nock('http://test-caseblocks-location', {reqheaders: {'accept': 'application/json'}})
     .get('/case_blocks/search.json')
     .query({query: 'match-result', auth_token: 'tnqhvzxYaRnVt7zRWYhr'})
     .reply(200, [{case_type_id: 42, cases: [{title: "test1"}, {title: "test2"}]}]);
