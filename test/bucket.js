@@ -40,7 +40,7 @@ describe('bucket', function() {
     Caseblocks.Bucket.get(6, "another_case_type").then(function(bucket) {
       bucket.cases().then(function(cases) {
         cases.length.should.equal(1);
-        cases[0].attributes.title.should.equal("Case Title")
+        cases[0].attributes.title.should.equal("Case Title");
         done();
       }).catch(function(err){
         done(err);

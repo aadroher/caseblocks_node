@@ -6,78 +6,78 @@ var inflection = require( 'inflection' );
 var Q = require('q');
 
 var Case = function(attributes) {
-  this.attributes = {}
-  for(k in attributes) {
-    this.attributes[k] = attributes[k]
+  this.attributes = {};
+  for (var k in attributes) {
+    this.attributes[k] = attributes[k];
   }
-  this.id = this.attributes["_id"];
-}
+  this.id = this.attributes._id;
+};
 
 Case.create = function(case_type_name, case_type_id, properties, options) {
   if (!Case.Caseblocks)
-    throw "Must call Caseblocks.setup";
+    throw new Error("Must call Caseblocks.setup");
 
-    _this = new Case()
+  if (typeof(options) == "undefined") {
+    options = {};
+  }
 
-    if (typeof options == "undefined")
-      options = {}
 
-    _this.payload = {}
-    properties.case_type_id = case_type_id
-    if (typeof options !== 'undefined' && typeof options.unique !== 'undefined') {
-      _this.payload["unique"] = options.unique
-    }
-    _this.payload["case"] = properties
+  var payload = {};
+  properties.case_type_id = case_type_id;
+  if (typeof(options.unique) !== 'undefined') {
+    payload.unique = options.unique;
+  }
+  payload.case = properties;
 
   return Q.fcall(function(data) {
-    return rest.postJson(Case.Caseblocks.buildUrl("/case_blocks/"+case_type_name+ ".json"), _this.payload, {headers: {"Accept": "application/json"}}).then(function (caseData) {
-      for (var k in caseData) {
-        _this.case_type_code = k
-        _this.attributes = caseData[k]
+    return rest.postJson(Case.Caseblocks.buildUrl("/case_blocks/"+case_type_name+ ".json"), payload, {headers: {"Accept": "application/json"}}).then(function (caseData) {
+      case_type_code = Object.keys(caseData)[0];
+      data = caseData[case_type_code];
 
-        _this.id = _this.attributes._id
-        break
-      }
-      return _this
-    })
+      kase = new Case(data);
+
+      kase.case_type_code = case_type_code;
+
+      return kase;
+    });
+    return {};
   });
-}
+};
 
 Case.get = function(case_type_name, id) {
   if (!Case.Caseblocks)
-    throw "Must call Caseblocks.setup";
+    throw new Error("Must call Caseblocks.setup");
 
-  _this = new Case()
-  _this.case_type_name = case_type_name
-  _this.id = id
+  _this = new Case();
+  _this.case_type_name = case_type_name;
+  _this.id = id;
   return Q.fcall(function(data) {
     return rest.get(Case.Caseblocks.buildUrl("/case_blocks/"+case_type_name+"/"+id+ ".json"), {headers: {"Accept": "application/json"}}).then(function (caseData) {
       for (var k in caseData) {
-        _this.case_type_code = k
-        _this.attributes = caseData[k]
-        break
+        _this.case_type_code = k;
+        _this.attributes = caseData[k];
       }
-      return _this
+      return _this;
     }).fail(function(err) {
       throw err;
     });
   });
-}
+};
 
 Case.search = function(case_type_id, query) {
   if (!Case.Caseblocks)
-    throw "Must call Caseblocks.setup";
+    throw new Error("Must call Caseblocks.setup");
 
   return Q.fcall(function(data) {
     return rest.get(Case.Caseblocks.buildUrl("/case_blocks/search.json?query="+query), {headers: {"Accept": "application/json"}}).then(function(data) {
       case_type_results = data.filter(function(ct) {
-        return ct.case_type_id == case_type_id
-      })[0]
+        return ct.case_type_id == case_type_id;
+      })[0];
       if (typeof(case_type_results) != 'undefined') {
-        case_type_fields = case_type_results.cases
+        case_type_fields = case_type_results.cases;
         return case_type_fields.map(function(d) {
-          return new Case(d)
-        })
+          return new Case(d);
+        });
       } else {
         return [];
       }
@@ -85,76 +85,76 @@ Case.search = function(case_type_id, query) {
       throw err;
     });
   });
-}
+};
 
 Case.prototype.save = function() {
   if (!Case.Caseblocks)
-    throw "Must call Caseblocks.setup";
+    throw new Error("Must call Caseblocks.setup");
 
 // save current data to caseblocks
-  _this = this
+  _this = this;
   return Q.fcall(function(data) {
-    payload = {}
-    payload[_this.case_type_code] = _this.attributes
-    delete payload[_this.case_type_code].tasklists
-    delete payload[_this.case_type_code]._documents
+    payload = {};
+    payload[_this.case_type_code] = _this.attributes;
+    delete payload[_this.case_type_code].tasklists;
+    delete payload[_this.case_type_code]._documents;
 
     return rest.putJson(Case.Caseblocks.buildUrl("/case_blocks/"+_this.case_type_name+"/"+_this.id + ".json"), payload, {headers: {"Accept": "application/json"}}).then(function(caseData) {
       for (var k in caseData) {
-        _this.case_type_code = k
-        _this.attributes = caseData[k]
+        _this.case_type_code = k;
+        _this.attributes = caseData[k];
       }
-      return _this
+      return _this;
     }).fail(function(err) {
       throw new Error("Error saving case");
     });
   });
-}
+};
 
 
 Case.prototype.delete = function() {
   if (!Case.Caseblocks)
-    throw "Must call Caseblocks.setup";
+    throw new Error("Must call Caseblocks.setup");
 
-  throw "Not implemented"
-}
+  throw "Not implemented";
+};
 
 Case.prototype.related = function(related_case_type_code, relation_id) {
   if (!Case.Caseblocks) {
-    throw "Must call Caseblocks.setup";
+    throw new Error("Must call Caseblocks.setup");
   }
 
-  path = "/case_blocks/"+related_case_type_code + ".json"
-  page_size = 100000
-  page = 0
+  path = "/case_blocks/"+related_case_type_code + ".json";
+  page_size = 100000;
+  page = 0;
 
-  params = {relation_id: relation_id, relationship_type: "CaseBlocks::CaseTypeDirectRelationship", case_from_id: this.id, page_size: page_size, page:page}
-  first = true
-  for(k in params) {
+  params = {relation_id: relation_id, relationship_type: "CaseBlocks::CaseTypeDirectRelationship", case_from_id: this.id, page_size: page_size, page:page};
+  first = true;
+  for(var k in params) {
     if (first)
-      path += "?"
+      path += "?";
     else
-      path += "&"
+      path += "&";
 
-    first = false
+    first = false;
 
-    path += "related_cases%5B"+k+"%5D="+encodeURIComponent(params[k])
+    path += "related_cases%5B"+k+"%5D="+encodeURIComponent(params[k]);
   }
 
 
-  url = Case.Caseblocks.buildUrl(path)
-  _this = this
+  url = Case.Caseblocks.buildUrl(path);
+  _this = this;
   return Q.fcall(function(data) {
     return rest.get(url, {headers: {"Accept": "application/json"}}).then(function(data) {
       return data[related_case_type_code].map(function(d) {
-        return new Case(d)
-      })
+        return new Case(d);
+      });
     }).fail(function(err) {
       throw err;
     });
   });
 
-}
+};
 
 
 module.exports = Case;

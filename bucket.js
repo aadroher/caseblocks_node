@@ -25,7 +25,7 @@ Bucket.get = function(bucket_id, case_type_code) {
 
 Bucket.prototype.stats = function() {
   if (!Bucket.Caseblocks)
-    throw "Must call Caseblocks.setup";
+    throw new Error("Must call Caseblocks.setup");
 
   var _this = this;
   return Q.fcall(function(data) {
@@ -37,7 +37,7 @@ Bucket.prototype.stats = function() {
 
 Bucket.prototype.cases = function(page, pageSize) {
   if (!Bucket.Caseblocks)
-    throw "Must call Caseblocks.setup";
+    throw new Error("Must call Caseblocks.setup");
   var _this = this;
   return Q.fcall(function(data) {
     if (typeof page == "undefined") {

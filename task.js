@@ -14,7 +14,7 @@ var Task = function(attributes) {
 
 Task.get = function(id) {
   if (!Task.Caseblocks)
-    throw "Must call Caseblocks.setup";
+    throw new Error("Must call Caseblocks.setup");
 
   url = Task.Caseblocks.buildUrl("/case_blocks/tasks.json?ids%5B%5D="+id)
   return Q.fcall(function(data) {
@@ -29,7 +29,7 @@ Task.get = function(id) {
 
 Task.getAll = function(ids) {
   if (!Task.Caseblocks)
-    throw "Must call Caseblocks.setup";
+    throw new Error("Must call Caseblocks.setup");
 
   url = Task.Caseblocks.buildUrl("/case_blocks/tasks.json?" + ids.map(function(id) {return "ids%5B%5D="+id}).join("&"))
 
@@ -48,7 +48,7 @@ Task.getAll = function(ids) {
 
 Task.prototype.execute = function() {
   if (!Task.Caseblocks)
-    throw "Must call Caseblocks.setup";
+    throw new Error("Must call Caseblocks.setup");
 
   url = Task.Caseblocks.buildUrl("/case_blocks/tasks/" + this.id + ".json")
   _this = this
