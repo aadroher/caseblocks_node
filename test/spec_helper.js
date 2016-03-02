@@ -97,6 +97,20 @@ var nockHttp = function() {
     .get('/case_blocks/tasklists.json?ids%5B%5D=550c40d9841976debf000018&auth_token=tnqhvzxYaRnVt7zRWYhr')
     .reply(200, {tasklists: [{_id: '550c40d9841976debf000018', name: "Development Tasks"}]});
 
+  // buckets
+
+  nock('http://test-caseblocks-location', {reqheaders: {'accept': 'application/json'}})
+    .get('/case_blocks/buckets/6?auth_token=tnqhvzxYaRnVt7zRWYhr')
+    .reply(200, {bucket: {id: '6', name:"Test Bucket"}});
+
+  nock('http://test-caseblocks-location', {reqheaders: {'accept': 'application/json'}})
+    .get('/case_blocks/bucket_stats/6?auth_token=tnqhvzxYaRnVt7zRWYhr')
+    .reply(200, {bucket_stats: [{term: 'Not Started', count:56}], bucket_summary: {total: 56, total_in_last_24_hours: 0}});
+
+  nock('http://test-caseblocks-location', {reqheaders: {'accept': 'application/json'}})
+    .get('/case_blocks/another_case_type?bucket_id=6&page=0&page_size=10&auth_token=tnqhvzxYaRnVt7zRWYhr')
+    .reply(200, {another_case_type: [{_id: '6', title:"Case Title"}]});
+
 
 
   // mandrillapp

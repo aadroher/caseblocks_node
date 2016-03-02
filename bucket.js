@@ -15,7 +15,7 @@ var Bucket = function(attributes) {
 
 Bucket.get = function(bucket_id, case_type_code) {
   return Q.fcall(function(data) {
-    return rest.get(Bucket.Caseblocks.buildUrl("/case_blocks/buckets/" + bucket_id)).then(function(data) {
+    return rest.get(Bucket.Caseblocks.buildUrl("/case_blocks/buckets/" + bucket_id),  {headers: {"Accept": "application/json"}}).then(function(data) {
       bucket_data = data["bucket"]
       bucket_data["case_type_code"] = case_type_code
       return new Bucket(bucket_data);
@@ -29,15 +29,13 @@ Bucket.prototype.stats = function() {
 
   var _this = this;
   return Q.fcall(function(data) {
-    console.log(_this.id)
-    return rest.get(Bucket.Caseblocks.buildUrl("/case_blocks/bucket_stats/" + _this.id)).then(function(data) {
+    return rest.get(Bucket.Caseblocks.buildUrl("/case_blocks/bucket_stats/" + _this.id), {headers: {"Accept": "application/json"}}).then(function(data) {
       return data;
     });
   });
 }
 
 Bucket.prototype.cases = function(page, pageSize) {
-  console.log("looking up cases")
   if (!Bucket.Caseblocks)
     throw "Must call Caseblocks.setup";
   var _this = this;
@@ -48,12 +46,8 @@ Bucket.prototype.cases = function(page, pageSize) {
     if (typeof pageSize == "undefined") {
       pageSize = 10
     }
-    console.log(_this.case_type_code)
-    console.log(page)
-    console.log(pageSize)
     var url = Bucket.Caseblocks.buildUrl("/case_blocks/" + _this.case_type_code + "?bucket_id=" + _this.id + "&page=" + page + "&page_size=" + pageSize)
-    console.log(url)
-    return rest.get(url).then(function(data) {
+    return rest.get(url, {headers: {"Accept": "application/json"}}).then(function(data) {
       cases = []
       for (kase of data[_this.case_type_code]) {
         cases.push(new Case(kase))
