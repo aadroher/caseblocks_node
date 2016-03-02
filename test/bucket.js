@@ -13,7 +13,11 @@ describe('bucket', function() {
 
   });
 
-  it("should get a bucket")
+  it("should get a bucket") function(done) {
+    Caseblocks.Bucket.get(24).then(function(bucket) {
+      bucket.title.should.equal("Test Bucket")
+    })
+  });
   it("should retrieve contents of bucket")
   it ("should export a bucket")
   it ("should run batch task over bucket")
