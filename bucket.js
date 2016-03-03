@@ -14,6 +14,8 @@ var Bucket = function(attributes) {
 };
 
 Bucket.get = function(bucket_id, case_type_code) {
+  if (!Bucket.Caseblocks)
+    throw new Error("Must call Caseblocks.setup");
   return Q.fcall(function(data) {
     return rest.get(Bucket.Caseblocks.buildUrl("/case_blocks/buckets/" + bucket_id),  {headers: {"Accept": "application/json"}}).then(function(data) {
       bucket_data = data["bucket"]
