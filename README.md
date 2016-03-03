@@ -173,6 +173,76 @@ Retrieves multiple tasks in one go.  Pass in an array of string id's and the mat
       done(err);
     });
 
+## Buckets
+
+### Public Methods
+
+**get**
+
+Retrieves a bucket from caseblocks supplying the id of the bucket and its case type code.
+
+
+    Caseblocks.Bucket.get(6, "bulk_uplifts").then(function(bucket) {
+        log(bucket.attributes.name)
+    }).catch(function(err) {
+        log("Failed to get bucket")
+        fail(JSON.stringify(err))
+    })
+
+### Instance Methods
+
+**stats**
+
+Saves any changes made to the current document.
+
+    Caseblocks.Bucket.get(6, "bulk_uplifts").then(function(bucket) {
+      log(bucket.attributes.name)
+      bucket.stats().then(function(bucket_stats) {
+        summary = bucket_stats["bucket_summary"]
+        log("")
+        log("Summary")
+        log("=======")
+        log("Total: " + summary.total)
+        log("Last 24 hrs: " + summary.total_in_last_24_hours)
+        log("")
+        log("Stats")
+        log("=====")
+        stats = bucket_stats["bucket_stats"]
+        for(i in stats) {
+            log("  " + stats[i].term + ": " + stats[i].count)
+        }
+      }).catch(function(err) {
+          log("Failed to get stats")
+          fail(JSON.stringify(err))
+      })
+    }).catch(function(err) {
+        log("Failed to get bucket")
+        fail(JSON.stringify(err))
+    })
+
+**cases**
+
+Retrieves cases contained in the bucket by page
+
+    Caseblocks.Bucket.get(6, "bulk_uplifts").then(function(bucket) {
+      log(bucket.attributes.name)
+      bucket.cases(0,10).then(function(cases) {
+        log("Found " + cases.length + " cases.")
+        
+        for(kase of cases) {
+            log(kase.attributes.title)
+        }
+
+        exit(payload)
+      }).catch(function(err) {
+          log("Failed to get cases")
+          fail(JSON.stringify(err))
+      })
+    }).catch(function(err) {
+        log("Failed to get bucket")
+        fail(JSON.stringify(err))
+    })
+
 ## Email
 
 The email functions allow you to send an email either through mandrill or smtp.  You can also use the mandrill templating features.
