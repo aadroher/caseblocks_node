@@ -82,6 +82,17 @@ Case.search = function(case_type_id, query) {
   });
 }
 
+Case.prototype.newConversation = function() {
+  if (!Case.Caseblocks)
+    throw "Must call Caseblocks.setup";
+
+
+  // call create message using this case
+
+  // return new conversation object
+
+}
+
 Case.prototype.save = function() {
   if (!Case.Caseblocks)
     throw "Must call Caseblocks.setup";

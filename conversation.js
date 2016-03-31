@@ -10,3 +10,12 @@ var Conversation = function(attributes) {
   }
   this.id = this.attributes._id;
 };
+
+var Conversation.prototype.messages = function() {
+
+}
+
+var Conversation.prototype.reply = function(message, recipients, attachments) {
+  if (!Case.Caseblocks)
+    throw "Must call Caseblocks.setup";
+}
