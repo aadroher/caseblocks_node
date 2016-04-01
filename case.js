@@ -83,7 +83,7 @@ Case.search = function(case_type_id, query) {
   });
 }
 
-Case.newConversation = function(case_id, body, subject, recipients, author_id, attachments) {
+Case.newConversation = function(case_id, body, subject, recipients, attachments) {
   if (!Case.Caseblocks)
     throw new Error("Must call Caseblocks.setup");
 
@@ -92,7 +92,7 @@ Case.newConversation = function(case_id, body, subject, recipients, author_id, a
       recipientsList.push({"email":recipients[recipient],"type":"Custom","display_name":recipients[recipient]});
   }
 
-  var message = {"message":{"author_id":author_id,"body":body,"case_id":case_id,"subject":subject,"recipients":recipientsList,"attachments":attachments}};
+  var message = {"message":{"body":body,"case_id":case_id,"subject":subject,"recipients":recipientsList,"attachments":attachments}};
 
   return Q.fcall(function(data) {
     return rest.postJson(Case.Caseblocks.buildUrl("/case_blocks/messages.json"), message, {headers: {"Accept": "application/json"}}).then(function (message) {
