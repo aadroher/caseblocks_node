@@ -97,8 +97,9 @@ Case.newConversation = function(case_id, body, subject, recipients, attachments)
   return Q.fcall(function(data) {
     return rest.postJson(Case.Caseblocks.buildUrl("/case_blocks/messages.json"), message, {headers: {"Accept": "application/json"}}).then(function (message) {
         return message;
+    }).fail(function(err) {
+      throw err;
     });
-    return {};
   });
 };
 
