@@ -337,7 +337,7 @@ Simples.
 
 ## Deploying to NPM
 
-#### Setup NPMx
+#### Setup NPM
   If this is the first time you are pushing to npm, you will need to setup your local npm first.
 
     npm set init.author.name "Your Name"
