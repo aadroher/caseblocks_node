@@ -228,7 +228,7 @@ Retrieves cases contained in the bucket by page
       log(bucket.attributes.name)
       bucket.cases(0,10).then(function(cases) {
         log("Found " + cases.length + " cases.")
-        
+
         for(kase of cases) {
             log(kase.attributes.title)
         }
@@ -323,10 +323,36 @@ Sends an email using a mandrill template.  The first parameter is a string that 
 
 This data will then be used with the fields in the mandrill template to render the email.
 
-
 ## Tests
 
-  npm test
+### Writing
+
+  You will find the existing specs under the test folder.  HTTP calls are mocked in the *spec_helper.js* using *nock* file and you should add to this the calls and their results you expect to make.
+
+### Running
+
+    npm test
+
+Simples.
+
+## Deploying to NPM
+
+#### Setup NPMx
+  If this is the first time you are pushing to npm, you will need to setup your local npm first.
+
+    npm set init.author.name "Your Name"
+    npm set init.author.email "you@example.com"
+    npm set init.author.url "http://yourblog.com"
+    npm adduser
+
+#### Publishing
+  First task is to increment the version number in package.json.  Increment the last number for small changes... eg 0.1.17 becomes 0.1.18.
+
+    "version": "0.1.18"
+
+  Save the file then run the following two commands
+
+    npm publish
 
 ## Contributing
 
