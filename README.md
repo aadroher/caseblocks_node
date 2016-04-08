@@ -350,7 +350,7 @@ Simples.
 
     "version": "0.1.18"
 
-  Save the file then run the following two commands
+  Save the file publish using the following command.
 
     npm publish
 
