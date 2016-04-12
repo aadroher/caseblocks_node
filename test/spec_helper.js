@@ -112,6 +112,10 @@ var nockHttp = function() {
     .reply(200, {another_case_type: [{_id: '6', title:"Case Title"}]});
 
 
+  //conversations
+  nock('http://test-caseblocks-location', {reqheaders: {'accept': 'application/json'}})
+    .post('/case_blocks/messages.json', {"message":{"body":"conv-body","case_id":"123","subject":"conv-subject","recipients":"conv-recipients","attachments":"conv-attachments"}})
+    .reply(200, {message: [{_id: '550c40d9841976debf000018', text: "Development Tasks"}]});
 
   // mandrillapp
 

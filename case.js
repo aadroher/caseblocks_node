@@ -87,6 +87,22 @@ Case.search = function(case_type_id, query) {
   });
 };
 
+Case.prototype.addConversation = function(subject, body, recipients, attachments) {
+  if (!Case.Caseblocks)
+    throw new Error("Must call Caseblocks.setup");
+
+  var conversation = Conversation.create(this, {subject: subject, body: body, recipients: recipients, attachments:attachments})
+
+  return conversation;
+};
+
+Case.prototype.conversations = function() {
+  if (!Case.Caseblocks)
+    throw new Error("Must call Caseblocks.setup");
+
+  throw("Not implemented yet")
+}
+
 Case.prototype.save = function() {
   if (!Case.Caseblocks)
     throw new Error("Must call Caseblocks.setup");
