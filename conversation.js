@@ -12,10 +12,15 @@ var Conversation = function(attributes) {
 };
 
 var Conversation.prototype.messages = function() {
+  if (!Case.Caseblocks)
+    throw "Must call Caseblocks.setup";
 
+  throw("Not implemented Yet")
 }
 
 var Conversation.prototype.reply = function(message, recipients, attachments) {
   if (!Case.Caseblocks)
     throw "Must call Caseblocks.setup";
+
+  throw("Not implemented Yet")
 }
