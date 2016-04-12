@@ -60,7 +60,6 @@ Case.get = function(case_type_name, id) {
 }
 
 Case.search = function(case_type_id, query) {
-  log('here');
   if (!Case.Caseblocks)
     throw "Must call Caseblocks.setup";
 
