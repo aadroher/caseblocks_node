@@ -82,16 +82,25 @@ Case.search = function(case_type_id, query) {
   });
 }
 
-Case.prototype.newConversation = function() {
+Case.newConversation = function(case_id, body, subject, recipients, attachments) {
   if (!Case.Caseblocks)
-    throw "Must call Caseblocks.setup";
+    throw new Error("Must call Caseblocks.setup");
 
+  var recipientsList = [];
+    for (recipient in recipients){
+      recipientsList.push({"email":recipients[recipient],"type":"Custom","display_name":recipients[recipient]});
+  }
 
-  // call create message using this case
+  var message = {"message":{"body":body,"case_id":case_id,"subject":subject,"recipients":recipientsList,"attachments":attachments}};
 
-  // return new conversation object
-
-}
+  return Q.fcall(function(data) {
+    return rest.postJson(Case.Caseblocks.buildUrl("/case_blocks/messages.json"), message, {headers: {"Accept": "application/json"}}).then(function (message) {
+        return message;
+    }).fail(function(err) {
+      throw err;
+    });
+  });
+};
 
 Case.prototype.save = function() {
   if (!Case.Caseblocks)
