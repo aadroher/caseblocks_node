@@ -1,6 +1,7 @@
 var rest = require('restler-q');
 var inflection = require( 'inflection' );
 
+
 var Q = require('q');
 
 var Conversation = function(attributes) {
@@ -24,11 +25,12 @@ Conversation.create = function(kase, attributes) {
     attributes.attachments = []
   }
 
-  var conversationMessage = {"message":{"body":attributes.body,"case_id":kase.id,"subject":attributes.subject,"recipients":recipientsList,"attachments":attributes.attachments}};
+  var conversationMessage = {"message":{"body":attributes.body,"case_id":kase.id,"subject":attributes.subject,"recipients":recipientsList,"attachments":attributes.attachments, author_id: 11}};
 
   return Q.fcall(function(data) {
-    return rest.postJson(Case.Caseblocks.buildUrl("/case_blocks/messages.json"), conversationMessage, {headers: {"Accept": "application/json"}}).then(function (message) {
-        return new Message(message);
+    return rest.postJson(Conversation.Caseblocks.buildUrl("/case_blocks/messages.json"), conversationMessage, {headers: {"Accept": "application/json"}}).then(function (message) {
+        // return new Message(message);
+        return message;
     }).fail(function(err) {
       throw err;
     });

@@ -2,6 +2,7 @@
 //var rest = require('rest')
 var rest = require('restler-q');
 var inflection = require( 'inflection' );
+var Conversation = require('./conversation.js');
 
 var Q = require('q');
 
@@ -87,11 +88,13 @@ Case.search = function(case_type_id, query) {
   });
 };
 
+
 Case.prototype.addConversation = function(subject, body, recipients, attachments) {
   if (!Case.Caseblocks)
     throw new Error("Must call Caseblocks.setup");
 
-  var conversation = Conversation.create(this, {subject: subject, body: body, recipients: recipients, attachments:attachments})
+  var conversationData = {subject: subject, body: body, recipients: recipients, attachments}
+  var conversation = Conversation.create(this, conversationData)
 
   return conversation;
 };
