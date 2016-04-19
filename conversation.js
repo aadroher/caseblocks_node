@@ -1,6 +1,6 @@
 var rest = require('restler-q');
 var inflection = require( 'inflection' );
-
+var _ = require('underscore')
 
 var Q = require('q');
 
@@ -12,7 +12,6 @@ var Conversation = function(attributes) {
   this.id = this.attributes._id;
 };
 
-
 // create a new conversation
 Conversation.create = function(kase, attributes) {
   var recipientsList = [];
@@ -21,11 +20,26 @@ Conversation.create = function(kase, attributes) {
         recipientsList.push({"email":attributes.recipients[recipient],"type":"Custom","display_name":attributes.recipients[recipient]});
     }
   }
+  var attachments = [];
+
   if (typeof(attributes.attachments)=="undefined") {
-    attributes.attachments = []
+    attachments = []
+  } else {
+    attachments = _.map(attributes.attachments, function(attachment) {
+      if (typeof(attachment._id) != "undefined") {
+        return attributes.attachments._id
+      } else if (typeof(attachment.file_name) != "undefined") {
+        var doc = _.find(kase.attributes._documents, function(d) { return d.file_name == attachment.file_name } )
+        return doc._id
+      } else {
+        return null
+      }
+    })
   }
 
-  var conversationMessage = {"message":{"body":attributes.body,"case_id":kase.id,"subject":attributes.subject,"recipients":recipientsList,"attachments":attributes.attachments, author_id: 11}};
+  attachments = _.compact(attachments)
+
+  var conversationMessage = {"message":{"body":attributes.body,"case_id":kase.id,"subject":attributes.subject,"recipients":recipientsList,"attachments":attachments, author_id: attributes.author_id}};
 
   return Q.fcall(function(data) {
     return rest.postJson(Conversation.Caseblocks.buildUrl("/case_blocks/messages.json"), conversationMessage, {headers: {"Accept": "application/json"}}).then(function (message) {
