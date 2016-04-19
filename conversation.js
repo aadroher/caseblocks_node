@@ -27,7 +27,7 @@ Conversation.create = function(kase, attributes) {
   } else {
     attachments = _.map(attributes.attachments, function(attachment) {
       if (typeof(attachment._id) != "undefined") {
-        return attributes.attachments._id
+        return attachment._id
       } else if (typeof(attachment.file_name) != "undefined") {
         var doc = _.find(kase.attributes._documents, function(d) { return d.file_name == attachment.file_name } )
         return doc._id
