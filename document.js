@@ -17,19 +17,21 @@ var Document = function(attributes, kase) {
 Document.prototype.rename = function(newFilename) {
   if (!Document.Caseblocks)
     throw "Must call Caseblocks.setup";
-  
+
   var _this = this
   var originalFilename = _this.file_name
   var originalUrl = _this.url
 
   return Q.fcall(function(data) {
     var url = _this.url
-    formData = {new_file_name: newFilename, url: _this.base_url + "/" + newFilename}
-    return rest.putJson(Document.Caseblocks.buildUrl(url), formData, {headers: {"Accept": "application/json"}}).then(function(response) {
-      _this.file_name = response.new_file_name
+    return rest.put(Document.Caseblocks.buildUrl(url), {data: {"new_file_name": newFilename}}).then(function(jsonResponse) {
+      var response = JSON.parse(jsonResponse)
+      _this.file_name = response.file_name
       _this.url = response.url
       // Iterate through each of the files in the case
       // check for 'document' field and update if matched against current image
+
+      _this.documentRespnose = response
 
       var documentField = {}
       for (var key in _this) {
@@ -40,8 +42,10 @@ Document.prototype.rename = function(newFilename) {
       delete documentField.kase
 
       return _this.kase.caseType().then(function(caseType) {
-        var field = _.find(caseType.fieldsOfType("document"), function(field) { return _this.kase.attributes[field.name].url == originalUrl })
-        _this.kase.attributes[field.name] = documentField
+        var documentFields = caseType.fieldsOfType("document")
+        var field = _.find(documentFields, function(field) { return _this.kase.attributes[field.name].url == originalUrl })
+        _this.kase.attributes[field.name].file_name = _this.file_name
+        _this.kase.attributes[field.name].url = _this.url
         return _this.kase.save().then(function(casedata) {
           return _this;
         }).fail(function(err) {

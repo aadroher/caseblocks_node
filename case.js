@@ -93,15 +93,19 @@ Case.search = function(case_type_id, query) {
 
 Case.prototype.caseType = function() {
   var _this = this;
-  
-  var caseTypeId = this.attributes.work_type_id || this.attributes.organization_type_id || this.attributes.people_type_id
+
+  var caseTypeId = this.attributes.case_type_id || this.attributes.work_type_id || this.attributes.organization_type_id || this.attributes.people_type_id
 
   return Casetype.get(caseTypeId)
 }
 
 Case.prototype.documents = function() {
   var _this = this;
-  return _this.attributes._documents.map(function(d) {return new Document(d, _this)} )
+  if (typeof(_this.attributes._documents) != "undefined") {
+    return _this.attributes._documents.map(function(d) {return new Document(d, _this)} )
+  } else {
+    return []
+  }
 }
 
 
@@ -141,6 +145,7 @@ Case.prototype.save = function() {
       }
       return _this;
     }).fail(function(err) {
+      console.error(err)
       throw new Error("Error saving case");
     });
   });
