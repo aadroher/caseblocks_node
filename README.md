@@ -22,9 +22,9 @@ Library of functions for interacting with the CaseBlocks API
 
 ### Constructor
 
-**new Caseblocks.Document(attributes, kase)**
+**new Caseblocks.Casetype(attributes)**
 
-The constructor for document takes the attributes of the document and the case object it is contained within.
+The constructor for Casetype takes the attributes of the case type to create
 
 ### Class Methods
 
