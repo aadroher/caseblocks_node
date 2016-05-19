@@ -5,6 +5,8 @@ var Task = require('./task.js')
 var Bucket = require('./bucket.js')
 var Email = require('./email.js')
 var Conversation = require('./conversation.js')
+var Document = require('./document.js')
+var Casetype = require('./casetype.js')
 
 var Caseblocks = function(host, token) {
   this.host = host
@@ -30,6 +32,8 @@ Caseblocks.setup = function(host, token) {
   Bucket.Caseblocks = caseblocks
   Email.Caseblocks = caseblocks
   Conversation.Caseblocks = caseblocks
+  Document.Caseblocks = caseblocks
+  Casetype.Caseblocks = caseblocks
 }
 
 module.exports.setup = Caseblocks.setup
@@ -39,3 +43,5 @@ module.exports.Task = Task;
 module.exports.Bucket = Bucket;
 module.exports.Email = Email;
 module.exports.Conversation = Conversation;
+module.exports.Document = Document;
+module.exports.Casetype = Casetype;

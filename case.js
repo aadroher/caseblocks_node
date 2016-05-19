@@ -3,6 +3,9 @@
 var rest = require('restler-q');
 var inflection = require( 'inflection' );
 var Conversation = require('./conversation.js');
+var Document = require('./document.js');
+var Casetype = require('./casetype.js');
+
 
 var Q = require('q');
 
@@ -49,7 +52,7 @@ Case.get = function(case_type_name, id) {
   if (!Case.Caseblocks)
     throw new Error("Must call Caseblocks.setup");
 
-  _this = new Case();
+  var _this = new Case();
   _this.case_type_name = case_type_name;
   _this.id = id;
   return Q.fcall(function(data) {
@@ -88,6 +91,19 @@ Case.search = function(case_type_id, query) {
   });
 };
 
+Case.prototype.caseType = function() {
+  var _this = this;
+  
+  var caseTypeId = this.attributes.work_type_id || this.attributes.organization_type_id || this.attributes.people_type_id
+
+  return Casetype.get(caseTypeId)
+}
+
+Case.prototype.documents = function() {
+  var _this = this;
+  return _this.attributes._documents.map(function(d) {return new Document(d, _this)} )
+}
+
 
 Case.prototype.addConversation = function(subject, body, recipients, attachments) {
   if (!Case.Caseblocks)
@@ -111,7 +127,7 @@ Case.prototype.save = function() {
     throw new Error("Must call Caseblocks.setup");
 
 // save current data to caseblocks
-  _this = this;
+  var _this = this;
   return Q.fcall(function(data) {
     payload = {};
     payload[_this.case_type_code] = _this.attributes;
@@ -129,7 +145,6 @@ Case.prototype.save = function() {
     });
   });
 };
-
 
 Case.prototype.delete = function() {
   if (!Case.Caseblocks)
