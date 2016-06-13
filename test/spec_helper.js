@@ -1,8 +1,12 @@
 var nock = require("nock");
 var chai = require("chai");
+var fs = require("fs");
 var chaiAsPromised = require("chai-as-promised");
 
 chai.use(chaiAsPromised);
+
+var caseTypeData = JSON.parse(fs.readFileSync("./test/support/case-type.json", "utf8"));
+var telkom_application_case_type = JSON.parse(fs.readFileSync("./test/support/telkom-application-case-type.json", "utf8"));
 
 var nockHttp = function() {
   nock('http://test-caseblocks-location', {reqheaders: {'accept': 'application/json'}})
@@ -60,6 +64,12 @@ var nockHttp = function() {
     .reply(200, {web_enquiries: [{_id: "554379ab841976f73700011c"}]});
 
 
+  nock('http://test-caseblocks-location', {reqheaders: {'accept': 'application/json'}})
+    .post("/case_blocks/support_requests.json",  {"unique":true,"case":{"title":"test1","case_type_id":42}})
+    .query({auth_token: "tnqhvzxYaRnVt7zRWYhr"})
+    .reply(200, {"case": {title: "test1"}})
+
+
  // Task
 
   nock('http://test-caseblocks-location', {reqheaders: {'accept': 'application/json'}})
@@ -97,7 +107,6 @@ var nockHttp = function() {
     .reply(200, {message: [{_id: '550c40d9841976debf000018', text: "Development Tasks"}]});
 
   // mandrillapp
-
   nock('https://mandrillapp.com')
     .put("/api/1.0/messages/send.json", { key: 'valid-mandrill-key', message: { subject: 'Test Email', from_email: 'stewart@emergeadapt.com', from_name: 'CaseBlocks', to: [ {"email":"stewart@theizone.co.uk","type":"to"} ], html: 'test content', text: 'test content' }})
     .reply(200, "success-mandrill-response")
@@ -113,15 +122,15 @@ var nockHttp = function() {
 
   // case type
 
-  //nock('http://test-caseblocks-location', {reqheaders: {'accept': 'application/json'}})
-  //  .get('/case_blocks/case_types/15.json')
-  //  .query({auth_token: 'tnqhvzxYaRnVt7zRWYhr'})
-  //  .reply(200, caseTypeData)
+  nock('http://test-caseblocks-location', {reqheaders: {'accept': 'application/json'}})
+    .get('/case_blocks/case_types/15.json')
+    .query({auth_token: 'tnqhvzxYaRnVt7zRWYhr'})
+    .reply(200, caseTypeData)
 
-  //nock('http://test-caseblocks-location', {reqheaders: {'accept': 'application/json'}})
-  //  .get('/case_blocks/case_types/22.json')
-  //  .query({auth_token: 'tnqhvzxYaRnVt7zRWYhr'})
-  //  .reply(200, telkom_application_case_type)
+  nock('http://test-caseblocks-location', {reqheaders: {'accept': 'application/json'}})
+    .get('/case_blocks/case_types/22.json')
+    .query({auth_token: 'tnqhvzxYaRnVt7zRWYhr'})
+    .reply(200, telkom_application_case_type)
 
   // documents
 
@@ -199,13 +208,14 @@ var nockHttp = function() {
 
      nock('http://test-caseblocks-location')
        .put('/documents/2/22/573af72681e9a8296f000023/old-filename.pdf', "new_file_name=new-filename.pdf")
-       .query({auth_token: 'tnqhvzxYaRnVt7zRWYhr'})
+       .query({new_file_name: "new-filename.pdf", auth_token: 'tnqhvzxYaRnVt7zRWYhr'})
        .reply(200, "{\"file_name\":\"new-filename.pdf\",\"url\":\"/documents/2/22/573af72681e9a8296f000023/new-filename.pdf\"}");
 
      nock('http://test-caseblocks-location', {reqheaders: {'accept': 'application/json'}})
        .put('/case_blocks/support_requests/case-with-documents.json',  {"support_request":{"_id":"case-with-documents","systems_involved":"1","application_pdf":{"file_name":"new-filename.pdf","url":"/documents/2/22/573af72681e9a8296f000023/new-filename.pdf","content_type":"application/pdf","size":"2952201","extension":"pdf","uploaded_at":"2016-05-17T10:49:37.179Z","used_as_attachment":false,"pages":[{"page_no":1,"url":"/documents/2/22/573af72681e9a8296f000023/2016050515064627.pdf-x512-0.jpg?ignoreOnTimeline=true"},{"url":"/documents/2/22/573af72681e9a8296f000023/2016050515064627.pdf-x512-1.jpg?ignoreOnTimeline=true","page_no":2},{"url":"/documents/2/22/573af72681e9a8296f000023/2016050515064627.pdf-x512-2.jpg?ignoreOnTimeline=true","page_no":3},{"url":"/documents/2/22/573af72681e9a8296f000023/2016050515064627.pdf-x512-3.jpg?ignoreOnTimeline=true","page_no":4},{"page_no":5,"url":"/documents/2/22/573af72681e9a8296f000023/2016050515064627.pdf-x512-4.jpg?ignoreOnTimeline=true"},{"url":"/documents/2/22/573af72681e9a8296f000023/2016050515064627.pdf-x512-5.jpg?ignoreOnTimeline=true","page_no":6},{"url":"/documents/2/22/573af72681e9a8296f000023/2016050515064627.pdf-x512-6.jpg?ignoreOnTimeline=true","page_no":7}],"status":null},"work_type_id":22}})
        .query({auth_token: 'tnqhvzxYaRnVt7zRWYhr'})
        .reply(200, {"support_request": {_id: '550c40d9841976debf000011', systems_involved: "2", calculated_field1: "calculated-result1", calculated_field2: "calculated-result2"}});
+
 
     // TEAMS
 
@@ -240,6 +250,12 @@ var nockHttp = function() {
       .get('/case_blocks/bucket_stats/6')
       .query({auth_token: 'tnqhvzxYaRnVt7zRWYhr'})
       .reply(200, {"bucket_stats":[{"term":"Not Started","count":56},{"term":"New","count":2}],"bucket_summary":{"total":56,"total_in_last_24_hours":0}})
+
+    nock('http://test-caseblocks-location', {reqheaders: {'accept': 'application/json'}})
+      .get('/case_blocks/another_case_type')
+      .query({bucket_id: 6, page: 0, page_size: 10, auth_token: 'tnqhvzxYaRnVt7zRWYhr'})
+      .reply(200, {"another_case_type":[{"_id":"5729b6e781e9a8b8f7000001","employee_number":"RP1","number_of_applications":1,"number_of_payments":null,"number_of_leads":null,"telkom":false,"cell_c":false,"four_paws":false,"breadline":false,"full_name":"Stewart McKee","first_name":null,"last_name":null,"gender":null,"cell_number":null,"email_address":null,"address":null,"identification_number":null,"passport_number":null,"data_card":null,"size":null,"leads_portal_password":null,"latitude":null,"longitude":null,"title":"Stewart McKee","office_reference":null,"agent_reference":1,"employee_sequence":1,"schema_version":4,"created_at":"2016-05-04T08:46:31.959Z","updated_at":"2016-06-08T14:08:28.186Z","due_at":"2016-05-04T08:46:31.951Z","owner_name":"Stewart2","unread_conversations":0,"current_state":"Not Started","case_type":"Agent","current_state_id":81,"owned_by_id":6,"owned_by_type":"CaseBlocks::User","_title":"Stewart McKee","participating_users":[6],"account_id":2,"participating_teams":[],"version":4,"_documents":[],"collection":null,"notes":"## Stewart McKee","conversations":[],"tasklists":[],"people_type_id":24},{"_id":"5729e4d881e9a8b8f7000017","employee_number":"RP2","number_of_applications":0,"number_of_payments":null,"number_of_leads":null,"telkom":false,"cell_c":false,"four_paws":false,"breadline":false,"full_name":null,"first_name":null,"last_name":null,"gender":null,"cell_number":null,"email_address":null,"address":null,"identification_number":null,"passport_number":null,"data_card":null,"size":null,"leads_portal_password":null,"latitude":null,"longitude":null,"title":null,"office_reference":null,"agent_reference":2,"employee_sequence":2,"schema_version":4,"created_at":"2016-05-04T12:02:32.103Z","updated_at":"2016-05-04T12:02:32.103Z","due_at":"2016-05-04T12:02:32.095Z","owner_name":"Stewart2","unread_conversations":0,"current_state":"Not Started","case_type":"Agent","current_state_id":81,"owned_by_id":6,"owned_by_type":"CaseBlocks::User","participating_users":[6],"account_id":2,"participating_teams":[],"version":1,"_documents":[],"collection":null,"conversations":[],"tasklists":[],"people_type_id":24}]})
+
 
 
 }
