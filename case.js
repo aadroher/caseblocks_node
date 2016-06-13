@@ -13,10 +13,12 @@ var Q = require('q');
 
 var Case = function(attributes) {
   this.attributes = {};
+
   for (var k in attributes) {
     this.attributes[k] = attributes[k];
   }
   this.id = this.attributes._id;
+
 };
 
 Case.create = function(case_type_name, case_type_id, properties, options) {
@@ -137,11 +139,11 @@ Case.prototype.teams = function() {
 };
 
 Case.prototype.users = function() {
-var promises = _.map(this.attributes.participating_users, function(id){return User.get(id);});
-return Q.allSettled(promises).then(function(returned_users) {
-  var fulfilled_users = _.filter(returned_users, function(u){return u.state == "fulfilled"});
-  return _.map(fulfilled_users, function(u){return u.value});
-});
+  var promises = _.map(this.attributes.participating_users, function(id){return User.get(id);});
+  return Q.allSettled(promises).then(function(returned_users) {
+    var fulfilled_users = _.filter(returned_users, function(u){return u.state == "fulfilled"});
+    return _.map(fulfilled_users, function(u){return u.value});
+  });
 };
 
 Case.prototype.participants = function(options) {
@@ -173,7 +175,7 @@ Case.prototype.participants = function(options) {
     }).map(function(u) {
       return u.value
     }))
-    return _.uniq(users)
+    return _.uniq(users, false, function(u){return u.id})
   });
  };
 

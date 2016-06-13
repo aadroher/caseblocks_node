@@ -128,4 +128,49 @@ describe('case', function() {
 
   })
 
+  describe("participants", function() {
+    it("should return a list of users", function(done) {
+      Caseblocks.Case.get("customers", "54524f696b949172a7000002").then(function(doc) {
+        doc.users().then(function(users) {
+          users.length.should.equal(2)
+          done()
+        }).catch(function(err) {
+          done(err);
+        })
+      })
+    })
+    it ("should return a list of teams", function(done) {
+      Caseblocks.Case.get("customers", "54524f696b949172a7000002").then(function(doc) {
+        doc.teams().then(function(teams) {
+          teams.length.should.equal(1)
+          done()
+        }).catch(function(err) {
+          done(err);
+        })
+      })
+    })
+    it ("should return a list of users for users and teams", function(done) {
+      Caseblocks.Case.get("customers", "54524f696b949172a7000002").then(function(doc) {
+        doc.participants().then(function(users) {
+          users.length.should.equal(2)
+          done()
+        }).catch(function(err) {
+          done(err);
+        })
+      })
+    })
+    it ("should return a de-duplicated list of users for participants", function(done) {
+      Caseblocks.Case.get("customers", "54524f696b949172a7000002").then(function(doc) {
+        doc.participants().then(function(users) {
+          users.length.should.equal(2)
+          users[0].display_name.should.equal("Stewart2")
+          users[1].display_name.should.equal("Stewart3")
+          done()
+        }).catch(function(err) {
+          done(err);
+        })
+      })
+    })
+  })
+
 })
