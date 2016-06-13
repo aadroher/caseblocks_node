@@ -84,14 +84,51 @@ Saves any changes made to the current document.
 
 Retrieves related cases from caseblocks supplying the case type code and the id of the document.
 
-Caseblocks.Case.get("support_requests", "550c40d1841976debf000003").then(function(doc) {
-  doc.related(related_case_type_code, relation_id).then(function(related_docs) {
-    console.log(related_docs[0].id)
-    console.log(related_docs[0].attributes.title)
-  })
-}).catch(function(err){
-  console.log(err)
-});
+    Caseblocks.Case.get("support_requests", "550c40d1841976debf000003").then(function(doc) {
+      doc.related(related_case_type_code, relation_id).then(function(related_docs) {
+        console.log(related_docs[0].id)
+        console.log(related_docs[0].attributes.title)
+      })
+    }).catch(function(err){
+      console.log(err)
+    });
+
+**teams**
+
+Retrieves the teams that are participants in this case
+
+    Caseblocks.Case.get("support_requests", "550c40d1841976debf000003").then(function(doc) {
+      doc.teams().then(function(teams) {
+        console.log(teams[0].display_name)
+      })
+    }).catch(function(err){
+      console.log(err)
+    });
+
+**users**
+
+Retrieves the users that are listed as an individual user as a participant on this case
+
+    Caseblocks.Case.get("support_requests", "550c40d1841976debf000003").then(function(doc) {
+      doc.users().then(function(users) {
+        console.log(users[0].display_name)
+      })
+    }).catch(function(err){
+      console.log(err)
+    });
+
+**participants**
+
+Retrieves all the users that are participants including team members.
+
+    Caseblocks.Case.get("support_requests", "550c40d1841976debf000003").then(function(doc) {
+      doc.participants().then(function(users) {
+        console.log(users[0].display_name)
+      })
+    }).catch(function(err){
+      console.log(err)
+    });
+
 
 
 ## Tasklist
