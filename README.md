@@ -210,6 +210,52 @@ Retrieves multiple tasks in one go.  Pass in an array of string id's and the mat
       done(err);
     });
 
+
+## Team
+
+### Public Methods
+
+**get**
+
+Retrieves a team matching the __id__ supplied
+
+    Caseblocks.Team.get(5).then(function(team) {
+      console.log(team.display_name))
+    }).catch(function(err){
+      console.err(err)
+    })
+
+### Instance Methods
+
+**members**
+
+Retrieves the users that are members in this team.
+
+    Caseblocks.Team.get(5).then(function(team) {
+      team.members().then(function(users) {
+        users.map(function(user) {
+          console.log(user.display_name)
+        })
+      })
+    }).catch(function(err){
+      console.err(err)
+    })
+
+## User
+
+### Public Methods
+
+**get**
+
+Retrieves a user matching the __id__ supplied
+
+    Caseblocks.User.get(5).then(function(user) {
+      console.log(user.display_name))
+    }).catch(function(err){
+      console.err(err)
+    })
+
+
 ## Email
 
 The email functions allow you to send an email either through mandrill or smtp.  You can also use the mandrill templating features.
