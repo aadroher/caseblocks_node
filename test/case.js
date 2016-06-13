@@ -74,11 +74,21 @@ describe('case', function() {
 
   it("should create a document", function(done) {
     Caseblocks.Case.create("support_requests", 42, {title: 'test1'}).then(function(doc) {
+      doc.attributes.title.should.equal("test1")
       done()
     }).catch(function(err){
       done(err);
     });
 
+  })
+
+  it("should create a unique document", function(done) {
+    Caseblocks.Case.create("support_requests", 42, {title: 'test1'}, {unique: true}).then(function(doc) {
+      doc.attributes.title.should.equal("test1")
+      done()
+    }).catch(function(err){
+      done(err);
+    });
   })
 
   it("should search for a document and return match", function(done) {

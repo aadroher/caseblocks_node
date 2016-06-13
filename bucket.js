@@ -1,125 +1,63 @@
 var rest = require('restler-q');
 var inflection = require( 'inflection' );
-
+var Case = require('./case.js');
 var Q = require('q');
 
 var Bucket = function(attributes) {
-  this.attributes = {}
-  for(k in attributes) {
-    this.attributes[k] = attributes[k]
+  this.attributes = {};
+  this.case_type_code = attributes.case_type_code
+  delete attributes.case_type_code
+  for(var k in attributes) {
+    this.attributes[k] = attributes[k];
   }
-  this.id = this.attributes["_id"];
+  this.id = this.attributes.id;
+};
+
+Bucket.get = function(bucket_id, case_type_code) {
+  if (!Bucket.Caseblocks)
+    throw new Error("Must call Caseblocks.setup");
+  return Q.fcall(function(data) {
+    return rest.get(Bucket.Caseblocks.buildUrl("/case_blocks/buckets/" + bucket_id),  {headers: {"Accept": "application/json"}}).then(function(data) {
+      bucket_data = data["bucket"]
+      bucket_data["case_type_code"] = case_type_code
+      return new Bucket(bucket_data);
+    });
+  });
+};
+
+Bucket.prototype.stats = function() {
+  if (!Bucket.Caseblocks)
+    throw new Error("Must call Caseblocks.setup");
+
+  var _this = this;
+  return Q.fcall(function(data) {
+    return rest.get(Bucket.Caseblocks.buildUrl("/case_blocks/bucket_stats/" + _this.id), {headers: {"Accept": "application/json"}}).then(function(data) {
+      return data;
+    });
+  });
 }
 
-// Case.create = function(case_type_name, case_type_id, properties) {
-//   if (!Case.Caseblocks)
-//     throw "Must call Caseblocks.setup";
-//
-//     _this = new Case()
-//
-//
-//
-//     _this.payload = {case: {}}
-//     properties.case_type_id = case_type_id
-//     _this.payload["case"][case_type_name] = properties
-//
-//
-//   _this.case_type_name = case_type_name
-//   return Q.fcall(function(data) {
-//     return rest.postJson(Case.Caseblocks.buildUrl("/case_blocks/"+case_type_name), _this.payload).then(function (caseData) {
-//       for (var k in caseData) {
-//         _this.case_type_code = k
-//         _this.attributes = caseData[k]
-//
-//         _this.id = _this.attributes._id
-//         break
-//       }
-//       return _this
-//     })
-//   });
-//
-// }
-//
-Bucket.get = function(account, id) {
-  console.warn("Bucket.get: Not implemented yet")
-}
-//
-// Case.search = function(case_type_id, query) {
-//   if (!Case.Caseblocks)
-//     throw "Must call Caseblocks.setup";
-//
-//   return Q.fcall(function(data) {
-//     return rest.get(Case.Caseblocks.buildUrl("/case_blocks/search?query="+query)).then(function(data) {
-//       case_type_fields = data.filter(function(ct) {
-//         return ct.case_type_id == case_type_id
-//       })[0].cases
-//       return case_type_fields.map(function(d) {
-//         return new Case(d)
-//       })
-//
-//     })
-//   });
-// }
-//
-// Case.prototype.save = function() {
-//   if (!Case.Caseblocks)
-//     throw "Must call Caseblocks.setup";
-//
-// // save current data to caseblocks
-//   _this = this
-//   return Q.fcall(function(data) {
-//     payload = {}
-//     payload[_this.case_type_code] = _this.attributes
-//     delete payload[_this.case_type_code].tasklists
-//     delete payload[_this.case_type_code]._documents
-//     return rest.putJson(Case.Caseblocks.buildUrl("/case_blocks/"+this.case_type_name+"/"+this.id), payload).then(function(data) {
-//
-//       return _this
-//     })
-//   });
-// }
-//
-//
-// Case.prototype.delete = function() {
-//   if (!Case.Caseblocks)
-//     throw "Must call Caseblocks.setup";
-//
-// }
-//
-// Case.prototype.related = function(related_case_type_code, relation_id) {
-//   if (!Case.Caseblocks) {
-//     throw "Must call Caseblocks.setup";
-//   }
-//
-//   path = "/case_blocks/"+related_case_type_code
-//   page_size = 100000
-//   page = 0
-//
-//   params = {relation_id: relation_id, relationship_type: "CaseBlocks::CaseTypeDirectRelationship", case_from_id: this.id, page_size: page_size, page:page}
-//   first = true
-//   for(k in params) {
-//     if (first)
-//       path += "?"
-//     else
-//       path += "&"
-//
-//     first = false
-//
-//     path += "related_cases["+k+"]="+params[k]
-//   }
-//
-//
-//   url = Case.Caseblocks.buildUrl(path)
-//   _this = this
-//   return Q.fcall(function(data) {
-//     return rest.get(url).then(function(data) {
-//       return data[related_case_type_code].map(function(d) {
-//         return new Case(d)
-//       })
-//     })
-//   });
-//
-// }
+Bucket.prototype.cases = function(page, pageSize) {
+  if (!Bucket.Caseblocks)
+    throw new Error("Must call Caseblocks.setup");
+  var _this = this;
+  return Q.fcall(function(data) {
+    if (typeof page == "undefined") {
+      page = 0
+    }
+    if (typeof pageSize == "undefined") {
+      pageSize = 10
+    }
+    var url = Bucket.Caseblocks.buildUrl("/case_blocks/" + _this.case_type_code + "?bucket_id=" + _this.id + "&page=" + page + "&page_size=" + pageSize)
+    return rest.get(url, {headers: {"Accept": "application/json"}}).then(function(data) {
+      cases = []
+      for (kase of data[_this.case_type_code]) {
+        cases.push(new Case(kase))
+      }
+      return cases;
+    });
+  });
 
+};
 
 module.exports = Bucket;

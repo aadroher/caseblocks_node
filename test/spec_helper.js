@@ -113,15 +113,15 @@ var nockHttp = function() {
 
   // case type
 
-  nock('http://test-caseblocks-location', {reqheaders: {'accept': 'application/json'}})
-    .get('/case_blocks/case_types/15.json')
-    .query({auth_token: 'tnqhvzxYaRnVt7zRWYhr'})
-    .reply(200, caseTypeData)
+  //nock('http://test-caseblocks-location', {reqheaders: {'accept': 'application/json'}})
+  //  .get('/case_blocks/case_types/15.json')
+  //  .query({auth_token: 'tnqhvzxYaRnVt7zRWYhr'})
+  //  .reply(200, caseTypeData)
 
-  nock('http://test-caseblocks-location', {reqheaders: {'accept': 'application/json'}})
-    .get('/case_blocks/case_types/22.json')
-    .query({auth_token: 'tnqhvzxYaRnVt7zRWYhr'})
-    .reply(200, telkom_application_case_type)
+  //nock('http://test-caseblocks-location', {reqheaders: {'accept': 'application/json'}})
+  //  .get('/case_blocks/case_types/22.json')
+  //  .query({auth_token: 'tnqhvzxYaRnVt7zRWYhr'})
+  //  .reply(200, telkom_application_case_type)
 
   // documents
 
@@ -212,7 +212,7 @@ var nockHttp = function() {
     nock('http://test-caseblocks-location', {reqheaders: {'accept': 'application/json'}})
       .get('/case_blocks/teams/5')
       .query({auth_token: 'tnqhvzxYaRnVt7zRWYhr'})
-      .reply(200, {"team": {"id": 5, "display_name": "Back Office Team", "exclude_from_distribution": false, "include_in_distribution": false, "created_at": "2015-11-16T13:23:09.000Z", updated_at: "2016-05-31T15:05:59.000Z", "account_id": 2, "team_screen_enabled": false, "users_length": 3, "team_membership_ids": ["6", "11"]}});
+      .reply(200, {"team": {"id": 5, "display_name": "Back Office Team", "exclude_from_distribution": false, "include_in_distribution": false, "created_at": "2015-11-16T13:23:09.000Z", updated_at: "2016-05-31T15:05:59.000Z", "account_id": 2, "team_screen_enabled": false, "users_length": 3, "team_membership_ids": ["6"]}});
 
     nock('http://test-caseblocks-location', {reqheaders: {'accept': 'application/json'}})
       .get('/case_blocks/users/6')
@@ -223,6 +223,24 @@ var nockHttp = function() {
       .get('/case_blocks/users/11')
       .query({auth_token: 'tnqhvzxYaRnVt7zRWYhr'})
       .reply(200, {"user":{"id":11,"display_name":"Stewart3","login":"stewart","email":"stewart@emergeadapt.com","created_at":"2015-11-16T13:23:08.000Z","updated_at":"2016-06-10T15:36:43.000Z","is_account_admin":true,"is_app_admin":true,"account_id":2,"presence_status":"Available","last_seen":"2016-06-10T15:36:43.000Z","avatar_url":"/users/avatar/2/6/Document-2013-11-11-09-19-09.jpg","accountId":2,"case_count":1762,"team_membership_ids":[4,12],"flagged_case_ids":["5527d184cff45548a50000d0","573d90e281e9a8a220000004"],"flagged_bucket_ids":[7,10,11,2,20,16],"team_memberships_length":2,"accessible_resources":[1,2,3,4,5,6,12,13,17,18,19,20,21,22,34,35,38,39,40,41,42,43,51,52,56,57,58,59,60,61,65,66,67,68,69,70,71,72,83,84,87,88,89,90,91,92,97,98,99,100,101,102,103,104,109,110,111,113,114,116,118,120,123,125,166,167,168,170,172,173,176,178,350,351,353,355,357,359,362,364,610,611,612,614,615,617,619,621,634,636,637,641,649,654,667,671,1011,1012,1013,1014,1015,1016,1017,1018,1043,1045,1047,1049,1051,1053,1055,1057,1136,1137,1138,1139,1140,1141,1142,1143,3141,3143,3145,3147,3149,3151,3153,3155,3194,3196,3198,3200,3202,3204,3206,3208,3459,3460,3462,3464,3465,3468,3470,3472,4127,4128,4130,4132,4134,4136,4139,4141],"authentication_token":"KFLQkX7VC-Sztpjdm1yr"}});
+
+    nock('http://test-caseblocks-location', {reqheaders: {'accept': 'application/json'}})
+      .get('/case_blocks/team_memberships')
+      .query({"ids[]": 6, auth_token: 'tnqhvzxYaRnVt7zRWYhr'})
+      .reply(200, {"team_memberships":[{"id":6,"user_id":6,"team_id":5,"leader":null}]});
+
+    // BUCKETS
+
+    nock('http://test-caseblocks-location', {reqheaders: {'accept': 'application/json'}})
+      .get('/case_blocks/buckets/6')
+      .query({auth_token: 'tnqhvzxYaRnVt7zRWYhr'})
+      .reply(200, {"bucket":{"id":6,"name":"Test Bucket","description":"All Bulk Uplift","short_code":"All","default":true,"kpi":"current_state","advanced_query":"","created_at":"2015-11-16T13:23:10.000Z","work_type_id":3,"work_type":3,"case_type":{"id":3,"type":"case_type"},"case_type_name":"Bulk Uplift","bucket_members":[1,2,3],"owner":{"id":9,"type":"user"},"owned_by_id":9,"owned_by_type":"CaseBlocks::User","bucket_groups":[],"bucket_criterias":[],"bucket_display_fields":[],"bucket_sort_fields":[],"bucket_alarms":[]}})
+
+    nock('http://test-caseblocks-location', {reqheaders: {'accept': 'application/json'}})
+      .get('/case_blocks/bucket_stats/6')
+      .query({auth_token: 'tnqhvzxYaRnVt7zRWYhr'})
+      .reply(200, {"bucket_stats":[{"term":"Not Started","count":56},{"term":"New","count":2}],"bucket_summary":{"total":56,"total_in_last_24_hours":0}})
+
 
 }
 

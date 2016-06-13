@@ -12,28 +12,63 @@ Library of functions for interacting with the CaseBlocks API
     var Caseblocks = require('caseblocks')
     Caseblocks.setup("http://yourpathtocaseblocks.com:8080", "your_user_token")
     Caseblocks.Case.get("support_requests", "550c40d1841976debf000003").then(function(doc) {
-      doc.attributes._id.should.equal("550c40d1841976debf000003")
+      doc.id.should.equal("550c40d1841976debf000003")
       console.log("Got Case: " + doc.attributes.title )
     }).catch(function(err){
       console.log(err)
     });
 
+## CaseType
+
+### Constructor
+
+**new Caseblocks.Casetype(attributes)**
+
+The constructor for Casetype takes the attributes of the case type to create
+
+### Class Methods
+
+**get(caseTypeId)**
+
+Gets the case type from the server and returns the casetype object.
+
+    Caseblocks.Casetype.get("15").then(function(casetype) {
+      console.log(casetype.id)
+    }).catch(function(err){
+      console.error(err);
+    });
+
+### Instance Methods
+
+**fieldsOfType(fieldType)**
+
+Returns all the field objects in the casetype of the specified type, for example 'documents'.
+
+
+    Caseblocks.Casetype.get("15").then(function(casetype) {
+      documentFields = casetype.fieldsOfType('document')
+      console.log(documentFields)
+    }).catch(function(err){
+      console.error(err);
+    });
+
+
 ## Case
 
-### Public Methods
+### Class Methods
 
-**create**
+**create(caseTypeCode, caseTypeId, caseData)**
 
 Creates a case document in the supplied case type (case_type_code and case_type_id) with the data supplied.
 
     Caseblocks.Case.create("support_requests", 42, {title: 'test1'}).then(function(doc) {
       console.log(doc.attributes.title)
     }).catch(function(err){
-      console.log(err)
+      console.error(err)
     });
 
 
-**get**
+**get(caseTypeCode, caseId)**
 
 Retrieves a case from caseblocks supplying the case type code and the id of the document.
 
@@ -43,10 +78,10 @@ Retrieves a case from caseblocks supplying the case type code and the id of the 
       console.log(doc.id);
       console.log(doc.attributes.title)
     }).catch(function(err){
-      console.log(err)
+      console.error(err)
     });
 
-**search**
+**search(caseTypeId, searchTerm)**
 
 Provides the ability to search for docuemnts and return an array of matching cases.  Each case is a Case object the same as you get from the __get__ method.
 
@@ -54,14 +89,14 @@ Provides the ability to search for docuemnts and return an array of matching cas
       console.log("Found " + docs.length + " Results!")
       docs.map(function(doc) {console.log(doc.attributes.title)})
     }).catch(function(err){
-      console.log(err);
+      console.error(err);
     });
 
 ### Instance Methods
 
-**save**
+**save()**
 
-Saves any changes made to the current document.
+Saves any changes made to the current case object.
 
     Caseblocks.Case.get("support_requests", "550c40d1841976debf000003").then(function(doc) {
       var d = new Date();
@@ -70,17 +105,16 @@ Saves any changes made to the current document.
       doc.save().then(function(doc) {
         console.log("Saved!");
       }).catch(function(err){
-        console.log(err);
+        console.error(err);
       });
 
     })
 
-**delete**
-
+**delete()**
 
   **Not implemented yet**
 
-**related**
+**related(relatedCaseTypeCode, relationshipId)**
 
 Retrieves related cases from caseblocks supplying the case type code and the id of the document.
 
@@ -131,42 +165,70 @@ Retrieves all the users that are participants including team members.
 
 
 
+## Document
+
+### Constructor
+
+**new Caseblocks.Document(attributes, kase)**
+
+The constructor for document takes the attributes of the document and the case object it is contained within.
+
+### Class Methods
+
+There are no class methods for this object
+
+### Instance Methods
+
+**rename(newFilename)**
+
+Renames the document in the case and updates any related document fields
+
+    Caseblocks.Case.get("support_requests", "case-with-documents").then(function(kase) {
+      docs = kase.documents()
+      if (docs.length > 0) {
+        docs[0].rename("new-filename.pdf").then(function(doc) {
+          console.log(doc.file_name)
+        }).catch(function(err){
+          console.log(err)
+        });
+      }
+    }).catch(function(err){
+      console.error(err)
+    });
+
 ## Tasklist
 
-### Public Methods
+### Class Methods
 
-**get**
+**get(taskListId)**
 
 Retrieve a tasklist matching the __id__ supplied.
 
     Caseblocks.Tasklist.get("550c40d1841976debf00000a").then(function(tasklist) {
-      tasklist.name.should.equal("Development Tasks")
-      done();
+      console.log(tasklist.name)
     }).catch(function(err){
-      done(err);
+      console.error(err)
     })
 
 
-**getAll**
+**getAll(taskListIds)**
 
 Retrieves multiple tasklists in one go.  Pass in an array of string id's and the matching Tasklists will be returned in an array.
 
     Caseblocks.Tasklist.getAll(["550c40d1841976debf00000a", "550c40d1841976debf00000c", "550c40d1841976debf00000e"]).then(function(tasklists) {
-      tasklists.length.should.equal(3)
-      tasklists[2].name.should.equal("Admin Tasks")
-      done();
+      console.log(tasklists.length)
     }).catch(function(err){
-      done(err);
+      console.error(err)
     });
 
-**tasks**
+**tasks()**
 
 Retrieves all tasks associated with this tasklist, returns a promise with an array of tasks.
 
     Caseblocks.Tasklist.getAll(["550c40d9841976debf000018", "550c40d9841976debf00001a", "550c40d9841976debf00001c"]).then(function(tasklists) {
       var tasklists_returned = tasklists.length
       tasklists.forEach(function(tasklist) {
-        tasklist.tasks.then(function(tasks) {
+        tasklist.tasks().then(function(tasks) {
           tasks.forEach(function(task) {
             all_tasks.push(task)
           });
@@ -185,9 +247,9 @@ Retrieves all tasks associated with this tasklist, returns a promise with an arr
 
 ## Task
 
-### Public Methods
+### Class Methods
 
-**get**
+**get(taskId)**
 
 Retrieves a task matching the __id__ supplied
 
@@ -198,7 +260,7 @@ Retrieves a task matching the __id__ supplied
       done(err);
     })
 
-**getAll**
+**getAll(taskIds)**
 
 Retrieves multiple tasks in one go.  Pass in an array of string id's and the matching Tasks will be returned in an array.
 
@@ -255,6 +317,72 @@ Retrieves a user matching the __id__ supplied
       console.err(err)
     })
 
+## Buckets
+
+### Class Methods
+
+**get(bucketId, caseTypeCode)**
+
+Retrieves a bucket from caseblocks supplying the id of the bucket and its case type code.
+
+
+    Caseblocks.Bucket.get(6, "bulk_uplifts").then(function(bucket) {
+        log(bucket.attributes.name)
+    }).catch(function(err) {
+        log("Failed to get bucket")
+        fail(JSON.stringify(err))
+
+**stats()**
+
+Saves any changes made to the current document.
+
+    Caseblocks.Bucket.get(6, "bulk_uplifts").then(function(bucket) {
+      log(bucket.attributes.name)
+      bucket.stats().then(function(bucket_stats) {
+        summary = bucket_stats["bucket_summary"]
+        log("")
+        log("Summary")
+        log("=======")
+        log("Total: " + summary.total)
+        log("Last 24 hrs: " + summary.total_in_last_24_hours)
+        log("")
+        log("Stats")
+        log("=====")
+        stats = bucket_stats["bucket_stats"]
+        for(i in stats) {
+            log("  " + stats[i].term + ": " + stats[i].count)
+        }
+      }).catch(function(err) {
+          log("Failed to get stats")
+          fail(JSON.stringify(err))
+      })
+    }).catch(function(err) {
+        log("Failed to get bucket")
+        fail(JSON.stringify(err))
+    })
+
+**cases(page, pageSize)**
+
+Retrieves cases contained in the bucket by page. Parameters are optional and `page` defaults to 0 and `pageSize` defaults to 10.
+
+    Caseblocks.Bucket.get(6, "bulk_uplifts").then(function(bucket) {
+      log(bucket.attributes.name)
+      bucket.cases(0,10).then(function(cases) {
+        log("Found " + cases.length + " cases.")
+
+        for(kase of cases) {
+            log(kase.attributes.title)
+        }
+
+        exit(payload)
+      }).catch(function(err) {
+          log("Failed to get cases")
+          fail(JSON.stringify(err))
+      })
+    }).catch(function(err) {
+        log("Failed to get bucket")
+        fail(JSON.stringify(err))
+    })
 
 ## Email
 
@@ -286,7 +414,9 @@ Example:
 
 The above example sets up the key for mandrill then adds a to address, bcc address, sets up the from address, subject and then adds an html body, then sends the email.
 
-### Public Methods
+***Note*** SMTP is not implemented yet
+
+### Class Methods
 
 **to(email, name)**
 
@@ -336,10 +466,36 @@ Sends an email using a mandrill template.  The first parameter is a string that 
 
 This data will then be used with the fields in the mandrill template to render the email.
 
-
 ## Tests
 
-  npm test
+### Writing
+
+  You will find the existing specs under the test folder.  HTTP calls are mocked in the *spec_helper.js* using *nock* file and you should add to this the calls and their results you expect to make.
+
+### Running
+
+    npm test
+
+Simples.
+
+## Deploying to NPM
+
+#### Setup NPM
+  If this is the first time you are pushing to npm, you will need to setup your local npm first.
+
+    npm set init.author.name "Your Name"
+    npm set init.author.email "you@example.com"
+    npm set init.author.url "http://yourblog.com"
+    npm adduser
+
+#### Publishing
+  First task is to increment the version number in package.json.  Increment the last number for small changes... eg 0.1.17 becomes 0.1.18.
+
+    "version": "0.1.18"
+
+  Save the file publish using the following command.
+
+    npm publish
 
 ## Contributing
 

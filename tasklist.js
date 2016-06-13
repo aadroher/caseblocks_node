@@ -17,7 +17,7 @@ var Tasklist = function(attributes) {
 
 Tasklist.get = function(id) {
   if (!Tasklist.Caseblocks)
-    throw "Must call Caseblocks.setup";
+    throw new Error("Must call Caseblocks.setup");
 
   url = Tasklist.Caseblocks.buildUrl("/case_blocks/tasklists.json?ids%5B%5D="+ id)
 
@@ -34,7 +34,7 @@ Tasklist.get = function(id) {
 
 Tasklist.getAll = function(tasklist_ids) {
   if (!Tasklist.Caseblocks)
-    throw "Must call Caseblocks.setup";
+    throw new Error("Must call Caseblocks.setup");
 
   url = Tasklist.Caseblocks.buildUrl("/case_blocks/tasklists.json?" + tasklist_ids.map(function(id) {return "ids%5B%5D="+id}).join("&"))
   return Q.fcall(function(data) {
@@ -53,7 +53,7 @@ Tasklist.getAll = function(tasklist_ids) {
 
 Tasklist.prototype.tasks = function() {
   if (!Tasklist.Caseblocks)
-    throw "Must call Caseblocks.setup";
+    throw new Error("Must call Caseblocks.setup");
 
   if (this._tasks !== undefined && this._tasks.length > 0) {
 

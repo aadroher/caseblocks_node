@@ -4,7 +4,7 @@ var should = require('chai').should(),
     Task = require('../team.js'),
     Caseblocks = require('../index')
 
-describe.only('team', function() {
+describe('team', function() {
 
   beforeEach(function() {
     this.timeout(5000);
@@ -30,9 +30,8 @@ describe.only('team', function() {
 
     Caseblocks.Team.get("5").then(function(team) {
       team.members().then(function(members) {
-        members.length.should.equal(2)
+        members.length.should.equal(1)
         members[0].display_name.should.equal("Stewart2")
-        members[1].display_name.should.equal("Stewart3")
         done();
       }).catch(function(err){
         done(err);
