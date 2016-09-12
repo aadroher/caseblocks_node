@@ -317,6 +317,18 @@ Retrieves a user matching the __id__ supplied
       console.err(err)
     })
 
+**getAll**
+
+Retrieves the complete list of users for an account
+
+    Caseblocks.User.getAll().then(function(users) {
+      for (var i=0; i <= users.length; i++) {
+        console.log(users[i].display_name))        
+      }
+    }).catch(function(err){
+      console.err(err)
+    })
+
 ## Buckets
 
 ### Class Methods

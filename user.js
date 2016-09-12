@@ -18,4 +18,14 @@ User.get = function(id) {
   });
 };
 
+User.getAll = function() {
+  if (!User.Caseblocks)
+    throw new Error("Must call Caseblocks.setup");
+  return Q.fcall(function(data) {
+    return rest.get(User.Caseblocks.buildUrl("/case_blocks/users"),  {headers: {"Accept": "application/json"}}).then(function(data) {
+      return data.users.map( (userData) => new User(userData) )
+    });
+  });
+};
+
 module.exports = User;
