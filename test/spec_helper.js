@@ -222,6 +222,17 @@ var nockHttp = function() {
        .reply(200, {"support_request": {_id: '550c40d9841976debf000011', systems_involved: "2", calculated_field1: "calculated-result1", calculated_field2: "calculated-result2"}});
 
 
+    // USERS
+    nock('http://test-caseblocks-location', {reqheaders: {'accept': 'application/json'}})
+      .get('/case_blocks/users/5')
+      .query({auth_token: 'tnqhvzxYaRnVt7zRWYhr'})
+      .reply(200, {"user": {"id": 5, "display_name": "Back Office Mngr", "created_at": "2015-11-16T13:23:09.000Z", updated_at: "2016-05-31T15:05:59.000Z", "account_id": 2, "team_membership_ids": ["6"]}});
+
+    nock('http://test-caseblocks-location', {reqheaders: {'accept': 'application/json'}})
+      .get('/case_blocks/users')
+      .query({auth_token: 'tnqhvzxYaRnVt7zRWYhr'})
+      .reply(200, {"users": [{"id": 5, "display_name": "Back Office Mngr", "created_at": "2015-11-16T13:23:09.000Z", updated_at: "2016-05-31T15:05:59.000Z", "account_id": 2, "team_membership_ids": ["6"]}, {"id": 2, "display_name": "Back Office Minion", "created_at": "2015-11-16T13:23:09.000Z", updated_at: "2016-05-31T15:05:59.000Z", "account_id": 2, "team_membership_ids": ["6"]}]});
+
     // TEAMS
 
     nock('http://test-caseblocks-location', {reqheaders: {'accept': 'application/json'}})
