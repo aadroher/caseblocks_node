@@ -42,7 +42,7 @@ Conversation.create = function(kase, attributes) {
   var conversationMessage = {"message":{"body":attributes.body,"case_id":kase.id,"subject":attributes.subject,"recipients":recipientsList,"attachments":attachments, author_id: attributes.author_id}};
 
   return Q.fcall(function(data) {
-    return rest.postJson(Conversation.Caseblocks.buildUrl("/case_blocks/messages.json"), conversationMessage, {headers: {"Accept": "application/json"}}).then(function (message) {
+    return rest.postJson(Conversation.Caseblocks.buildUrl("/case_blocks/messages"), conversationMessage, {headers: {"Accept": "application/json"}}).then(function (message) {
         // return new Message(message);
         return message;
     }).fail(function(err) {
