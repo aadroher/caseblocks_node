@@ -51,7 +51,6 @@ class Caseblocks {
 
   }
 
-
 }
 
 module.exports.setup = Caseblocks.setup;
