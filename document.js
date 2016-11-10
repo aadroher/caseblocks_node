@@ -12,7 +12,10 @@ class Document {
 
     this.caseInstance = caseInstance;
     this.id = attributes._id;
-    this.base_url = this.url.split("/").slice(0,-1).join("/");
+
+    //TODO: Review the need for this attribute.
+    this.base_url = this.url  ? this.url.split("/").slice(0,-1).join("/")
+                              : null;
 
     this.debug = [];
 
@@ -73,7 +76,14 @@ class Document {
     }
   }
 
+  makeVoodoo() {
+
+    return "Voodoo made.";
+
+  }
 }
+
+
 
 
 module.exports = Document;
