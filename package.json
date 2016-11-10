@@ -23,9 +23,9 @@
   "homepage": "https://git.emergeadapt.com/developers/caseblocks_node#readme",
   "devDependencies": {
     "chai": "^2.3.0",
-    "mocha": "^2.2.4",
-    "nock": "2.17.0",
-    "chai-as-promised": "5.1.0"
+    "chai-as-promised": "5.1.0",
+    "mocha": "^2.5.3",
+    "nock": "2.17.0"
   },
   "dependencies": {
     "restler": "^3.2.1",
