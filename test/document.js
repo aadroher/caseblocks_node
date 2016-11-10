@@ -1,5 +1,4 @@
 var helper = require("./spec_helper")
-
 var should = require('chai').should(),
     Caseblocks = require('../index')
 
@@ -57,6 +56,7 @@ describe('document', function() {
   })
 
   describe("renaming documents", function() {
+
     it("renames document on document server", function(done) {
       Caseblocks.Case.get("support_requests", "case-with-documents").then(function(kase) {
         docs = kase.documents()
@@ -70,6 +70,8 @@ describe('document', function() {
         done(err);
       })
     })
+
     it("renames document fields on case")
+
   })
 })

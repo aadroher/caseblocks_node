@@ -4,15 +4,31 @@ var _ = require('underscore')
 
 var Q = require('q');
 
-var Document = function(attributes, kase) {
-  for(var k in attributes) {
-    this[k] = attributes[k];
-  }
-  this.kase = kase;
-  this.id = attributes._id
+class Document {
 
-  this.base_url = this.url.split("/").slice(0,-1).join("/")
-};
+  constructor(attributes, caseInstance) {
+
+    Object.keys(attributes).forEach(key => {
+      this[key] = attributes[key];
+    });
+
+    this.kase = caseInstance;
+    this.id = attributes._id;
+    this.base_url = this.url.split("/").slice(0,-1).join("/");
+
+  }
+
+}
+
+// var Document = function(attributes, kase) {
+//   for(var k in attributes) {
+//     this[k] = attributes[k];
+//   }
+//   this.kase = kase;
+//   this.id = attributes._id
+//
+//   this.base_url = this.url.split("/").slice(0,-1).join("/")
+// };
 
 Document.prototype.rename = function(newFilename) {
   if (!Document.Caseblocks)
