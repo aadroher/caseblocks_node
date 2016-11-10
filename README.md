@@ -197,7 +197,7 @@ Caseblocks.Case.get("support_requests", "550c40d1841976debf000003")
 
 ### Constructor
 
-`new Caseblocks.Document(attributes, kase)`
+`new Caseblocks.Document(attributes, caseInstance)`
 
 The constructor for document takes the attributes of the document and the case object it is contained within.
 
@@ -213,8 +213,8 @@ Renames the document in the case and updates any related document fields
 
 ```javascript
 Caseblocks.Case.get("support_requests", "case-with-documents")
-    .then(function(kase) {
-      docs = kase.documents()
+    .then(function(caseInstance) {
+      docs = caseInstance.documents()
       if (docs.length > 0) {
         docs[0].rename("new-filename.pdf").then(function(doc) {
           console.log(doc.file_name)
