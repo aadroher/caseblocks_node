@@ -35,7 +35,7 @@ describe('document', function() {
     it("should have the correct filename", function(done) {
       Caseblocks.Case.get("support_requests", "case-with-documents").then(function(kase) {
         docs = kase.documents()
-        docs[0].kase.should.equal(kase)
+        docs[0].caseInstance.should.equal(kase)
         done();
       }).fail(function(err){
         console.error(err);
