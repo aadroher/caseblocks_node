@@ -1,4 +1,5 @@
-const Caseblocks = require('./index')
+const Caseblocks = require('../index');
+
 Caseblocks.setup("http://localhost:8888", "3moqKdEXNVs-N_P_3DM8");
 
 Caseblocks.Bucket.get(7, 'claims').then((bucket) => {
