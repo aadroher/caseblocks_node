@@ -11,9 +11,12 @@ const randomStringLength = 15;
 const CRLF = '\r\n';
 
 const getDocumentsEndPointPath = (caseTypeId, caseInstance) => {
-  const accountId = caseInstance.account_id;
-  const caseId = caseInstance._id;
-  return `documents/${accountId}/${caseTypeId}/${caseId}/`;
+
+  const accountId = caseInstance.attributes.account_id;
+  const caseId = caseInstance.attributes._id;
+  return `/documents/${accountId}/${caseTypeId}/${caseId}/`;
+
+
 };
 
 const getBoundary = () => {
@@ -38,11 +41,34 @@ class Document {
    */
   static fromString(caseTypeId, caseInstance, fileName, contents) {
 
-    // TODO: Implement this guard as a method decorator.
+    const isIntegerRepresentation = x =>
+      Number.isInteger(x) || (typeof x === 'string' && !/[^0-9]+/.test(x))
+    const isAlphaNumeric = x => (typeof x === 'string' && (/^[a-z0-9]+$/i).test(x))
+
+    const validCaseTypeId = isIntegerRepresentation(caseTypeId)
+    const validAccountId = isIntegerRepresentation(caseInstance.attributes.account_id)
+    const validCaseId = isAlphaNumeric(caseInstance.attributes._id)
+
+    // TODO: Implement this guard as a method decorator for all methods.
     if(!Document.Caseblocks) {
 
       const msg = 'You must first call Caseblocks.setup';
-      throw new Error(msg);
+      return Promise.reject(new Error(msg));
+
+    } else if (!validCaseTypeId) {
+
+      const msg = `'${caseTypeId}' is not a valid case type ID.`;
+      return Promise.reject(new Error(msg));
+
+    } else if (!validAccountId) {
+
+      const msg = `'${caseInstance.account_id}' is not a valid account ID.`;
+      return Promise.reject(new Error(msg));
+
+    } else if (!validCaseId) {
+
+      const msg = `'${caseInstance._id}' is not a valid case ID`;
+      return Promise.reject(new Error(msg));
 
     } else {
 
@@ -113,7 +139,7 @@ class Document {
             } else {
 
               const respBodyObject = JSON.parse(respString);
-              const document = Document(respBodyObject, caseInstance);
+              const document = new Document(respBodyObject, caseInstance);
               resolve(document);
 
             }
@@ -141,17 +167,12 @@ class Document {
   // Instance methods
   constructor(attributes, caseInstance) {
 
-
     Object.keys(attributes).forEach(key => {
       this[key] = attributes[key];
     });
 
     this.caseInstance = caseInstance;
     this.id = attributes._id;
-
-    //TODO: Review the need for this attribute.
-    this.base_url = this.url  ? this.url.split("/").slice(0,-1).join("/")
-                              : null;
 
     this.debug = [];
 
@@ -177,22 +198,20 @@ class Document {
 
       const requestUrl = `${Document.Caseblocks.buildUrl(url)}&new_file_name=${newFilename}`;
 
-      // TODO: Not sure what is the use of this attributes. Remove them, maybe?
-      this.requestUrl = requestUrl;
-      this.requestData = formData;
-
       return rest.put(requestUrl, { data: formData }).then(jsonResponse => {
+
                 const response = JSON.parse(jsonResponse);
-                this.file_name = response.file_name;
-                this.url = response.url;
 
-                // TODO: Check if this attribute should be removed, too.
-                this.documentResponse = response;
+                return {
+                  file_name: response.file_name,
+                  url: response.url
+                }
 
-                return this;
               }).fail(err => {
+
                 console.log(err);
                 throw new Error("Error renaming document");
+
               });
 
     }
@@ -212,11 +231,6 @@ class Document {
     }
   }
 
-  makeVoodoo() {
-
-    return "Voodoo made.";
-
-  }
 }
 
 module.exports = Document;
