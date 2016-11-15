@@ -149,10 +149,6 @@ class Document {
     this.caseInstance = caseInstance;
     this.id = attributes._id;
 
-    //TODO: Review the need for this attribute.
-    this.base_url = this.url  ? this.url.split("/").slice(0,-1).join("/")
-                              : null;
-
     this.debug = [];
 
   }
@@ -177,22 +173,20 @@ class Document {
 
       const requestUrl = `${Document.Caseblocks.buildUrl(url)}&new_file_name=${newFilename}`;
 
-      // TODO: Not sure what is the use of this attributes. Remove them, maybe?
-      this.requestUrl = requestUrl;
-      this.requestData = formData;
-
       return rest.put(requestUrl, { data: formData }).then(jsonResponse => {
+
                 const response = JSON.parse(jsonResponse);
-                this.file_name = response.file_name;
-                this.url = response.url;
 
-                // TODO: Check if this attribute should be removed, too.
-                this.documentResponse = response;
+                return {
+                  file_name: response.file_name,
+                  url: response.url
+                }
 
-                return this;
               }).fail(err => {
+
                 console.log(err);
                 throw new Error("Error renaming document");
+
               });
 
     }
@@ -212,11 +206,6 @@ class Document {
     }
   }
 
-  makeVoodoo() {
-
-    return "Voodoo made.";
-
-  }
 }
 
 module.exports = Document;
