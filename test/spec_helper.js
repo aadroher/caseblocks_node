@@ -12,6 +12,10 @@ const telkom_application_case_type = JSON.parse(
   fs.readFileSync("./test/support/telkom-application-case-type.json", "utf8")
 );
 
+const htmlDocumentPath = './test/support/sword_fighting_insults.html'
+
+
+
 const nockHttp = () => {
 
   nock('http://test-caseblocks-location', {
