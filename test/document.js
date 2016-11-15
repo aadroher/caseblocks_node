@@ -1,6 +1,8 @@
-var helper = require("./spec_helper")
-var should = require('chai').should(),
-    Caseblocks = require('../index')
+const helper = require("./spec_helper");
+const should = require('chai').should(),
+      Caseblocks = require('../index');
+
+const Document = require('../document').Document;
 
 describe('document', function() {
 
@@ -73,5 +75,30 @@ describe('document', function() {
 
     it("renames document fields on case")
 
+  })
+
+  describe('creating documents from a string', () => {
+
+
+
+    it('should resolve into a document instance', () => {
+
+      Caseblocks.Case.get("support_requests", "case-with-documents")
+        .then(caseInstance =>
+          Caseblocks.Document.fromString(
+            'support_requests',
+            'case-with-documents',
+            'file_name.html',
+            'Hi.'
+          ).then(doc =>
+            doc.should.be.a('Document')
+          )
+        )
+
+      // return Promise.resolve(1).should.eventually.equal(1)
+
+      // return Caseblocks.Document.fromString('1', {id: 'hfks'}, 'file_name.html', '<p>Hello!</p>>')
+      //         .should.equal(false)
+    })
   })
 })
