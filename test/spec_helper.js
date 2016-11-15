@@ -5,16 +5,31 @@ const chaiAsPromised = require("chai-as-promised");
 
 chai.use(chaiAsPromised);
 
+const authQuery = {
+  auth_token: 'tnqhvzxYaRnVt7zRWYhr'
+}
+
 const caseTypeData = JSON.parse(
   fs.readFileSync("./test/support/case-type.json", "utf8")
 );
+
 const telkom_application_case_type = JSON.parse(
   fs.readFileSync("./test/support/telkom-application-case-type.json", "utf8")
 );
 
-const htmlDocumentPath = './test/support/sword_fighting_insults.html'
+const casePayloadPath = './test/support/case.json'
+const htmlDocumentPath = './test/support/example.html'
 
+const caseTypeName = {
+  sing: 'pirate',
+  plu: 'pirates'
+}
 
+const casePayload = JSON.parse(
+  fs.readFileSync(casePayloadPath, 'utf-8')
+)
+
+const htmlDocumentString = fs.readFileSync(htmlDocumentPath, 'utf-8')
 
 const nockHttp = () => {
 
@@ -289,7 +304,8 @@ const nockHttp = () => {
     .query({auth_token: 'tnqhvzxYaRnVt7zRWYhr'})
     .reply(200, telkom_application_case_type)
 
-  // documents
+
+  // Documents
 
   nock('http://test-caseblocks-location', {reqheaders: {'accept': 'application/json'}})
     .get('/case_blocks/support_requests/case-with-documents.json')
@@ -419,9 +435,33 @@ const nockHttp = () => {
       }
     });
 
+
+  const accountId = casePayloadPath.account_id
+  const caseTypeId = casePayload.case_type_id
+  const caseId = casePayload._id
+  const caseResourcePath = `/case_blocks/${caseTypeName.plu}/${caseId}`
+  const documentResourcePath = `/documents/${accountId}/${caseTypeId}/${caseId}/`
+
+  // console.log(caseResourcePath)
+
+
   nock('http://test-caseblocks-location')
-    .post('/documents/2/22/573af72681e9a8296f000023/old-filename.pdf', "new_file_name=new-filename.pdf")
-    .query({new_file_name: "new-filename.pdf", auth_token: 'tnqhvzxYaRnVt7zRWYhr'})
+    .get(caseResourcePath, body => {
+      console.log(body)
+
+    })
+    .query(authQuery)
+    .reply(200, () => {
+
+      return {
+        [caseTypeName.sing]: casePayload
+      }
+    })
+    .post(documentResourcePath, function(body) {
+      // console.log(this)
+      return true
+    })
+    .query(authQuery)
     .reply(200, "{\"file_name\":\"new-filename.pdf\",\"url\":\"/documents/2/22/573af72681e9a8296f000023/new-filename.pdf\"}");
 
   // USERS
@@ -687,5 +727,15 @@ const nockHttp = () => {
 
 }
 
+module.exports = {
+  nockHttp,
+  authQuery,
+  caseTypeName,
+  casePayload,
+  htmlDocumentString,
+  expect: chai.expect
+}
+
 exports.nockHttp = nockHttp;
 exports.expect = chai.expect;
+

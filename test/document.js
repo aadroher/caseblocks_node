@@ -79,17 +79,18 @@ describe('document', function() {
 
   describe('creating documents from a string', () => {
 
-
-
     it('should resolve into a document instance', () => {
 
-      Caseblocks.Case.get("support_requests", "case-with-documents")
+      const caseTypeName = helper.caseTypeName
+      const casePayload = helper.casePayload
+
+      Caseblocks.Case.get(caseTypeName.plu, casePayload._id)
         .then(caseInstance =>
           Caseblocks.Document.fromString(
-            'support_requests',
-            'case-with-documents',
-            'file_name.html',
-            'Hi.'
+            casePayload.account_id,
+            casePayload.case_type_id,
+            'example.html',
+            helper.htmlDocumentString
           ).then(doc =>
             doc.should.be.a('Document')
           )
