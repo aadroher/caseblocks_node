@@ -113,9 +113,5 @@ describe('document', function() {
         })
     })
 
-      // return Promise.resolve(1).should.eventually.equal(1)
-
-      // return Caseblocks.Document.fromString('1', {id: 'hfks'}, 'file_name.html', '<p>Hello!</p>>')
-      //         .should.equal(false)
   })
 })

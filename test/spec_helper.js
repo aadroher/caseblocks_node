@@ -732,34 +732,48 @@ const nockHttp = () => {
 
 
 const processDocumentPostRequest = (request, body) => {
-  const statusCode = 200
   const headers = request.headers
   const contentTypeHeader = getContentTypeHeader(headers, 'content-type')
 
   const isMultipart = contentTypeHeader.mediaType === 'multipart/form-data'
 
-  if (isMultipart) {
-    const parts = parseMultipartPayload(contentTypeHeader, body)
-    console.log(
-      util.inspect(parts, {
-        depth: null,
-        color: true
-      })
-    )
+    if (isMultipart) {
 
+      try {
 
-  }
+        const payload = parseMultipartPayload(contentTypeHeader, body)
+        const validation = getPayloadValidation(payload)
 
-  // console.log(request)
-  // console.log(body)
+        if (validation.validates) {
 
-  return [
-    statusCode,
-    {
-      [caseTypeName.sing]: casePayload
+          return [200,
+            {
+              [caseTypeName.sing]: casePayload
+            }
+          ]
+
+        } else {
+
+          const msg = 'The payload is not valid.'
+          return [400, msg]
+
+        }
+
+      } catch (err) {
+
+        return [400, err.message]
+
+      }
+
+    } else {
+
+      const msg = 'The payload is not well formed.'
+      return [400, msg]
+
     }
-  ]
+
 }
+
 
 const getContentTypeHeader = (headers, name) => {
 
@@ -781,6 +795,7 @@ const getContentTypeHeader = (headers, name) => {
   return contentTypeHeader
 
 }
+
 
 const parseMultipartPayload = (contenTypeHeader, body)  => {
 
@@ -875,11 +890,19 @@ const parsePart = (chunk, index) => {
 
 }
 
+const getPayloadValidation = multipartPayload => ({
+  validates: true,
+  messages: ''
+})
 
+// Validation rules.
 
-// Validation rules
-
-
+const hasTheRightFormFieldName = payload => {
+  const part = payload.find(part =>
+    part.preamble['Content-Disposition'].directiveFields.name === 'newFileName'
+  )
+  return !!part
+}
 
 
 
