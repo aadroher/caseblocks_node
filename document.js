@@ -113,7 +113,7 @@ class Document {
             } else {
 
               const respBodyObject = JSON.parse(respString);
-              const document = Document(respBodyObject, caseInstance);
+              const document = new Document(respBodyObject, caseInstance);
               resolve(document);
 
             }
