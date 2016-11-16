@@ -16,7 +16,7 @@ describe('case', function() {
       doc.attributes._id.should.equal("550c40d9841976debf000011")
       done();
     }).catch(function(err){
-      console.log(err);
+      // console.log(err);
       done(err);
     });
   });

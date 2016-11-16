@@ -449,7 +449,7 @@ const nockHttp = () => {
 
   nock('http://test-caseblocks-location')
     .get(caseResourcePath, body => {
-      console.log(body)
+      // console.log(body)
 
     })
     .query(authQuery)
