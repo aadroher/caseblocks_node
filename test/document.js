@@ -2,7 +2,7 @@ const helper = require("./spec_helper");
 const should = require('chai').should(),
       Caseblocks = require('../index');
 
-const Document = require('../document').Document;
+// const Document = require('../document').Document;
 
 describe('document', function() {
 
@@ -73,36 +73,49 @@ describe('document', function() {
       })
     })
 
+    // TODO: Implement this.
     it("renames document fields on case")
 
   })
 
   describe('creating documents from a string', function() {
 
-    it('should resolve into a document instance', function () {
+    it.only('should resolve into a document instance', function (done) {
+
+      Caseblocks.setup("http://test-caseblocks-location", "tnqhvzxYaRnVt7zRWYhr")
+
+      helper.nockHttp()
 
       const caseTypeName = helper.caseTypeName
       const casePayload = helper.casePayload
 
       Caseblocks.Case.get(caseTypeName.plu, casePayload._id)
-        .then(caseInstance =>
+        .then(caseInstance => {
+          caseInstance.should.be.a('object')
+
+          Caseblocks.setup("https://test-caseblocks-location/", "tnqhvzxYaRnVt7zRWYhr")
+
           Caseblocks.Document.fromString(
-            casePayload.account_id,
-            casePayload.case_type_id,
+            caseInstance.attributes.case_type_id,
+            caseInstance.attributes,
             'example.html',
             helper.htmlDocumentString
-          ).then(doc => {
-            // console.log(doc)
-            // doc.should.be.a('Document')
-
+          ).then(result => {
+            // console.log(result)
+            done()
+          }).catch(err => {
+            done(err)
           })
 
-        )
+        })
+        .catch(err => {
+          done(err)
+        })
+    })
 
       // return Promise.resolve(1).should.eventually.equal(1)
 
       // return Caseblocks.Document.fromString('1', {id: 'hfks'}, 'file_name.html', '<p>Hello!</p>>')
       //         .should.equal(false)
-    })
   })
 })

@@ -3,6 +3,8 @@ const chai = require("chai");
 const fs = require("fs");
 const chaiAsPromised = require("chai-as-promised");
 
+const util = require('util');
+
 chai.use(chaiAsPromised);
 
 const authQuery = {
@@ -16,6 +18,8 @@ const caseTypeData = JSON.parse(
 const telkom_application_case_type = JSON.parse(
   fs.readFileSync("./test/support/telkom-application-case-type.json", "utf8")
 );
+
+// const caseBlocksBaseURL = 'http://test-caseblocks-location'
 
 const casePayloadPath = './test/support/case.json'
 const htmlDocumentPath = './test/support/example.html'
@@ -438,33 +442,7 @@ const nockHttp = () => {
     });
 
 
-  const accountId = casePayloadPath.account_id
-  const caseTypeId = casePayload.case_type_id
-  const caseId = casePayload._id
-  const caseResourcePath = `/case_blocks/${caseTypeName.plu}/${caseId}`
-  const documentResourcePath = `/documents/${accountId}/${caseTypeId}/${caseId}/`
 
-  // console.log(caseResourcePath)
-
-
-  nock('http://test-caseblocks-location')
-    .get(caseResourcePath, body => {
-      // console.log(body)
-
-    })
-    .query(authQuery)
-    .reply(200, () => {
-
-      return {
-        [caseTypeName.sing]: casePayload
-      }
-    })
-    .post(documentResourcePath, function(body) {
-      // console.log(this)
-      return true
-    })
-    .query(authQuery)
-    .reply(200, "{\"file_name\":\"new-filename.pdf\",\"url\":\"/documents/2/22/573af72681e9a8296f000023/new-filename.pdf\"}");
 
   // USERS
   nock('http://test-caseblocks-location', {reqheaders: {'accept': 'application/json'}})
@@ -727,7 +705,184 @@ const nockHttp = () => {
       }]
     })
 
+
+  // TODO: Move this back to its place.
+
+  const accountId = casePayload.account_id
+  const caseTypeId = casePayload.case_type_id
+  const caseId = casePayload._id
+  const caseResourcePath = `/case_blocks/${caseTypeName.plu}/${caseId}.json`
+  const documentResourcePath = `/documents/${accountId}/${caseTypeId}/${caseId}/`
+
+  nock('http://test-caseblocks-location', {reqheaders: {'accept': 'application/json'}})
+    .get(caseResourcePath)
+    .query(authQuery)
+    .reply(200, {
+      [caseTypeName.sing]: casePayload
+    })
+
+  nock('https://test-caseblocks-location')
+    .post(documentResourcePath)
+    .query(authQuery)
+    .reply(function(uri, requestBody) {
+      return processDocumentPostRequest(this.req, requestBody)
+    })
+
 }
+
+
+const processDocumentPostRequest = (request, body) => {
+  const statusCode = 200
+  const headers = request.headers
+  const contentTypeHeader = getContentTypeHeader(headers, 'content-type')
+
+  const isMultipart = contentTypeHeader.mediaType === 'multipart/form-data'
+
+  if (isMultipart) {
+    const parts = parseMultipartPayload(contentTypeHeader, body)
+    console.log(
+      util.inspect(parts, {
+        depth: null,
+        color: true
+      })
+    )
+
+
+  }
+
+  // console.log(request)
+  // console.log(body)
+
+  return [
+    statusCode,
+    {
+      [caseTypeName.sing]: casePayload
+    }
+  ]
+}
+
+const getContentTypeHeader = (headers, name) => {
+
+  const contentTypeDirectives = headers[name].split(';')
+
+  const contentTypeHeader = contentTypeDirectives.reduce((prevVal, directive, index) => {
+
+    const directiveChunks = index === 0 ? ['mediaType', directive] : directive.split('=')
+    const cleanDirectiveChunks = directiveChunks.map(
+      chunk => chunk.trim().replace(/['"]+/g, '')
+    )
+
+    return Object.assign(prevVal, {
+      [cleanDirectiveChunks[0]]: cleanDirectiveChunks[1]
+    })
+
+  }, {})
+
+  return contentTypeHeader
+
+}
+
+const parseMultipartPayload = (contenTypeHeader, body)  => {
+
+  const separator = `--${contenTypeHeader.boundary}`
+
+  const chunks = body.split(separator)
+
+  const isWellFormed = chunks.slice(0, 1).pop() === '' && chunks.slice(-1).pop() === '--'
+
+  if (isWellFormed) {
+
+    const parts = chunks.slice(1, -1).map(parsePart)
+    return parts
+
+  } else {
+
+    const msg = `The received multipart payload is not well formed.`
+    throw new Error(msg)
+
+  }
+
+}
+
+
+const parsePart = (chunk, index) => {
+
+  const lineSep = '\r\n'
+  const chunkTree = chunk.trim()
+    .split(`${lineSep}${lineSep}`)
+    .map(
+      subpart => subpart.split(lineSep)
+    )
+
+  const isWellFormed = chunkTree.length === 2
+    && chunkTree.every((subchunk, subindex) =>
+      Array.isArray(subchunk)
+        && (subindex !== 1 || subchunk.length === 1)
+    )
+
+  if (isWellFormed) {
+
+    const preambleChunks = chunkTree[0]
+    const preambleHeaders = preambleChunks.map(preambleChunk => {
+
+      const headerChunks = preambleChunk.split(/: ?/)
+
+      const headerName = headerChunks.slice(0,1).pop()
+      const headerFields = headerChunks.slice(1,2).pop().split(/; ?/)
+      const directiveName = headerFields.slice(0,1).pop()
+      const directiveFields = headerFields.slice(1).map(headerField => {
+
+          const headerFieldChunks = headerField.split('=')
+
+          const attrAndVal = headerFieldChunks.map(headerFieldChunk =>
+            headerFieldChunk.replace(/['"]+/g, '')
+          )
+
+          return {
+            [attrAndVal[0]]: attrAndVal[1]
+          }
+
+      }).reduce((prevVal, entry) =>
+        Object.assign(prevVal, entry)
+      , {})
+
+      return {
+        headerName, directiveName, directiveFields
+      }
+
+    })
+
+    const preamble = preambleHeaders.reduce((prevVal, header) =>
+      Object.assign(prevVal, {
+        [header.headerName]: {
+          directiveName: header.directiveName,
+          directiveFields: header.directiveFields
+        }
+      })
+    , {})
+
+    return {
+      preamble,
+      body: chunkTree.pop().pop()
+    }
+
+  } else {
+
+    const msg = `Part ${index} from the received multipart payload is not well formed.`
+    throw Error(msg)
+
+  }
+
+}
+
+
+
+// Validation rules
+
+
+
+
+
 
 module.exports = {
   nockHttp,
@@ -737,7 +892,4 @@ module.exports = {
   htmlDocumentString,
   expect: chai.expect
 }
-
-exports.nockHttp = nockHttp;
-exports.expect = chai.expect;
 
