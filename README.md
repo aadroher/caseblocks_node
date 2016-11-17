@@ -206,9 +206,9 @@ The constructor for document takes the attributes of the document and the case o
 `fromString(caseTypeId, caseInstance, fileName, contents)`
 
 - Arguments:
-    - `caseTypeId <string | number>` The id of the case type this case belongs to
-    - `caseInstance <object>` The case to attach it to
-    - `fileName <string>` The name of the file
+    - `caseTypeId {string | number}` The id of the case type this case belongs to
+    - `caseInstance {object}` The case to attach it to
+    - `fileName {string}` The name of the file
     - `contents {string}` The content of the file
 - Returns: `{Promise.<Document>}` A promise that resolves to the metadata about the saved file.
    
