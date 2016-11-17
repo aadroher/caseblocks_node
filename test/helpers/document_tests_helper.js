@@ -3,7 +3,7 @@ const chai = require("chai");
 const fs = require("fs");
 const chaiAsPromised = require("chai-as-promised");
 
-const util = require('util');
+// const util = require('util');
 
 chai.use(chaiAsPromised);
 
@@ -11,7 +11,9 @@ chai.use(chaiAsPromised);
 // Constants
 
 const casePayloadPath = './test/support/case.json'
-const htmlDocumentPath = './test/support/example.html'
+
+const htmlDocumentFilename = 'example.html'
+const htmlDocumentPath = `./test/support/${htmlDocumentFilename}`
 
 const caseTypeName = {
   sing: 'pirate',
@@ -37,7 +39,11 @@ const caseBlocksBaseURL = 'http://test-caseblocks-location'
 const htmlDocumentString = fs.readFileSync(htmlDocumentPath, 'utf-8')
 
 
+// Utility functions to process the multpipart/form-data POST
+// request.
+
 const processDocumentPostRequest = (request, body) => {
+
   const headers = request.headers
   const contentTypeHeader = getContentTypeHeader(headers, 'content-type')
 
@@ -53,9 +59,11 @@ const processDocumentPostRequest = (request, body) => {
       if (validation.validates) {
 
         return [200,
-          {
-            [caseTypeName.sing]: casePayload
-          }
+          getResponsePayload({
+            contentType: 'text/html; charset=utf-8',
+            fileName: htmlDocumentFilename,
+            fileContents: htmlDocumentString
+          })
         ]
 
       } else {
@@ -101,8 +109,7 @@ const getContentTypeHeader = (headers, name) => {
 
 }
 
-
-const parseMultipartPayload = (contenTypeHeader, body)  => {
+const parseMultipartPayload = (contenTypeHeader, body) => {
 
   const separator = `--${contenTypeHeader.boundary}`
 
@@ -123,7 +130,6 @@ const parseMultipartPayload = (contenTypeHeader, body)  => {
   }
 
 }
-
 
 const parsePart = (chunk, index) => {
 
@@ -147,9 +153,9 @@ const parsePart = (chunk, index) => {
 
       const headerChunks = preambleChunk.split(/: ?/)
 
-      const headerName = headerChunks.slice(0,1).pop()
-      const headerFields = headerChunks.slice(1,2).pop().split(/; ?/)
-      const directiveName = headerFields.slice(0,1).pop()
+      const headerName = headerChunks.slice(0, 1).pop()
+      const headerFields = headerChunks.slice(1, 2).pop().split(/; ?/)
+      const directiveName = headerFields.slice(0, 1).pop()
       const directiveFields = headerFields.slice(1).map(headerField => {
 
         const headerFieldChunks = headerField.split('=')
@@ -207,6 +213,25 @@ const hasTheRightFormFieldName = payload => {
     part.preamble['Content-Disposition'].directiveFields.name === 'newFileName'
   )
   return !!part
+}
+
+
+const getResponsePayload = ({contentType, fileName, fileContents}) => {
+
+  const filenameChunks = fileName.split('.')
+  const extension = filenameChunks.length > 1 ? filenameChunks.slice(-1).pop() : ''
+  const size = Buffer.byteLength(fileContents, 'utf-8')
+
+  return {
+    '_id': '582d83f255423100050000cb',
+    content_type: contentType,
+    extension: extension,
+    file_name: fileName,
+    pages: [],
+    size: size,
+    uploaded_at: new Date().toISOString(),
+    url: `${documentResourcePath}${fileName}`
+  }
 }
 
 
@@ -342,7 +367,6 @@ const nockHttp = () => {
       }
     });
 
-
   nock(caseBlocksBaseURL, {reqheaders: {'accept': 'application/json'}})
     .get(caseResourcePath)
     .query(authQuery)
@@ -350,10 +374,13 @@ const nockHttp = () => {
       [caseTypeName.sing]: casePayload
     })
 
+  /**
+   * Respond with 200 + payload if OK or 400 + error message otherwise.
+   */
   nock('https://test-caseblocks-location')
     .post(documentResourcePath)
     .query(authQuery)
-    .reply(function(uri, requestBody) {
+    .reply(function (uri, requestBody) {
       return processDocumentPostRequest(this.req, requestBody)
     })
 
@@ -365,6 +392,7 @@ module.exports = {
   authQuery,
   caseTypeName,
   casePayload,
+  htmlDocumentFilename,
   htmlDocumentString,
   expect: chai.expect
 }

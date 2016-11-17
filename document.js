@@ -141,7 +141,6 @@ class Document {
   // Instance methods
   constructor(attributes, caseInstance) {
 
-
     Object.keys(attributes).forEach(key => {
       this[key] = attributes[key];
     });

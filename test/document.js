@@ -2,8 +2,6 @@ const helper = require("./helpers/document_tests_helper");
 const should = require('chai').should(),
       Caseblocks = require('../index');
 
-// const Document = require('../document').Document;
-
 describe('document', function() {
 
   beforeEach(function() {
@@ -13,6 +11,7 @@ describe('document', function() {
   });
 
   describe("loading documents from cases", function() {
+
     it("should have the correct id", function(done) {
       Caseblocks.Case.get("support_requests", "case-with-documents").then(function(kase) {
         docs = kase.documents()
@@ -24,6 +23,7 @@ describe('document', function() {
       });
 
     })
+
     it("should have the correct filename", function(done) {
       Caseblocks.Case.get("support_requests", "case-with-documents").then(function(kase) {
         docs = kase.documents()
@@ -34,6 +34,7 @@ describe('document', function() {
         done(err);
       });
     })
+
     it("should have the correct filename", function(done) {
       Caseblocks.Case.get("support_requests", "case-with-documents").then(function(kase) {
         docs = kase.documents()
@@ -55,6 +56,7 @@ describe('document', function() {
         done(err);
       });
     })
+
   })
 
   describe("renaming documents", function() {
@@ -78,7 +80,7 @@ describe('document', function() {
 
   })
 
-  describe('creating documents from a string', function() {
+  describe.only('creating documents from a string', function() {
 
     it('should resolve into a document instance', function (done) {
 
@@ -98,10 +100,10 @@ describe('document', function() {
           Caseblocks.Document.fromString(
             caseInstance.attributes.case_type_id,
             caseInstance.attributes,
-            'example.html',
+            helper.htmlDocumentFilename,
             helper.htmlDocumentString
           ).then(result => {
-            // console.log(result)
+            console.log(result)
             done()
           }).catch(err => {
             done(err)
