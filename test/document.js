@@ -1,11 +1,16 @@
+const _ = require('underscore')
+
 const helper = require("./helpers/document_tests_helper");
 const should = require('chai').should(),
-      Caseblocks = require('../index');
+      Caseblocks = require('../index'),
+      Document = Caseblocks.Document;
+
+const caseBlocksBaseURL = 'https://test-caseblocks-location'
 
 describe('document', function() {
 
   beforeEach(function() {
-    Caseblocks.setup("http://test-caseblocks-location", "tnqhvzxYaRnVt7zRWYhr")
+    Caseblocks.setup(caseBlocksBaseURL, "tnqhvzxYaRnVt7zRWYhr")
 
     helper.nockHttp()
   });
@@ -80,33 +85,32 @@ describe('document', function() {
 
   })
 
-  describe.only('creating documents from a string', function() {
+  describe('creating documents from a string', function() {
 
-    it('should resolve into a document instance', function (done) {
-
-      Caseblocks.setup("http://test-caseblocks-location", "tnqhvzxYaRnVt7zRWYhr")
-
-      helper.nockHttp()
+    it('should resolve into a correct document instance', function (done) {
 
       const caseTypeName = helper.caseTypeName
       const casePayload = helper.casePayload
 
       Caseblocks.Case.get(caseTypeName.plu, casePayload._id)
         .then(caseInstance => {
-          caseInstance.should.be.a('object')
-
-          Caseblocks.setup("https://test-caseblocks-location/", "tnqhvzxYaRnVt7zRWYhr")
 
           Caseblocks.Document.fromString(
             caseInstance.attributes.case_type_id,
             caseInstance.attributes,
             helper.htmlDocumentFilename,
             helper.htmlDocumentString
-          ).then(result => {
-            console.log(result)
+          ).then(document => {
+
+            document.should.be.an.instanceOf(Document)
+            document.caseInstance.should.be.deep.equal(caseInstance.attributes)
+
             done()
+
           }).catch(err => {
+
             done(err)
+
           })
 
         })
@@ -114,6 +118,59 @@ describe('document', function() {
           done(err)
         })
     })
+
+    it('should resolve into the correct metadata object', function(done) {
+
+      const caseTypeName = helper.caseTypeName
+      const casePayload = helper.casePayload
+
+      Caseblocks.Case.get(caseTypeName.plu, casePayload._id)
+        .then(caseInstance => {
+
+          Caseblocks.Document.fromString(
+            caseInstance.attributes.case_type_id,
+            caseInstance.attributes,
+            helper.htmlDocumentFilename,
+            helper.htmlDocumentString
+          ).then(document => {
+
+            const caseTypeId = caseInstance.attributes.case_type_id
+            const documentResourcePath = `/documents/${casePayload.account_id}/${caseTypeId}/${casePayload._id}/`
+
+            const filenameChunks = helper.htmlDocumentFilename.split('.')
+            const extension = filenameChunks.length > 1 ? filenameChunks.slice(-1).pop() : ''
+            const size = Buffer.byteLength(helper.htmlDocumentString, 'utf-8')
+
+            const expected = {
+              content_type: 'text/html; charset=utf-8',
+              extension: extension,
+              file_name: helper.htmlDocumentFilename,
+              pages: [],
+              size: size,
+              url: `${documentResourcePath}${helper.htmlDocumentFilename}`
+            }
+
+            _.omit(
+              document,
+              'caseInstance', 'uploaded_at', 'id', '_id', 'debug'
+            ).should.be.deep.equal(expected)
+
+            done()
+
+          }).catch(err => {
+
+            done(err)
+
+          })
+
+        })
+        .catch(err => {
+          done(err)
+        })
+
+    })
+
+    it('should be awesome')
 
   })
 })

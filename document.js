@@ -13,7 +13,7 @@ const CRLF = '\r\n';
 const getDocumentsEndPointPath = (caseTypeId, caseInstance) => {
   const accountId = caseInstance.account_id;
   const caseId = caseInstance._id;
-  return `documents/${accountId}/${caseTypeId}/${caseId}/`;
+  return `/documents/${accountId}/${caseTypeId}/${caseId}/`;
 };
 
 const getBoundary = () => {

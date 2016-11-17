@@ -34,7 +34,7 @@ const authQuery = {
   auth_token: 'tnqhvzxYaRnVt7zRWYhr'
 }
 
-const caseBlocksBaseURL = 'http://test-caseblocks-location'
+const caseBlocksBaseURL = 'https://test-caseblocks-location'
 
 const htmlDocumentString = fs.readFileSync(htmlDocumentPath, 'utf-8')
 
@@ -222,8 +222,11 @@ const getResponsePayload = ({contentType, fileName, fileContents}) => {
   const extension = filenameChunks.length > 1 ? filenameChunks.slice(-1).pop() : ''
   const size = Buffer.byteLength(fileContents, 'utf-8')
 
+  const randomId = (Math.floor(Math.random() * Math.pow(10, 28))).toString(16)
+
   return {
-    '_id': '582d83f255423100050000cb',
+    _id: randomId,
+    id: randomId,
     content_type: contentType,
     extension: extension,
     file_name: fileName,
@@ -377,7 +380,7 @@ const nockHttp = () => {
   /**
    * Respond with 200 + payload if OK or 400 + error message otherwise.
    */
-  nock('https://test-caseblocks-location')
+  nock(caseBlocksBaseURL)
     .post(documentResourcePath)
     .query(authQuery)
     .reply(function (uri, requestBody) {
