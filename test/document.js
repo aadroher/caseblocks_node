@@ -1,9 +1,14 @@
 const _ = require('underscore')
 
 const helper = require("./helpers/document_tests_helper");
-const should = require('chai').should(),
+const chai = require('chai'),
       Caseblocks = require('../index'),
       Document = Caseblocks.Document;
+
+const chaiAsPromised = require("chai-as-promised");
+
+chai.use(chaiAsPromised);
+chai.should()
 
 const caseBlocksBaseURL = 'https://test-caseblocks-location'
 
@@ -87,7 +92,7 @@ describe('document', function() {
 
   describe('creating documents from a string', function() {
 
-    it('should resolve into a correct document instance', function (done) {
+    it('should resolve into a document instance', function (done) {
 
       const caseTypeName = helper.caseTypeName
       const casePayload = helper.casePayload
@@ -97,14 +102,12 @@ describe('document', function() {
 
           Caseblocks.Document.fromString(
             caseInstance.attributes.case_type_id,
-            caseInstance.attributes,
+            caseInstance,
             helper.htmlDocumentFilename,
             helper.htmlDocumentString
           ).then(document => {
 
             document.should.be.an.instanceOf(Document)
-            document.caseInstance.should.be.deep.equal(caseInstance.attributes)
-
             done()
 
           }).catch(err => {
@@ -129,7 +132,7 @@ describe('document', function() {
 
           Caseblocks.Document.fromString(
             caseInstance.attributes.case_type_id,
-            caseInstance.attributes,
+            caseInstance,
             helper.htmlDocumentFilename,
             helper.htmlDocumentString
           ).then(document => {
@@ -142,18 +145,20 @@ describe('document', function() {
             const size = Buffer.byteLength(helper.htmlDocumentString, 'utf-8')
 
             const expected = {
-              content_type: 'text/html; charset=utf-8',
-              extension: extension,
-              file_name: helper.htmlDocumentFilename,
-              pages: [],
-              size: size,
-              url: `${documentResourcePath}${helper.htmlDocumentFilename}`
+              attributes: {
+                content_type: 'text/html; charset=utf-8',
+                extension: extension,
+                file_name: helper.htmlDocumentFilename,
+                pages: [],
+                size: size,
+                url: `${documentResourcePath}${helper.htmlDocumentFilename}`
+              }
             }
 
             _.omit(
-              document,
-              'caseInstance', 'uploaded_at', 'id', '_id', 'debug'
-            ).should.be.deep.equal(expected)
+              document.attributes,
+              'caseInstance', 'id', 'uploaded_at'
+            ).should.be.deep.equal(expected.attributes)
 
             done()
 
@@ -170,7 +175,126 @@ describe('document', function() {
 
     })
 
-    it('should be awesome')
+    it('should include a correct representation of the case instance', function (done) {
+
+      const caseTypeName = helper.caseTypeName
+      const casePayload = helper.casePayload
+
+      Caseblocks.Case.get(caseTypeName.plu, casePayload._id)
+        .then(caseInstance => {
+
+          Caseblocks.Document.fromString(
+            caseInstance.attributes.case_type_id,
+            caseInstance,
+            helper.htmlDocumentFilename,
+            helper.htmlDocumentString
+          ).then(document => {
+
+            document.caseInstance.should.be.deep.equal(caseInstance)
+            done()
+
+          }).catch(err => {
+
+            done(err)
+
+          })
+
+        })
+        .catch(err => {
+          done(err)
+        })
+
+    })
+
+    it('should raise and error if case instance is not well formed', function() {
+
+      const caseTypeName = helper.caseTypeName
+      const casePayload = helper.casePayload
+
+      const wrongCaseInstance = {
+        attributes: {
+          oh: 'my',
+          this_is: 'such',
+          a: 'wrong',
+          argument: '!'
+        }
+      }
+
+
+      Caseblocks.Document.fromString(
+        casePayload.case_type_id,
+        wrongCaseInstance,
+        helper.htmlDocumentFilename,
+        helper.htmlDocumentString
+      ).should.be.rejectedWith(Error)
+
+
+    })
+
+    it('should raise and error if case type ID is not valid', function() {
+
+      const caseTypeName = helper.caseTypeName
+      const casePayload = helper.casePayload
+
+      const wrongCaseTypeId = '(╯°□°)╯︵ ┻━┻'
+
+      return Caseblocks.Case.get(caseTypeName.plu, casePayload._id)
+        .then(caseInstance => {
+
+          return Caseblocks.Document.fromString(
+            wrongCaseTypeId,
+            caseInstance.attributes,
+            helper.htmlDocumentFilename,
+            helper.htmlDocumentString
+          )
+
+        }).should.be.rejectedWith(Error)
+
+    })
+
+    it('should raise and error if account ID is not valid', function() {
+
+      const caseTypeName = helper.caseTypeName
+      const casePayload = helper.casePayload
+
+      const wrongAccountId = '(╯°□°)╯︵ ┻━┻'
+
+      return Caseblocks.Case.get(caseTypeName.plu, casePayload._id)
+        .then(caseInstance => {
+          return Caseblocks.Document.fromString(
+                  caseInstance.attributes.case_type_id,
+                  Object.assign(caseInstance.attributes,{
+                    account_id: wrongAccountId
+                  }),
+                  helper.htmlDocumentFilename,
+                  helper.htmlDocumentString
+                )
+        }).should.be.rejectedWith(Error)
+
+    })
+
+    it('should raise and error if case ID is not valid', function() {
+
+      const caseTypeName = helper.caseTypeName
+      const casePayload = helper.casePayload
+
+      const wrongCaseId = '(╯°□°)╯︵ ┻━┻'
+
+      return Caseblocks.Case.get(caseTypeName.plu, casePayload._id)
+        .then(caseInstance => {
+
+            return Caseblocks.Document.fromString(
+              caseInstance.attributes.case_type_id,
+              Object.assign(caseInstance.attributes,{
+                _id: wrongCaseId,
+              }),
+              helper.htmlDocumentFilename,
+              helper.htmlDocumentString
+            )
+
+        }).should.be.rejectedWith(Error)
+
+    })
 
   })
 })

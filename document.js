@@ -11,9 +11,12 @@ const randomStringLength = 15;
 const CRLF = '\r\n';
 
 const getDocumentsEndPointPath = (caseTypeId, caseInstance) => {
-  const accountId = caseInstance.account_id;
-  const caseId = caseInstance._id;
+
+  const accountId = caseInstance.attributes.account_id;
+  const caseId = caseInstance.attributes._id;
   return `/documents/${accountId}/${caseTypeId}/${caseId}/`;
+
+
 };
 
 const getBoundary = () => {
@@ -38,11 +41,34 @@ class Document {
    */
   static fromString(caseTypeId, caseInstance, fileName, contents) {
 
-    // TODO: Implement this guard as a method decorator.
+    const isIntegerRepresentation = x =>
+      Number.isInteger(x) || (typeof x === 'string' && !/[^0-9]+/.test(x))
+    const isAlphaNumeric = x => (typeof x === 'string' && (/^[a-z0-9]+$/i).test(x))
+
+    const validCaseTypeId = isIntegerRepresentation(caseTypeId)
+    const validAccountId = isIntegerRepresentation(caseInstance.attributes.account_id)
+    const validCaseId = isAlphaNumeric(caseInstance.attributes._id)
+
+    // TODO: Implement this guard as a method decorator for all methods.
     if(!Document.Caseblocks) {
 
       const msg = 'You must first call Caseblocks.setup';
-      throw new Error(msg);
+      return Promise.reject(new Error(msg));
+
+    } else if (!validCaseTypeId) {
+
+      const msg = `'${caseTypeId}' is not a valid case type ID.`;
+      return Promise.reject(new Error(msg));
+
+    } else if (!validAccountId) {
+
+      const msg = `'${caseInstance.account_id}' is not a valid account ID.`;
+      return Promise.reject(new Error(msg));
+
+    } else if (!validCaseId) {
+
+      const msg = `'${caseInstance._id}' is not a valid case ID`;
+      return Promise.reject(new Error(msg));
 
     } else {
 

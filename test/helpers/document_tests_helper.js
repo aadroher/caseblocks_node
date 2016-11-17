@@ -3,10 +3,7 @@ const chai = require("chai");
 const fs = require("fs");
 const chaiAsPromised = require("chai-as-promised");
 
-// const util = require('util');
-
 chai.use(chaiAsPromised);
-
 
 // Constants
 
@@ -151,10 +148,10 @@ const parsePart = (chunk, index) => {
     const preambleChunks = chunkTree[0]
     const preambleHeaders = preambleChunks.map(preambleChunk => {
 
-      const headerChunks = preambleChunk.split(/: ?/)
+      const headerChunks = preambleChunk.split(/: +/)
 
       const headerName = headerChunks.slice(0, 1).pop()
-      const headerFields = headerChunks.slice(1, 2).pop().split(/; ?/)
+      const headerFields = headerChunks.slice(1, 2).pop().split(/; +/)
       const directiveName = headerFields.slice(0, 1).pop()
       const directiveFields = headerFields.slice(1).map(headerField => {
 
@@ -225,16 +222,21 @@ const getResponsePayload = ({contentType, fileName, fileContents}) => {
   const randomId = (Math.floor(Math.random() * Math.pow(10, 28))).toString(16)
 
   return {
+
     _id: randomId,
-    id: randomId,
-    content_type: contentType,
-    extension: extension,
-    file_name: fileName,
-    pages: [],
-    size: size,
-    uploaded_at: new Date().toISOString(),
-    url: `${documentResourcePath}${fileName}`
+    attributes: {
+      id: randomId,
+      content_type: contentType,
+      extension: extension,
+      file_name: fileName,
+      pages: [],
+      size: size,
+      uploaded_at: new Date().toISOString(),
+      url: `${documentResourcePath}${fileName}`
+    }
+
   }
+
 }
 
 
