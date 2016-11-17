@@ -203,7 +203,50 @@ The constructor for document takes the attributes of the document and the case o
 
 ### Class Methods
 
-There are no class methods for this object
+`fromString(caseTypeId, caseInstance, fileName, contents)`
+
+- Arguments:
+    - `caseTypeId <string | number>` The id of the case type this case belongs to
+    - `caseInstance <object>` The case to attach it to
+    - `fileName <string>` The name of the file
+    - `contents {string}` The content of the file
+- Returns: `{Promise.<Document>}` A promise that resolves to the metadata about the saved file.
+   
+This function creates a document from a string and attaches it to `caseInstance`.
+
+
+```javascript
+const caseTypeId = 1964
+fileName = 'secret_message.txt'
+fileContents = 'The bird is in the nest.'
+
+Caseblocks.Case.get('secret_agents', '09eef94cbc39370046000da1')
+    .then(caseInstance => 
+        
+          Caseblocks.Document.fromString(
+            caseTypeId,
+            caseInstance,
+            fileName,
+            fileContents
+          ).then(document => {
+          
+            // Do something with the document
+            
+          }).catch(err => {
+            
+            // Handle error
+            
+          })
+        
+    ).catch(err => {
+      
+      // Handle error
+      
+    })
+```
+
+Once an invocation of this method has succeeded a new text file may be found in the documents section of the view of the specified case. Its name and contents 
+will be `fileName` and `contents`. 
 
 ### Instance Methods
 
