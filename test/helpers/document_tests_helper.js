@@ -7,19 +7,8 @@ const util = require('util');
 
 chai.use(chaiAsPromised);
 
-const authQuery = {
-  auth_token: 'tnqhvzxYaRnVt7zRWYhr'
-}
 
-const caseTypeData = JSON.parse(
-  fs.readFileSync("./test/support/case-type.json", "utf8")
-);
-
-const telkom_application_case_type = JSON.parse(
-  fs.readFileSync("./test/support/telkom-application-case-type.json", "utf8")
-);
-
-// const caseBlocksBaseURL = 'http://test-caseblocks-location'
+// Constants
 
 const casePayloadPath = './test/support/case.json'
 const htmlDocumentPath = './test/support/example.html'
@@ -33,164 +22,19 @@ const casePayload = JSON.parse(
   fs.readFileSync(casePayloadPath, 'utf-8')
 )
 
-const htmlDocumentString = fs.readFileSync(htmlDocumentPath, 'utf-8')
+const accountId = casePayload.account_id
+const caseTypeId = casePayload.case_type_id
+const caseId = casePayload._id
+const caseResourcePath = `/case_blocks/${caseTypeName.plu}/${caseId}.json`
+const documentResourcePath = `/documents/${accountId}/${caseTypeId}/${caseId}/`
 
-
-const nockHttp = () => {
-
-  // Documents
-
-  nock('http://test-caseblocks-location', {reqheaders: {'accept': 'application/json'}})
-    .get('/case_blocks/support_requests/case-with-documents.json')
-    .query({auth_token: 'tnqhvzxYaRnVt7zRWYhr'})
-    .reply(200, {
-      "support_request": {
-        _id: 'case-with-documents', systems_involved: '1', "_documents": [{
-          "content_type": "application/pdf",
-          "size": "2952201",
-          "extension": "pdf",
-          "uploaded_at": "2016-05-17T10:49:37.179Z",
-          "pages": [{
-            "page_no": 1,
-            "url": "/documents/2/22/573af72681e9a8296f000023/2016050515064627.pdf-x512-0.jpg?ignoreOnTimeline=true"
-          }, {
-            "url": "/documents/2/22/573af72681e9a8296f000023/2016050515064627.pdf-x512-1.jpg?ignoreOnTimeline=true",
-            "page_no": 2
-          }, {
-            "url": "/documents/2/22/573af72681e9a8296f000023/2016050515064627.pdf-x512-2.jpg?ignoreOnTimeline=true",
-            "page_no": 3
-          }, {
-            "url": "/documents/2/22/573af72681e9a8296f000023/2016050515064627.pdf-x512-3.jpg?ignoreOnTimeline=true",
-            "page_no": 4
-          }, {
-            "page_no": 5,
-            "url": "/documents/2/22/573af72681e9a8296f000023/2016050515064627.pdf-x512-4.jpg?ignoreOnTimeline=true"
-          }, {
-            "url": "/documents/2/22/573af72681e9a8296f000023/2016050515064627.pdf-x512-5.jpg?ignoreOnTimeline=true",
-            "page_no": 6
-          }, {
-            "url": "/documents/2/22/573af72681e9a8296f000023/2016050515064627.pdf-x512-6.jpg?ignoreOnTimeline=true",
-            "page_no": 7
-          }],
-          "_id": "573af74181e9a82979000008",
-          "file_name": "old-filename.pdf",
-          "url": "/documents/2/22/573af72681e9a8296f000023/old-filename.pdf"
-        }],
-        "application_pdf": {
-          "file_name": "old-filename.pdf",
-          "url": "/documents/2/22/573af72681e9a8296f000023/old-filename.pdf",
-          "content_type": "application/pdf",
-          "size": "2952201",
-          "extension": "pdf",
-          "uploaded_at": "2016-05-17T10:49:37.179Z",
-          "used_as_attachment": false,
-          "pages": [{
-            "page_no": 1,
-            "url": "/documents/2/22/573af72681e9a8296f000023/2016050515064627.pdf-x512-0.jpg?ignoreOnTimeline=true"
-          }, {
-            "url": "/documents/2/22/573af72681e9a8296f000023/2016050515064627.pdf-x512-1.jpg?ignoreOnTimeline=true",
-            "page_no": 2
-          }, {
-            "url": "/documents/2/22/573af72681e9a8296f000023/2016050515064627.pdf-x512-2.jpg?ignoreOnTimeline=true",
-            "page_no": 3
-          }, {
-            "url": "/documents/2/22/573af72681e9a8296f000023/2016050515064627.pdf-x512-3.jpg?ignoreOnTimeline=true",
-            "page_no": 4
-          }, {
-            "page_no": 5,
-            "url": "/documents/2/22/573af72681e9a8296f000023/2016050515064627.pdf-x512-4.jpg?ignoreOnTimeline=true"
-          }, {
-            "url": "/documents/2/22/573af72681e9a8296f000023/2016050515064627.pdf-x512-5.jpg?ignoreOnTimeline=true",
-            "page_no": 6
-          }, {
-            "url": "/documents/2/22/573af72681e9a8296f000023/2016050515064627.pdf-x512-6.jpg?ignoreOnTimeline=true",
-            "page_no": 7
-          }],
-          "status": null,
-
-        },
-        "work_type_id": 22
-      }
-    });
-
-  nock('http://test-caseblocks-location')
-    .put('/documents/2/22/573af72681e9a8296f000023/old-filename.pdf', "new_file_name=new-filename.pdf")
-    .query({new_file_name: "new-filename.pdf", auth_token: 'tnqhvzxYaRnVt7zRWYhr'})
-    .reply(200, "{\"file_name\":\"new-filename.pdf\",\"url\":\"/documents/2/22/573af72681e9a8296f000023/new-filename.pdf\"}");
-
-  nock('http://test-caseblocks-location', {reqheaders: {'accept': 'application/json'}})
-    .put('/case_blocks/support_requests/case-with-documents.json', {
-      "support_request": {
-        "_id": "case-with-documents",
-        "systems_involved": "1",
-        "application_pdf": {
-          "file_name": "new-filename.pdf",
-          "url": "/documents/2/22/573af72681e9a8296f000023/new-filename.pdf",
-          "content_type": "application/pdf",
-          "size": "2952201",
-          "extension": "pdf",
-          "uploaded_at": "2016-05-17T10:49:37.179Z",
-          "used_as_attachment": false,
-          "pages": [{
-            "page_no": 1,
-            "url": "/documents/2/22/573af72681e9a8296f000023/2016050515064627.pdf-x512-0.jpg?ignoreOnTimeline=true"
-          }, {
-            "url": "/documents/2/22/573af72681e9a8296f000023/2016050515064627.pdf-x512-1.jpg?ignoreOnTimeline=true",
-            "page_no": 2
-          }, {
-            "url": "/documents/2/22/573af72681e9a8296f000023/2016050515064627.pdf-x512-2.jpg?ignoreOnTimeline=true",
-            "page_no": 3
-          }, {
-            "url": "/documents/2/22/573af72681e9a8296f000023/2016050515064627.pdf-x512-3.jpg?ignoreOnTimeline=true",
-            "page_no": 4
-          }, {
-            "page_no": 5,
-            "url": "/documents/2/22/573af72681e9a8296f000023/2016050515064627.pdf-x512-4.jpg?ignoreOnTimeline=true"
-          }, {
-            "url": "/documents/2/22/573af72681e9a8296f000023/2016050515064627.pdf-x512-5.jpg?ignoreOnTimeline=true",
-            "page_no": 6
-          }, {
-            "url": "/documents/2/22/573af72681e9a8296f000023/2016050515064627.pdf-x512-6.jpg?ignoreOnTimeline=true",
-            "page_no": 7
-          }],
-          "status": null
-        },
-        "work_type_id": 22
-      }
-    })
-    .query({auth_token: 'tnqhvzxYaRnVt7zRWYhr'})
-    .reply(200, {
-      "support_request": {
-        _id: '550c40d9841976debf000011',
-        systems_involved: "2",
-        calculated_field1: "calculated-result1",
-        calculated_field2: "calculated-result2"
-      }
-    });
-
-  // TODO: Move this back to its place.
-
-  const accountId = casePayload.account_id
-  const caseTypeId = casePayload.case_type_id
-  const caseId = casePayload._id
-  const caseResourcePath = `/case_blocks/${caseTypeName.plu}/${caseId}.json`
-  const documentResourcePath = `/documents/${accountId}/${caseTypeId}/${caseId}/`
-
-  nock('http://test-caseblocks-location', {reqheaders: {'accept': 'application/json'}})
-    .get(caseResourcePath)
-    .query(authQuery)
-    .reply(200, {
-      [caseTypeName.sing]: casePayload
-    })
-
-  nock('https://test-caseblocks-location')
-    .post(documentResourcePath)
-    .query(authQuery)
-    .reply(function(uri, requestBody) {
-      return processDocumentPostRequest(this.req, requestBody)
-    })
-
+const authQuery = {
+  auth_token: 'tnqhvzxYaRnVt7zRWYhr'
 }
+
+const caseBlocksBaseURL = 'http://test-caseblocks-location'
+
+const htmlDocumentString = fs.readFileSync(htmlDocumentPath, 'utf-8')
 
 
 const processDocumentPostRequest = (request, body) => {
@@ -235,7 +79,6 @@ const processDocumentPostRequest = (request, body) => {
   }
 
 }
-
 
 const getContentTypeHeader = (headers, name) => {
 
@@ -367,6 +210,154 @@ const hasTheRightFormFieldName = payload => {
 }
 
 
+const nockHttp = () => {
+
+  // Documents
+
+  nock(caseBlocksBaseURL, {reqheaders: {'accept': 'application/json'}})
+    .get('/case_blocks/support_requests/case-with-documents.json')
+    .query({auth_token: 'tnqhvzxYaRnVt7zRWYhr'})
+    .reply(200, {
+      "support_request": {
+        _id: 'case-with-documents', systems_involved: '1', "_documents": [{
+          "content_type": "application/pdf",
+          "size": "2952201",
+          "extension": "pdf",
+          "uploaded_at": "2016-05-17T10:49:37.179Z",
+          "pages": [{
+            "page_no": 1,
+            "url": "/documents/2/22/573af72681e9a8296f000023/2016050515064627.pdf-x512-0.jpg?ignoreOnTimeline=true"
+          }, {
+            "url": "/documents/2/22/573af72681e9a8296f000023/2016050515064627.pdf-x512-1.jpg?ignoreOnTimeline=true",
+            "page_no": 2
+          }, {
+            "url": "/documents/2/22/573af72681e9a8296f000023/2016050515064627.pdf-x512-2.jpg?ignoreOnTimeline=true",
+            "page_no": 3
+          }, {
+            "url": "/documents/2/22/573af72681e9a8296f000023/2016050515064627.pdf-x512-3.jpg?ignoreOnTimeline=true",
+            "page_no": 4
+          }, {
+            "page_no": 5,
+            "url": "/documents/2/22/573af72681e9a8296f000023/2016050515064627.pdf-x512-4.jpg?ignoreOnTimeline=true"
+          }, {
+            "url": "/documents/2/22/573af72681e9a8296f000023/2016050515064627.pdf-x512-5.jpg?ignoreOnTimeline=true",
+            "page_no": 6
+          }, {
+            "url": "/documents/2/22/573af72681e9a8296f000023/2016050515064627.pdf-x512-6.jpg?ignoreOnTimeline=true",
+            "page_no": 7
+          }],
+          "_id": "573af74181e9a82979000008",
+          "file_name": "old-filename.pdf",
+          "url": "/documents/2/22/573af72681e9a8296f000023/old-filename.pdf"
+        }],
+        "application_pdf": {
+          "file_name": "old-filename.pdf",
+          "url": "/documents/2/22/573af72681e9a8296f000023/old-filename.pdf",
+          "content_type": "application/pdf",
+          "size": "2952201",
+          "extension": "pdf",
+          "uploaded_at": "2016-05-17T10:49:37.179Z",
+          "used_as_attachment": false,
+          "pages": [{
+            "page_no": 1,
+            "url": "/documents/2/22/573af72681e9a8296f000023/2016050515064627.pdf-x512-0.jpg?ignoreOnTimeline=true"
+          }, {
+            "url": "/documents/2/22/573af72681e9a8296f000023/2016050515064627.pdf-x512-1.jpg?ignoreOnTimeline=true",
+            "page_no": 2
+          }, {
+            "url": "/documents/2/22/573af72681e9a8296f000023/2016050515064627.pdf-x512-2.jpg?ignoreOnTimeline=true",
+            "page_no": 3
+          }, {
+            "url": "/documents/2/22/573af72681e9a8296f000023/2016050515064627.pdf-x512-3.jpg?ignoreOnTimeline=true",
+            "page_no": 4
+          }, {
+            "page_no": 5,
+            "url": "/documents/2/22/573af72681e9a8296f000023/2016050515064627.pdf-x512-4.jpg?ignoreOnTimeline=true"
+          }, {
+            "url": "/documents/2/22/573af72681e9a8296f000023/2016050515064627.pdf-x512-5.jpg?ignoreOnTimeline=true",
+            "page_no": 6
+          }, {
+            "url": "/documents/2/22/573af72681e9a8296f000023/2016050515064627.pdf-x512-6.jpg?ignoreOnTimeline=true",
+            "page_no": 7
+          }],
+          "status": null,
+
+        },
+        "work_type_id": 22
+      }
+    });
+
+  nock(caseBlocksBaseURL)
+    .put('/documents/2/22/573af72681e9a8296f000023/old-filename.pdf', "new_file_name=new-filename.pdf")
+    .query({new_file_name: "new-filename.pdf", auth_token: 'tnqhvzxYaRnVt7zRWYhr'})
+    .reply(200, "{\"file_name\":\"new-filename.pdf\",\"url\":\"/documents/2/22/573af72681e9a8296f000023/new-filename.pdf\"}");
+
+  nock(caseBlocksBaseURL, {reqheaders: {'accept': 'application/json'}})
+    .put('/case_blocks/support_requests/case-with-documents.json', {
+      "support_request": {
+        "_id": "case-with-documents",
+        "systems_involved": "1",
+        "application_pdf": {
+          "file_name": "new-filename.pdf",
+          "url": "/documents/2/22/573af72681e9a8296f000023/new-filename.pdf",
+          "content_type": "application/pdf",
+          "size": "2952201",
+          "extension": "pdf",
+          "uploaded_at": "2016-05-17T10:49:37.179Z",
+          "used_as_attachment": false,
+          "pages": [{
+            "page_no": 1,
+            "url": "/documents/2/22/573af72681e9a8296f000023/2016050515064627.pdf-x512-0.jpg?ignoreOnTimeline=true"
+          }, {
+            "url": "/documents/2/22/573af72681e9a8296f000023/2016050515064627.pdf-x512-1.jpg?ignoreOnTimeline=true",
+            "page_no": 2
+          }, {
+            "url": "/documents/2/22/573af72681e9a8296f000023/2016050515064627.pdf-x512-2.jpg?ignoreOnTimeline=true",
+            "page_no": 3
+          }, {
+            "url": "/documents/2/22/573af72681e9a8296f000023/2016050515064627.pdf-x512-3.jpg?ignoreOnTimeline=true",
+            "page_no": 4
+          }, {
+            "page_no": 5,
+            "url": "/documents/2/22/573af72681e9a8296f000023/2016050515064627.pdf-x512-4.jpg?ignoreOnTimeline=true"
+          }, {
+            "url": "/documents/2/22/573af72681e9a8296f000023/2016050515064627.pdf-x512-5.jpg?ignoreOnTimeline=true",
+            "page_no": 6
+          }, {
+            "url": "/documents/2/22/573af72681e9a8296f000023/2016050515064627.pdf-x512-6.jpg?ignoreOnTimeline=true",
+            "page_no": 7
+          }],
+          "status": null
+        },
+        "work_type_id": 22
+      }
+    })
+    .query({auth_token: 'tnqhvzxYaRnVt7zRWYhr'})
+    .reply(200, {
+      "support_request": {
+        _id: '550c40d9841976debf000011',
+        systems_involved: "2",
+        calculated_field1: "calculated-result1",
+        calculated_field2: "calculated-result2"
+      }
+    });
+
+
+  nock(caseBlocksBaseURL, {reqheaders: {'accept': 'application/json'}})
+    .get(caseResourcePath)
+    .query(authQuery)
+    .reply(200, {
+      [caseTypeName.sing]: casePayload
+    })
+
+  nock('https://test-caseblocks-location')
+    .post(documentResourcePath)
+    .query(authQuery)
+    .reply(function(uri, requestBody) {
+      return processDocumentPostRequest(this.req, requestBody)
+    })
+
+}
 
 
 module.exports = {
