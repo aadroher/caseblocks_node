@@ -10,35 +10,48 @@ var Casetype = require('./casetype.js');
 var Team = require('./team.js');
 var User = require('./user.js');
 
-var Caseblocks = function(host, token) {
-  this.host = host;
-  this.token = token;
-};
 
-Caseblocks.prototype.buildUrl = function(path) {
-  var url = this.host+path;
-  if (url.indexOf("?") > 0)
-    url = url + "&auth_token="+this.token;
-  else
-    url = url + "?auth_token="+this.token;
+class Caseblocks {
 
-  return url;
-};
+  // Static methods
 
-Caseblocks.setup = function(host, token) {
-  caseblocks = new Caseblocks(host, token);
+  static setup(host, token) {
 
-  Case.Caseblocks = caseblocks;
-  Tasklist.Caseblocks = caseblocks;
-  Task.Caseblocks = caseblocks;
-  Bucket.Caseblocks = caseblocks;
-  Email.Caseblocks = caseblocks;
-  Conversation.Caseblocks = caseblocks;
-  Document.Caseblocks = caseblocks;
-  Casetype.Caseblocks = caseblocks;
-  Team.Caseblocks = caseblocks;
-  User.Caseblocks = caseblocks;
-};
+    const caseblocks = new Caseblocks(host, token);
+
+    Case.Caseblocks = caseblocks;
+    Tasklist.Caseblocks = caseblocks;
+    Task.Caseblocks = caseblocks;
+    Bucket.Caseblocks = caseblocks;
+    Email.Caseblocks = caseblocks;
+    Conversation.Caseblocks = caseblocks;
+    Document.Caseblocks = caseblocks;
+    Casetype.Caseblocks = caseblocks;
+    Team.Caseblocks = caseblocks;
+    User.Caseblocks = caseblocks;
+
+  }
+
+  // Instance methods
+
+  constructor(host, token) {
+
+    this.host = host;
+    this.token = token;
+
+  }
+
+  buildUrl(path) {
+
+    const url = `${this.host}${path}`;
+    const separator = url.includes('?') ? '&'
+                                        : '?';
+
+    return `${url}${separator}auth_token=${this.token}`;
+
+  }
+
+}
 
 module.exports.setup = Caseblocks.setup;
 module.exports.Case = Case;

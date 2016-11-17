@@ -1,0 +1,37 @@
+{
+  "_id": "09eef94cbc39370046000da1",
+  "number_of_orders": null,
+  "title": "Guybrush Threepwood",
+  "first_name": "Guybrush",
+  "last_name": "Threepwood",
+  "email": "gthreepwood@piratesguild.com",
+  "schema_version": 3,
+  "created_at": "2016-09-30T23:46:20.354Z",
+  "updated_at": "2016-09-30T23:46:20.354Z",
+  "due_at": "2016-09-30T23:46:20.343Z",
+  "owner_name": "Registered Users",
+  "unread_conversations": 0,
+  "current_state": "Active",
+  "owned_by_id": 187,
+  "owned_by_type": "CaseBlocks::Team",
+  "case_type": "Pirate",
+  "case_type_id": 1668,
+  "__comment": "`case_type_id` Normally not there. Included for testing purposes.",
+  "current_state_id": 1158,
+  "_title": "Test Client",
+  "participating_users": [
+    692
+  ],
+  "account_id": 21,
+  "participating_teams": [
+    187
+  ],
+  "version": 1,
+  "_documents": [],
+  "collection": null,
+  "_unread_messages": 4,
+  "_no_messages": 4,
+  "conversations": [],
+  "tasklists": [],
+  "organization_type_id": 268
+}

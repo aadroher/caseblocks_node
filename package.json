@@ -1,6 +1,6 @@
 {
   "name": "caseblocks",
-  "version": "0.1.30",
+  "version": "0.1.31",
   "description": "Module to interact with the CaseBlocks API",
   "main": "index.js",
   "scripts": {
@@ -11,6 +11,9 @@
     "url": "git://git.emergeadapt.com:developers/caseblocks_node.git"
   },
   "author": "Stewart McKee <stewart@emergeadapt.com> (http://www.emergeadapt.com/)",
+  "contributors": [
+    "Armand Adroher <armand@emergeadapt.com> (http://www.emergeadapt.com/)"
+  ],
   "licenses": [
     {
       "type": "MIT",
@@ -23,15 +26,14 @@
   "homepage": "https://git.emergeadapt.com/developers/caseblocks_node#readme",
   "devDependencies": {
     "chai": "^2.3.0",
-    "mocha": "^2.2.4",
-    "nock": "2.17.0",
-    "chai-as-promised": "5.1.0"
+    "chai-as-promised": "5.1.0",
+    "mocha": "^2.5.3",
+    "nock": "2.17.0"
   },
   "dependencies": {
     "restler": "^3.2.1",
     "inflection": "^1.7.0",
     "q": "^1.3.0",
-    "restler": "^3.2.2",
     "restler-q": "git://github.com/stewartmckee/restler-q.git",
     "html-to-text": "1.3.2",
     "underscore": "*"

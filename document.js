@@ -1,86 +1,236 @@
-var rest = require('restler-q');
-var inflection = require( 'inflection' );
-var _ = require('underscore')
 
-var Q = require('q');
+const https = require('https');
+const url = require('url');
+const rest = require('restler-q');
 
-var Document = function(attributes, kase) {
-  for(var k in attributes) {
-    this[k] = attributes[k];
-  }
-  this.kase = kase;
-  this.id = attributes._id
+// Utility functions and constants not to be exposed.
+// This is a poor mans (and more functional) way of defining private
+// members (is's a closure, after all).
 
-  this.base_url = this.url.split("/").slice(0,-1).join("/")
+const randomStringLength = 15;
+const CRLF = '\r\n';
+
+const getDocumentsEndPointPath = (caseTypeId, caseInstance) => {
+
+  const accountId = caseInstance.attributes.account_id;
+  const caseId = caseInstance.attributes._id;
+  return `/documents/${accountId}/${caseTypeId}/${caseId}/`;
+
+
 };
 
-Document.prototype.rename = function(newFilename) {
-  if (!Document.Caseblocks)
-    throw "Must call Caseblocks.setup";
+const getBoundary = () => {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+  const randomString = [...Array(randomStringLength).keys()].reduce((acc, position) =>
+    acc + chars.charAt(Math.floor(Math.random() * chars.length))
+  );
+  return `${randomString}`;
+};
 
-  var _this = this
-  _this.debug = []
-  var originalFilename = _this.file_name
-  var originalUrl = _this.url
-  _this.debug.push("starting rename")
-  return Q.fcall(function(data) {
-    var url = _this.url
-    var formData = {"new_file_name": newFilename}
-    _this.requestData = formData
-    _this.requestUrl = Document.Caseblocks.buildUrl(url) + "&new_file_name="+newFilename
-    return rest.put(Document.Caseblocks.buildUrl(url) + "&new_file_name="+newFilename, {data: formData}).then(function(jsonResponse) {
-      var response = JSON.parse(jsonResponse)
-      _this.file_name = response.file_name
-      _this.url = response.url
+class Document {
 
-      _this.documentRespnose = response
-/*
-      var documentField = {}
-      for (var key in _this) {
-        documentField[key] = _this[key]
-      }
+  // Static methods
 
-      delete documentField.base_url
-      delete documentField.kase*/
+  /**
+   * Creates a document from a string and attaches it to caseInstance
+   * @param caseTypeId {string} The id of the case type this case belongs to
+   * @param caseInstance {object} The case to attach it to
+   * @param fileName {string} The name of the file
+   * @param contents {string} The content of the file
+   * @return {Promise.<Document>} A promise that resolves to the metadata about the saved file.
+   */
+  static fromString(caseTypeId, caseInstance, fileName, contents) {
 
-      return _this
+    const isIntegerRepresentation = x =>
+      Number.isInteger(x) || (typeof x === 'string' && !/[^0-9]+/.test(x))
+    const isAlphaNumeric = x => (typeof x === 'string' && (/^[a-z0-9]+$/i).test(x))
 
-      /*return _this.kase.caseType().then(function(caseType) {
-        var documentFields = caseType.fieldsOfType("document")
-        var field = _.find(documentFields, function(field) { return _this.kase.attributes[field.name].url == originalUrl })
-        if (typeof(field) != "undefined") {
-          _this.debug.push("found field " + field.name)
-          _this.kase.attributes[field.name].file_name = _this.file_name
-          _this.debug.push("set field file_name to " + _this.file_name)
-          _this.kase.attributes[field.name].url = _this.url
-          _this.debug.push("set field url to " + _this.url)
-          delete _this.kase.version
-          return _this.kase.save().then(function(casedata) {
-            _this.debug.push("successfully saved case")
-            return _this;
-          }).fail(function(err) {
-            _this.debug.push(err)
-            throw new Error("Error saving case");
+    const validCaseTypeId = isIntegerRepresentation(caseTypeId)
+    const validAccountId = isIntegerRepresentation(caseInstance.attributes.account_id)
+    const validCaseId = isAlphaNumeric(caseInstance.attributes._id)
+
+    // TODO: Implement this guard as a method decorator for all methods.
+    if(!Document.Caseblocks) {
+
+      const msg = 'You must first call Caseblocks.setup';
+      return Promise.reject(new Error(msg));
+
+    } else if (!validCaseTypeId) {
+
+      const msg = `'${caseTypeId}' is not a valid case type ID.`;
+      return Promise.reject(new Error(msg));
+
+    } else if (!validAccountId) {
+
+      const msg = `'${caseInstance.account_id}' is not a valid account ID.`;
+      return Promise.reject(new Error(msg));
+
+    } else if (!validCaseId) {
+
+      const msg = `'${caseInstance._id}' is not a valid case ID`;
+      return Promise.reject(new Error(msg));
+
+    } else {
+
+      const documentsEndPointPath = getDocumentsEndPointPath(caseTypeId, caseInstance);
+      const uri = Document.Caseblocks.buildUrl(documentsEndPointPath);
+
+      const urlObject = url.parse(uri, true);
+      const boundary = getBoundary();
+
+      const payloadLines = [
+        `--${boundary}`,
+        `Content-Disposition: form-data; name="newFileName"`,
+        '',
+        `${fileName}`,
+        `--${boundary}`,
+        `Content-Disposition: form-data; name="file"; filename="${fileName}"`,
+        `Content-Type: text/plain; charset=utf-8`,
+        '',
+        `${contents}`,
+        `--${boundary}--`
+      ];
+
+
+      const payload = payloadLines.join(CRLF);
+      const payloadBuffer = Buffer.from(payload);
+
+      const requestOptions = {
+        protocol: urlObject.protocol,
+        hostname: urlObject.hostname,
+        path: urlObject.path,
+        method: 'POST',
+        headers: {
+          'Content-Length': payloadBuffer.length,
+          'Content-Type': `multipart/form-data; boundary="${boundary}"`,
+          'Accept': '*/*',
+          'X-Requested-With': 'XMLHttpRequest',
+          'Accept-Encoding': 'gzip, deflate, br',
+          'Accept-Language': 'en-US,en;q=0.8',
+          'auth_token': Document.Caseblocks.token
+        },
+      };
+
+      // Here the actual action begins.
+      return new Promise((resolve, reject) => {
+
+        let req = https.request(requestOptions, res => {
+
+          const statusCode = res.statusCode;
+
+          // Accumulate the response on an external variable.
+
+          let respString = '';
+
+          res.setEncoding('utf-8');
+
+          res.on('data', chunk => {
+            respString += chunk + '\n';
           });
-        } else {
-          return _this;
-        }
-      }).fail(function(err) {
-        console.log(err)
-        throw new Error("Error loading case type document");
-      });*/
-    }).fail(function(err) {
-      console.log(err)
-      throw new Error("Error renaming document");
+
+          res.on('end', () => {
+
+            if (![200, 201].includes(statusCode)) {
+
+              const msg = `The document server has returned error ${statusCode}:\n` +
+                          `${respString}`;
+              reject(new Error(msg));
+
+            } else {
+
+              const respBodyObject = JSON.parse(respString);
+              const document = new Document(respBodyObject, caseInstance);
+              resolve(document);
+
+            }
+          });
+
+        });
+
+        // Bind the error to reject.
+        req.on('error', err => {
+          reject(new Error(err.message));
+        });
+
+        // Write the payload.
+        req.write(payloadBuffer);
+
+        // Mark the request as complete.
+        req.end();
+
+      });
+
+    }
+
+  }
+
+  // Instance methods
+  constructor(attributes, caseInstance) {
+
+    Object.keys(attributes).forEach(key => {
+      this[key] = attributes[key];
     });
-  });
-}
 
-Document.prototype.delete = function() {
-  if (!Document.Caseblocks)
-    throw "Must call Caseblocks.setup";
+    this.caseInstance = caseInstance;
+    this.id = attributes._id;
 
-  throw("Not implemented Yet")
+    this.debug = [];
+
+  }
+
+  rename(newFilename) {
+
+    if(!Document.Caseblocks) {
+
+      throw "Must call Caseblocks.setup";
+
+    } else {
+
+      const originalFilename = this.file_name;
+      const originalURL = this.url;
+
+      this.debug.push("starting rename");
+
+      const url = this.url;
+      const formData = {
+        new_file_name: newFilename
+      };
+
+      const requestUrl = `${Document.Caseblocks.buildUrl(url)}&new_file_name=${newFilename}`;
+
+      return rest.put(requestUrl, { data: formData }).then(jsonResponse => {
+
+                const response = JSON.parse(jsonResponse);
+
+                return {
+                  file_name: response.file_name,
+                  url: response.url
+                }
+
+              }).fail(err => {
+
+                console.log(err);
+                throw new Error("Error renaming document");
+
+              });
+
+    }
+
+  }
+
+  delete() {
+
+    if(!Document.Caseblocks) {
+
+      throw "Must call Caseblocks.setup";
+
+    } else {
+
+      throw("Not implemented Yet");
+
+    }
+  }
+
 }
 
 module.exports = Document;
