@@ -11,6 +11,9 @@
     "url": "git://git.emergeadapt.com:developers/caseblocks_node.git"
   },
   "author": "Stewart McKee <stewart@emergeadapt.com> (http://www.emergeadapt.com/)",
+  "contributors": [
+    "Armand Adroher <armand@emergeadapt.com> (http://www.emergeadapt.com/)"
+  ],
   "licenses": [
     {
       "type": "MIT",

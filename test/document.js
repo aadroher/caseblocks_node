@@ -1,4 +1,4 @@
-const helper = require("./spec_helper");
+const helper = require("./helpers/document_tests_helper");
 const should = require('chai').should(),
       Caseblocks = require('../index');
 
@@ -80,7 +80,7 @@ describe('document', function() {
 
   describe('creating documents from a string', function() {
 
-    it.only('should resolve into a document instance', function (done) {
+    it('should resolve into a document instance', function (done) {
 
       Caseblocks.setup("http://test-caseblocks-location", "tnqhvzxYaRnVt7zRWYhr")
 
