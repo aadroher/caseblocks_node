@@ -1,4 +1,4 @@
-var helper = require("./spec_helper");
+var helper = require("./helpers/spec_helper");
 var should = require('chai').should();
 var Caseblocks = require('../index');
 
