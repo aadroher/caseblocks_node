@@ -5,7 +5,7 @@ const Document = require('./document.js')
 const Casetype = require('./casetype.js')
 const User = require('./user.js')
 const Team = require("./team.js")
-const _ = require("underscore")
+const _ = require('underscore')
 
 class Case {
 
@@ -65,30 +65,50 @@ class Case {
       // Follow the same pattern as in `Case.create`.
       const uri = Case.Caseblocks.buildUrl(`/case_blocks/${caseTypeName}/${id}.json`)
 
-      return rest.get(uri, {headers: {"Accept": "application/json"}}).then(caseData => {
+      return rest.get(uri, {headers: {"Accept": "application/json"}})
+        .then(caseData => {
 
-        const caseTypeCode = Object.keys(caseData).pop()
-        const caseTypeName = inflection.pluralize(caseTypeCode)
+          const caseTypeCode = Object.keys(caseData).pop()
+          const caseTypeName = inflection.pluralize(caseTypeCode)
 
-        const attributes = caseData[caseTypeCode]
+          const attributes = caseData[caseTypeCode]
 
-        return Object.assign(
-            new Case(attributes),
-            {
-              case_type_code: caseTypeCode,
-              case_type_name: caseTypeName
-            }
-          )
+          return Object.assign(
+              new Case(attributes),
+              {
+                case_type_code: caseTypeCode,
+                case_type_name: caseTypeName
+              }
+            )
 
-      })
+        })
 
     }
 
   }
 
-  static search() {
+  static search(caseTypeId, query) {
 
-    throw new Error('Not implemented.')
+    if (!Case.Caseblocks) {
+
+      throw new Error("Must call Caseblocks.setup")
+
+    } else {
+
+      const uri = Case.Caseblocks.buildUrl(`/case_blocks/search.json?query=${query}`)
+
+      return rest.get(uri,  {headers: {"Accept": "application/json"}})
+        .then(results => {
+
+          const caseTypeResults = results.find(result =>
+              result.case_type_id === caseTypeId
+            ) || []
+
+          return caseTypeResults.cases.map(attributes => new Case(attributes))
+
+        })
+
+    }
 
   }
 
@@ -211,9 +231,44 @@ class Case {
 
   }
 
-  related() {
+  related(relatedCaseTypeName, relationId) {
 
-    throw new Error('Not implemented.')
+    if (!Case.Caseblocks) {
+
+      throw new Error("Must call Caseblocks.setup")
+
+    } else {
+
+      const path = `/case_blocks/${relatedCaseTypeName}.json`
+      const pageSize = 10000
+      const page = 0
+
+      const params = {
+        relation_id: relationId,
+        relationship_type: 'CaseBlocks::CaseTypeDirectRelationship',
+        case_from_id: this.id,
+        page_size: pageSize,
+        page: page
+      }
+
+      console.log(this)
+
+      const queryString = Object.keys(params).map(key =>
+        `related_cases[${key}]=${encodeURIComponent(params[key])}`
+      ).join('&')
+
+      const uri = Case.Caseblocks.buildUrl(`${path}?${queryString}`)
+
+      console.log(uri)
+
+      return rest.get(uri, {headers: {"Accept": "application/json"}})
+        .then(result =>
+
+          result[relatedCaseTypeName].map(attributes => new Case(attributes))
+
+        )
+
+    }
 
   }
 

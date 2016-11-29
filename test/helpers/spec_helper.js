@@ -142,11 +142,6 @@ const nockHttp = () => {
     );
 
   nock('http://test-caseblocks-location', {reqheaders: {'accept': 'application/json'}})
-    .get('/case_blocks/customers/54524f696b949172a7000001.json')
-    .query({auth_token: 'tnqhvzxYaRnVt7zRWYhr'})
-    .reply(200, {_id: '554379ab841976f73700011c'});
-
-  nock('http://test-caseblocks-location', {reqheaders: {'accept': 'application/json'}})
     .get('/case_blocks/customers/54524f696b949172a7000002.json')
     .query({auth_token: 'tnqhvzxYaRnVt7zRWYhr'})
     .reply(200, {
@@ -156,6 +151,11 @@ const nockHttp = () => {
         participating_users: [6, 11]
       }
     });
+
+  nock('http://test-caseblocks-location', {reqheaders: {'accept': 'application/json'}})
+    .get('/case_blocks/customers/54524f696b949172a7000001.json')
+    .query({auth_token: 'tnqhvzxYaRnVt7zRWYhr'})
+    .reply(200, {support_request: {_id: '554379ab841976f73700011c'}});
 
   nock('http://test-caseblocks-location', {reqheaders: {'accept': 'application/json'}})
     .get('/case_blocks/web_enquiries.json')
