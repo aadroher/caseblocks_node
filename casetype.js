@@ -1,5 +1,4 @@
-const rest = require('restler-q');
-const inflection = require( 'inflection' );
+const rest = require('restler-q')
 
 class Casetype {
 
@@ -51,4 +50,4 @@ class Casetype {
 
 }
 
-module.exports = Casetype;
+module.exports = Casetype
