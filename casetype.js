@@ -1,42 +1,53 @@
-var rest = require('restler-q');
-var inflection = require( 'inflection' );
-var _ = require('underscore')
+const rest = require('restler-q')
 
-var Q = require('q');
+class Casetype {
 
-var Casetype = function(attributes) {
-  for(var k in attributes) {
-    this[k] = attributes[k];
+  static get(id) {
+
+    if (!Casetype.Caseblocks) {
+
+      throw new Error("Must call Caseblocks.setup");
+
+    } else {
+
+      const uri = Casetype.Caseblocks.buildUrl(`/case_blocks/case_types/${id}.json`)
+
+      return rest.get(uri, { headers: { "Accept": "application/json" }})
+        .then(caseTypeData =>
+
+          new Casetype(caseTypeData.case_type)
+
+        )
+
+    }
+
   }
-};
 
-Casetype.get = function(id) {
-  if (!Casetype.Caseblocks)
-    throw new Error("Must call Caseblocks.setup");
+  constructor(attributes) {
 
-  return Q.fcall(function(data) {
-    return rest.get(Casetype.Caseblocks.buildUrl("/case_blocks/case_types/"+id+ ".json"), {headers: {"Accept": "application/json"}}).then(function (caseTypeData) {
-      return new Casetype(caseTypeData.case_type)
-    }).fail(function(err) {
-      throw err;
-    });
-  });
+    // Avoid iterating over inherited properties
+    for (let key of Object.keys(attributes)) {
+      this[key] = attributes[key]
+    }
+
+  }
+
+  fieldsOfType(typeName) {
+
+    // This does not mutate `this.schema`. `slice` returns a copy.
+    const currentSchema = this.schema.slice(-1).pop()
+
+    // Flatten `this.schema` by reducing it.
+    return currentSchema.fieldsets.reduce((prevVal, fieldset) => {
+
+      const newFields = fieldset.fields.filter(field => field.type === typeName)
+
+      return [...prevVal, ...newFields]
+
+      }, [])
+
+  }
+
 }
 
-Casetype.prototype.fieldsOfType = function(fieldType) {
-  var _this = this;
-  var fields = [];
-
-  schema = _this.schema[_this.schema.length-1]
-  schema.fieldsets.forEach(function(fieldset) {
-    fieldset.fields.forEach(function(field) {
-      if (field.type == fieldType) {
-        fields.push(field)
-      }
-    })
-  })
-
-  return fields
-}
-
-module.exports = Casetype;
+module.exports = Casetype

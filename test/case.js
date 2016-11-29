@@ -113,7 +113,6 @@ describe('case', function() {
   })
 
   it ("should find related documents", function(done) {
-    var case_id = "54524f696b949172a7000001"
     Caseblocks.Case.get("customers", "54524f696b949172a7000001").then(function(doc) {
       doc.related("web_enquiries", 28).then(function(related_docs) {
         related_docs.length.should.equal(1);
