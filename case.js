@@ -7,6 +7,8 @@ const User = require('./user.js')
 const Team = require("./team.js")
 const _ = require('underscore')
 
+
+
 class Case {
 
   // Static methods
@@ -87,6 +89,14 @@ class Case {
 
   }
 
+  // TODO: Extend this or create a new function
+
+  /**
+   * Wrapper around `this._search`
+   * @param caseTypeId {number|string}
+   * @param query {string|object}
+   * @return {Promise.<TResult>|*}
+   */
   static search(caseTypeId, query) {
 
     if (!Case.Caseblocks) {
@@ -95,16 +105,34 @@ class Case {
 
     } else {
 
+      // JS automatically typecasts, but it should not.
+      const caseTypeIdStr = caseTypeId.toString()
+      const caseTypeIdIsNumeric = /^[1-9][0-9]*$/.test(caseTypeIdStr)
+      const caseTypeIsAlphaNumeric = /^[1-9][0-9]*$/.test(caseTypeIdStr)
+
+      let caseTypeName
+      if (caseTypeIdIsNumeric) {
+        // Conversion of `caseTypeId` to case type name should be attempted.
+
+      } else {
+
+
+
+      }
+
+
       const uri = Case.Caseblocks.buildUrl(`/case_blocks/search.json?query=${query}`)
 
       return rest.get(uri,  {headers: {"Accept": "application/json"}})
         .then(results => {
 
+          console.log(results)
+
           const caseTypeResults = results.find(result =>
               result.case_type_id === caseTypeId
             ) || []
 
-          return caseTypeResults.cases.map(attributes => new Case(attributes))
+          return caseTypeResults.map(attributes => new Case(attributes))
 
         })
 
@@ -112,6 +140,13 @@ class Case {
 
   }
 
+  static _search(caseTypeName, query) {
+
+    const uri = Case.Caseblocks.buildUrl(`/case_blocks/${caseTypeName}/search.json`)
+
+    return rest.get(uri, params)
+
+  }
 
   // Instance methods
 
@@ -317,8 +352,8 @@ class Case {
 
   }
 
-
 }
+
 
 
 module.exports = Case
