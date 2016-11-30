@@ -162,8 +162,8 @@ const nockHttp = () => {
     .query({
       "related_cases[relation_id]": 28,
       "related_cases[relationship_type]": "CaseBlocks::CaseTypeDirectRelationship",
-      "related_cases[case_from_id]": "54524f696b949172a7000001",
-      "related_cases[page_size]": 100000,
+      "related_cases[case_from_id]": "554379ab841976f73700011c",
+      "related_cases[page_size]": 10000,
       "related_cases[page]": 0,
       "auth_token": "tnqhvzxYaRnVt7zRWYhr"
     })

@@ -251,15 +251,11 @@ class Case {
         page: page
       }
 
-      console.log(this)
-
       const queryString = Object.keys(params).map(key =>
-        `related_cases[${key}]=${encodeURIComponent(params[key])}`
+        `${encodeURIComponent(`related_cases[${key}]`)}=${encodeURIComponent(params[key])}`
       ).join('&')
 
       const uri = Case.Caseblocks.buildUrl(`${path}?${queryString}`)
-
-      console.log(uri)
 
       return rest.get(uri, {headers: {"Accept": "application/json"}})
         .then(result =>
