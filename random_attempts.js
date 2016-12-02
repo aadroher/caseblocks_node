@@ -1,19 +1,28 @@
-Caseblocks = require('./index.js')
-util = require('util')
+const Caseblocks = require('./index.js')
+const util = require('util')
 
 // Account dependant constants
 const caseBlocksAuthToken = 'iuW2v4Kj9BJAKUmrzwzm'
 const caseBlocksAPIBaseURL = 'https://login.caseblocks.com/'
 
-const orderCaseTypeId = '267'
+const orderCaseTypeId = 267
 
 Caseblocks.setup(caseBlocksAPIBaseURL, caseBlocksAuthToken)
 
 const query = `order_number:19616`
 
 Caseblocks.Case.search(orderCaseTypeId, query)
+  // .then(results =>
+  //
+  //   results.find(result =>
+  //     result.case_type_id === orderCaseTypeId
+  //   )
+  //
+  // )
   .then(console.log)
   .catch(err => {throw err})
+
+
 
 
 // The new search API expects

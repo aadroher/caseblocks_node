@@ -89,15 +89,12 @@ class Case {
 
   }
 
-  // TODO: Extend this or create a new function
-
   /**
-   * Wrapper around `this._search`
-   * @param caseTypeId {number|string}
+   * @param caseTypeRepresentation {number|string}
    * @param query {string|object}
    * @return {Promise.<TResult>|*}
    */
-  static search(caseTypeId, query) {
+  static search(caseTypeRepresentation, query) {
 
     if (!Case.Caseblocks) {
 
@@ -106,41 +103,65 @@ class Case {
     } else {
 
       // JS automatically typecasts, but it should not.
-      const caseTypeIdStr = caseTypeId.toString()
-      const caseTypeIdIsNumeric = /^[1-9][0-9]*$/.test(caseTypeIdStr)
-      const caseTypeIsAlphaNumeric = /^[1-9][0-9]*$/.test(caseTypeIdStr)
+      const caseTypeRepresentationStr = caseTypeRepresentation.toString()
+      const caseTypeRepresentationIsNumeric = /^[1-9][0-9]*$/.test(caseTypeRepresentationStr)
 
-      let caseTypeName
-      if (caseTypeIdIsNumeric) {
-        // Conversion of `caseTypeId` to case type name should be attempted.
+      const queryIsString = typeof query === "string"
+
+      if (caseTypeRepresentationIsNumeric && queryIsString) {
+
+        return this._search(caseTypeRepresentation, query)
 
       } else {
 
-
+        return this._search_via_api(caseTypeRepresentation, query)
 
       }
-
-
-      const uri = Case.Caseblocks.buildUrl(`/case_blocks/search.json?query=${query}`)
-
-      return rest.get(uri,  {headers: {"Accept": "application/json"}})
-        .then(results => {
-
-          console.log(results)
-
-          const caseTypeResults = results.find(result =>
-              result.case_type_id === caseTypeId
-            ) || []
-
-          return caseTypeResults.map(attributes => new Case(attributes))
-
-        })
 
     }
 
   }
 
-  static _search(caseTypeName, query) {
+  /**
+   * @param caseTypeId
+   * @param query
+   * @return {Promise.<T>}
+   * @private
+   */
+  static _search(caseTypeId, query) {
+
+    const uri = Case.Caseblocks.buildUrl(`/case_blocks/search.json?query=${query}`)
+
+    return rest.get(uri,  {headers: {"Accept": "application/json"}})
+      .then(results => {
+
+        const caseTypeResults = results.find(result =>
+            result.case_type_id === caseTypeId
+          ) || []
+
+        return caseTypeResults.cases.map(attributes => new Case(attributes))
+
+      })
+      .catch(err => {
+        console.log(err.message)
+        throw err
+      })
+
+  }
+
+  /**
+   * @param caseTypeName {string} A singular underscored case type name.
+   * @param query {object} A filter query representation with the following the pattern:
+   *  {
+   *    properties: {
+   *      field_name: value_to_match
+   *    },
+   *    page_size: n,
+   *    page_number: m
+   *  }
+   * @private
+   */
+  static _search_via_api(caseTypeName, query) {
 
     const uri = Case.Caseblocks.buildUrl(`/case_blocks/${caseTypeName}/search.json`)
 
