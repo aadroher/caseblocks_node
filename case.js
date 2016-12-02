@@ -8,8 +8,11 @@ const Team = require("./team.js")
 const _ = require('underscore')
 
 
-
 class Case {
+
+  static get max_page_size() {
+    return 1000
+  }
 
   // Static methods
 
@@ -89,10 +92,11 @@ class Case {
 
   }
 
+  // TODO: Add deprecation warning to the combinationof argument values that trigger `_search`.
   /**
    * @param caseTypeRepresentation {number|string}
    * @param query {string|object}
-   * @return {Promise.<TResult>|*}
+   * @return {Promise.<[object]>}
    */
   static search(caseTypeRepresentation, query) {
 
@@ -110,7 +114,7 @@ class Case {
 
       if (caseTypeRepresentationIsNumeric && queryIsString) {
 
-        return this._search(caseTypeRepresentation, query)
+        return this._search(parseInt(caseTypeRepresentation), query)
 
       } else {
 
@@ -123,9 +127,10 @@ class Case {
   }
 
   /**
-   * @param caseTypeId
-   * @param query
-   * @return {Promise.<T>}
+   * This is a new implementation of the old search function.
+   * @param caseTypeId {number}
+   * @param query {string}
+   * @return {Promise.<[object]>}
    * @private
    */
   static _search(caseTypeId, query) {
@@ -153,19 +158,38 @@ class Case {
    * @param caseTypeName {string} A singular underscored case type name.
    * @param query {object} A filter query representation with the following the pattern:
    *  {
-   *    properties: {
-   *      field_name: value_to_match
-   *    },
-   *    page_size: n,
-   *    page_number: m
+   *    field_name_0: value_to_match_0,
+   *    ...
+   *    field_name_n: value_to_match_n,
    *  }
+   * @return {Promise.<[object]>}
    * @private
    */
   static _search_via_api(caseTypeName, query) {
 
-    const uri = Case.Caseblocks.buildUrl(`/case_blocks/${caseTypeName}/search.json`)
+    // The API endpoint expects URI encoded spaces to separate case type
+    // name words.
+    const cleanCaseTypeName = encodeURIComponent(caseTypeName.replace('_', ' '))
+    const uri = Case.Caseblocks.buildUrl(`/case_blocks/${cleanCaseTypeName}/search.json`)
 
-    return rest.get(uri, params)
+    const searchParams = {
+      properties: query,
+      page_size: Case.max_page_size,
+      page: 0
+    }
+
+    return rest.postJson(uri, searchParams, {headers: {"Accept": "application/json"}})
+      .then(result => {
+        const pages = Math.trunc(result.summary.available_cases / Case.max_page_size) + 1
+
+        // We already have page 0
+
+        return Array
+
+
+
+      })
+      .catch(err => console.log(err))
 
   }
 
