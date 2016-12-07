@@ -1,4 +1,6 @@
+const qs = require('qs')
 const rest = require('restler-q')
+const fetch = require('node-fetch')
 const inflection = require( 'inflection' )
 const Conversation = require('./conversation.js')
 const Document = require('./document.js')
@@ -199,7 +201,7 @@ class Case {
 
     // Manually build URI. Hardcoded GET query in URL (as Caseblocks.buildURL generates)
     // seems to take precedence to the `query` option in `restler.get`.
-    const uri = `${Case.Caseblocks.host}/case_blocks/${caseTypeName}/search.json`
+    const baseUri = `${Case.Caseblocks.host}/case_blocks/${caseTypeName}/search.json`
 
     const queryDefaults = {
       page_size: Case.maxPageSize,
@@ -207,13 +209,13 @@ class Case {
       auth_token: Case.Caseblocks.token
     }
 
-    const searchParams = Object.assign(queryDefaults, options.query)
+    const getParams = Object.assign(queryDefaults, options.query)
 
-    const updatedOptions = Object.assign(options, {
-      query: searchParams
-    })
+    const getQueryStr = qs.stringify(getParams)
+    const uri = `${baseUri}?${getQueryStr}`
 
-    return rest.get(uri, updatedOptions)
+    return fetch(uri)
+      .then(response => response.json())
       .then(result => {
 
         // The total count comes with each response.
@@ -229,7 +231,7 @@ class Case {
           const caseAttributes = result[caseTypeName] || []
           const cases = caseAttributes.map(attributes => new Case(attributes))
 
-          const numAdditionalRequests = Math.ceil(availableCases / options.query.page_size) - 1
+          const numAdditionalRequests = Math.ceil(availableCases / Case.maxPageSize) - 1
 
           if (numAdditionalRequests === 0) {
 
@@ -237,27 +239,29 @@ class Case {
 
           } else {
 
+            console.log(numAdditionalRequests)
+
             // This just creates a sequence [1, 2, ..., n].
             // Empty if numAdditionalRequests == 0.
             const pageNumbers = Array.from(new Array(numAdditionalRequests).keys()).map(i => i + 1)
-            console.log(pageNumbers)
 
             // Build and return promise chain.
-
             const basePromise = Promise.resolve(cases)
 
             const requestPromiseChain =
               pageNumbers.reduce((promise, pageNumber) =>
                   promise.then(cases => {
 
-                    // TODO: Make this update nicer.
-                    const newOptions = Object.assign(updatedOptions, {
-                      query: Object.assign(updatedOptions.query, {
-                        page: pageNumber
-                      })
+                    const getParams = Object.assign(getParams, {
+                      page: pageNumber
                     })
 
-                    return rest.get(uri, newOptions)
+                    // Harmless shadowing.
+                    const getQueryStr = qs.stringify(getParams)
+                    const uri = `${baseUri}?${getQueryStr}`
+
+                    return fetch(uri)
+                      .then(response => response.json())
                       .then(result => {
 
                         const caseAttributes = result[caseTypeName] || []
