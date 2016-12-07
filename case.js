@@ -197,6 +197,7 @@ class Case {
    * @return {Promise.<[Case]>}
    * @private
    */
+  // TODO: The logic in this function is not DRY but 1 + loop(N). Abstract it.
   static _getSearchRequestChain(caseTypeName, options) {
 
     // Manually build URI. Hardcoded GET query in URL (as Caseblocks.buildURL generates)
@@ -215,7 +216,18 @@ class Case {
     const uri = `${baseUri}?${getQueryStr}`
 
     return fetch(uri)
-      .then(response => response.json())
+      .then(response => {
+        if (response.ok) {
+
+          return response.json()
+
+        } else {
+
+          const msg = `Error ${response.status}: ${response.statusText}`
+          throw new Error(msg)
+
+        }
+      })
       .then(result => {
 
         // The total count comes with each response.
@@ -261,7 +273,18 @@ class Case {
                     const uri = `${baseUri}?${getQueryStr}`
 
                     return fetch(uri)
-                      .then(response => response.json())
+                      .then(response => {
+                        if (response.ok) {
+
+                          return response.json()
+
+                        } else {
+
+                          const msg = `Error ${response.status}: ${response.statusText}`
+                          throw new Error(msg)
+
+                        }
+                      })
                       .then(result => {
 
                         const caseAttributes = result[caseTypeName] || []
@@ -282,7 +305,7 @@ class Case {
         }
 
       })
-      .catch(err => console.log(err))
+      // .catch(err => console.log(err))
 
   }
 
