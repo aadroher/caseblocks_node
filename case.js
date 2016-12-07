@@ -10,7 +10,7 @@ const _ = require('underscore')
 
 class Case {
 
-  static get max_page_size() {
+  static get maxPageSize() {
     return 1000
   }
 
@@ -110,6 +110,7 @@ class Case {
       const caseTypeRepresentationStr = caseTypeRepresentation.toString()
       const caseTypeRepresentationIsNumeric = /^[1-9][0-9]*$/.test(caseTypeRepresentationStr)
 
+
       const queryIsString = typeof query === "string"
 
       if (caseTypeRepresentationIsNumeric && queryIsString) {
@@ -118,7 +119,11 @@ class Case {
 
       } else {
 
-        return this._search_via_api(caseTypeRepresentation, query)
+        const params = !queryIsString ? query : {
+          query_string: query
+        }
+
+        return this._search_via_api(caseTypeRepresentation, params)
 
       }
 
@@ -144,7 +149,7 @@ class Case {
             result.case_type_id === caseTypeId
           ) || []
 
-        return caseTypeResults.cases.map(attributes => new Case(attributes))
+        return (caseTypeResults.cases || []).map(attributes => new Case(attributes))
 
       })
       .catch(err => {
@@ -170,23 +175,107 @@ class Case {
     // The API endpoint expects URI encoded spaces to separate case type
     // name words.
     const cleanCaseTypeName = encodeURIComponent(caseTypeName.replace('_', ' '))
-    const uri = Case.Caseblocks.buildUrl(`/case_blocks/${cleanCaseTypeName}/search.json`)
 
-    const searchParams = {
-      properties: query,
-      page_size: Case.max_page_size,
-      page: 0
+    const options = {
+      headers: {"Accept": "application/json"},
+      query: query
     }
 
-    return rest.postJson(uri, searchParams, {headers: {"Accept": "application/json"}})
+    return Case._getSearchRequestChain(cleanCaseTypeName, options)
+
+  }
+
+  /**
+   * Since there is no guarantee that the Case.maxPageSize is greater
+   * than the amount of cases to be returned (although it's an edge case)
+   * a chain of request promises has to be built in order to retrieve them
+   * all.
+   * @param caseTypeName
+   * @param options
+   * @return {Promise.<[Case]>}
+   * @private
+   */
+  static _getSearchRequestChain(caseTypeName, options) {
+
+    // Manually build URI. Hardcoded GET query in URL (as Caseblocks.buildURL generates)
+    // seems to take precedence to the `query` option in `restler.get`.
+    const uri = `${Case.Caseblocks.host}/case_blocks/${caseTypeName}/search.json`
+
+    const queryDefaults = {
+      page_size: Case.maxPageSize,
+      page: 0,
+      auth_token: Case.Caseblocks.token
+    }
+
+    const searchParams = Object.assign(queryDefaults, options.query)
+
+    const updatedOptions = Object.assign(options, {
+      query: searchParams
+    })
+
+    return rest.get(uri, updatedOptions)
       .then(result => {
-        const pages = Math.trunc(result.summary.available_cases / Case.max_page_size) + 1
 
-        // We already have page 0
+        // The total count comes with each response.
+        const availableCases = (result.summary || {}).available_cases
 
-        return Array
+        if (availableCases === undefined) {
 
+          const msg = 'Number of available cases unknown.'
+          throw new Error(msg)
 
+        } else {
+
+          const caseAttributes = result[caseTypeName] || []
+          const cases = caseAttributes.map(attributes => new Case(attributes))
+
+          const numAdditionalRequests = Math.ceil(availableCases / options.query.page_size) - 1
+
+          if (numAdditionalRequests === 0) {
+
+            return cases
+
+          } else {
+
+            // This just creates a sequence [1, 2, ..., n].
+            // Empty if numAdditionalRequests == 0.
+            const pageNumbers = Array.from(new Array(numAdditionalRequests).keys()).map(i => i + 1)
+            console.log(pageNumbers)
+
+            // Build and return promise chain.
+
+            const basePromise = Promise.resolve(cases)
+
+            const requestPromiseChain =
+              pageNumbers.reduce((promise, pageNumber) =>
+                  promise.then(cases => {
+
+                    // TODO: Make this update nicer.
+                    const newOptions = Object.assign(updatedOptions, {
+                      query: Object.assign(updatedOptions.query, {
+                        page: pageNumber
+                      })
+                    })
+
+                    return rest.get(uri, newOptions)
+                      .then(result => {
+
+                        const caseAttributes = result[caseTypeName] || []
+
+                        return cases.concat(
+                          caseAttributes.map(attributes => new Case(attributes))
+                        )
+
+                      })
+
+                  })
+                , basePromise)
+
+            return requestPromiseChain
+
+          }
+
+        }
 
       })
       .catch(err => console.log(err))
