@@ -52,7 +52,7 @@ class Case {
 
           return Object.assign(
             new Case(attributes),
-            {case_type_code: caseTypeCode}
+            { case_type_code: caseTypeCode }
           )
 
         })
@@ -254,48 +254,51 @@ class Case {
             // Empty if numAdditionalRequests == 0.
             const pageNumbers = Array.from(new Array(numAdditionalRequests).keys()).map(i => i + 1)
 
-            // Build and return promise chain.
-            const basePromise = Promise.resolve(cases)
+            const requestPromises =
+              pageNumbers.map(pageNumber => {
 
-            const requestPromiseChain =
-              pageNumbers.reduce((promise, pageNumber) =>
-                  promise.then(cases => {
+                const getParams = Object.assign(getParams, {
+                  page: pageNumber
+                })
 
-                    const getParams = Object.assign(getParams, {
-                      page: pageNumber
-                    })
+                // Harmless shadowing.
+                const getQueryStr = qs.stringify(getParams)
+                const uri = `${baseUri}?${getQueryStr}`
 
-                    // Harmless shadowing.
-                    const getQueryStr = qs.stringify(getParams)
-                    const uri = `${baseUri}?${getQueryStr}`
+                return fetch(uri)
+                  .then(response => {
+                    if (response.ok) {
 
-                    return fetch(uri)
-                      .then(response => {
-                        if (response.ok) {
+                      return response.json()
 
-                          return response.json()
+                    } else {
 
-                        } else {
+                      const msg = `Error ${response.status}: ${response.statusText}`
+                      throw new Error(msg)
 
-                          const msg = `Error ${response.status}: ${response.statusText}`
-                          throw new Error(msg)
+                    }
+                  })
+                  .then(result => {
 
-                        }
-                      })
-                      .then(result => {
+                    const caseAttributes = result[caseTypeName] || []
 
-                        const caseAttributes = result[caseTypeName] || []
-
-                        return cases.concat(
-                          caseAttributes.map(attributes => new Case(attributes))
-                        )
-
-                      })
+                    return {
+                      page: pageNumber,
+                      cases: caseAttributes.map(attributes => new Case(attributes))
+                    }
 
                   })
-                , basePromise)
 
-            return requestPromiseChain
+              })
+
+            return Promise.all(requestPromises).then(results =>
+              // Sort and flatten
+              results.sort(
+                (a, b) => parseInt(a.page) - parseInt(b.page)
+              ).reduce(
+                (alreadyFlattened, result) => [...alreadyFlattened, ...result.cases], []
+              )
+            )
 
           }
 
@@ -487,8 +490,6 @@ class Case {
               .then(result => {
 
                 const directRelationships = result.case_type_direct_relationships
-
-                // console.log(result)
 
                 return { thisCaseType, relatedCaseType, directRelationships }
 
