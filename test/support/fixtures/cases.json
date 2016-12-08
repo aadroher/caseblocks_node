@@ -1,7 +1,6 @@
 [
   {
     "_id": "09eef94cbc39370046000da1",
-    "number_of_orders": null,
     "title": "Han Solo",
     "person_reference": 1,
     "first_name": "Han",
@@ -35,7 +34,6 @@
   },
   {
     "_id": "09eef94cbc39370046000da3",
-    "number_of_orders": null,
     "title": "Luke Skywalker",
     "person_reference": 2,
     "first_name": "Luke",
@@ -69,8 +67,8 @@
   },
   {
     "_id": "09eef94cbc39370046000da5",
-    "number_of_orders": null,
     "title": "BlasTech DL-44",
+    "weapon_model": "BlasTech DL-44",
     "weapon_reference": 1,
     "weight": 2500,
     "weight_unit": "g",
@@ -99,8 +97,8 @@
   },
   {
     "_id": "09eef94cbc39370046000da6",
-    "number_of_orders": null,
     "title": "Lightsaber",
+    "weapon_model": "Lightsaber",
     "weapon_reference": 2,
     "weight": 500,
     "weight_unit": "g",
