@@ -3,7 +3,7 @@
     "_id": "09eef94cbc39370046000da1",
     "number_of_orders": null,
     "title": "Han Solo",
-    "person_reference": 45,
+    "person_reference": 1,
     "first_name": "Han",
     "last_name": "Solo",
     "email": "hsolo@smugglersguild.com",
@@ -18,7 +18,6 @@
     "owned_by_type": "CaseBlocks::Team",
     "case_type": "Person",
     "current_state_id": 1158,
-    "_title": "Han Solo",
     "participating_users": [
       692
     ],
@@ -32,14 +31,13 @@
     "_unread_messages": 4,
     "_no_messages": 4,
     "conversations": [],
-    "tasklists": [],
-    "_type_id": 268
+    "tasklists": []
   },
   {
-    "_id": "09eef94cbc39370046000da1",
+    "_id": "09eef94cbc39370046000da3",
     "number_of_orders": null,
     "title": "Luke Skywalker",
-    "person_reference": 12,
+    "person_reference": 2,
     "first_name": "Luke",
     "last_name": "Skywalker",
     "email": "hsolo@smugglersguild.com",
@@ -54,7 +52,6 @@
     "owned_by_type": "CaseBlocks::Team",
     "case_type": "Person",
     "current_state_id": 1158,
-    "_title": "Luke Skywalker",
     "participating_users": [
       692
     ],
@@ -68,13 +65,12 @@
     "_unread_messages": 4,
     "_no_messages": 4,
     "conversations": [],
-    "tasklists": [],
-    "_type_id": 268
+    "tasklists": []
   },
   {
-    "_id": "09eef94cbc39370046000da1",
+    "_id": "09eef94cbc39370046000da5",
     "number_of_orders": null,
-    "title": "Blaster Pistol",
+    "title": "BlasTech DL-44",
     "weapon_reference": 1,
     "weight": 2500,
     "weight_unit": "g",
@@ -89,7 +85,7 @@
     "owned_by_type": "CaseBlocks::Team",
     "case_type": "Weapon",
     "current_state_id": 1159,
-    "_title": "Blaster Pistol",
+    "_title": "BlasTech DL-44",
     "participating_users": [],
     "account_id": 21,
     "participating_teams": [],
@@ -99,11 +95,10 @@
     "_unread_messages": 4,
     "_no_messages": 4,
     "conversations": [],
-    "tasklists": [],
-    "_type_id": 268
+    "tasklists": []
   },
   {
-    "_id": "09eef94cbc39370046000da1",
+    "_id": "09eef94cbc39370046000da6",
     "number_of_orders": null,
     "title": "Lightsaber",
     "weapon_reference": 2,
