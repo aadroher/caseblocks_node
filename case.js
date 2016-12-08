@@ -112,7 +112,6 @@ class Case {
       const caseTypeRepresentationStr = caseTypeRepresentation.toString()
       const caseTypeRepresentationIsNumeric = /^[1-9][0-9]*$/.test(caseTypeRepresentationStr)
 
-
       const queryIsString = typeof query === "string"
 
       if (caseTypeRepresentationIsNumeric && queryIsString) {
@@ -243,15 +242,13 @@ class Case {
           const caseAttributes = result[caseTypeName] || []
           const cases = caseAttributes.map(attributes => new Case(attributes))
 
-          const numAdditionalRequests = Math.ceil(availableCases / Case.maxPageSize) - 1
+          const numAdditionalRequests = Math.max(0, Math.ceil(availableCases / Case.maxPageSize) - 1)
 
           if (numAdditionalRequests === 0) {
 
             return cases
 
           } else {
-
-            console.log(numAdditionalRequests)
 
             // This just creates a sequence [1, 2, ..., n].
             // Empty if numAdditionalRequests == 0.
@@ -305,7 +302,6 @@ class Case {
         }
 
       })
-      // .catch(err => console.log(err))
 
   }
 
@@ -427,7 +423,7 @@ class Case {
 
   }
 
-  related(relatedCaseTypeName, relationId) {
+  related(relatedCaseTypeName) {
 
     if (!Case.Caseblocks) {
 
@@ -435,30 +431,120 @@ class Case {
 
     } else {
 
-      const path = `/case_blocks/${relatedCaseTypeName}.json`
-      const pageSize = 10000
-      const page = 0
+      const caseTypeClassNames = [
+        'case_types',
+        'people_types',
+        'organization_types'
+      ]
 
-      const params = {
-        relation_id: relationId,
-        relationship_type: 'CaseBlocks::CaseTypeDirectRelationship',
-        case_from_id: this.id,
-        page_size: pageSize,
-        page: page
-      }
+      return (
 
-      const queryString = Object.keys(params).map(key =>
-        `${encodeURIComponent(`related_cases[${key}]`)}=${encodeURIComponent(params[key])}`
-      ).join('&')
+        caseTypeClassNames.reduce((requestPromiseChain, caseTypeClassName) =>
+            requestPromiseChain
+              .then(prevResults => {
 
-      const uri = Case.Caseblocks.buildUrl(`${path}?${queryString}`)
+                const path = `/case_blocks/${caseTypeClassName}.json`
+                const uri = Case.Caseblocks.buildUrl(path)
 
-      return rest.get(uri, {headers: {"Accept": "application/json"}})
-        .then(result =>
+                return fetch(uri)
+                  .then(response => response.json())
+                  .then(result =>
+                    [
+                      ...prevResults,
+                      ...result[caseTypeClassName].map(caseTypeAttributes => new Casetype(caseTypeAttributes))
+                    ]
+                  )
 
-          result[relatedCaseTypeName].map(attributes => new Case(attributes))
+              })
+          , Promise.resolve([]))
+          .then(caseTypes => {
 
-        )
+            const thisCaseType =
+              caseTypes.find(
+                caseType =>
+                  [
+                    this.attributes.case_type_id,
+                    this.attributes.people_type_id,
+                    this.attributes.organization_type_id
+                  ].includes(caseType.id)
+              )
+
+            const relatedCaseType =
+              caseTypes.find(
+                caseType => caseType.code === relatedCaseTypeName
+              )
+
+            // Fetch direct relationships
+            const path = `/case_blocks/case_type_direct_relationships.json`
+            const getQueryString = thisCaseType.direct_relationships.map(relationshipId =>
+              `ids[]=${relationshipId}`
+            ).join('&')
+
+            const uri = Case.Caseblocks.buildUrl(`${path}?${getQueryString}`)
+
+            return fetch(uri)
+              .then(response => response.json())
+              .then(result => {
+
+                const directRelationships = result.case_type_direct_relationships
+
+                // console.log(result)
+
+                return { thisCaseType, relatedCaseType, directRelationships }
+
+              })
+
+          })
+          .then(({ thisCaseType, relatedCaseType, directRelationships }) => {
+
+            const relationshipCaseTypeClassNames = [
+              'work',
+              'people',
+              'organization'
+            ]
+
+            const fromIdFieldNames = relationshipCaseTypeClassNames.map(
+              relationshipCaseTypeClassName => `from_${relationshipCaseTypeClassName}_type_id`
+            )
+
+            const toIdFieldNames = relationshipCaseTypeClassNames.map(
+              relationshipCaseTypeClassName => `to_${relationshipCaseTypeClassName}_type_id`
+            )
+
+            // Catch relevant relationships
+            const relevantRelationships =
+              directRelationships.filter(relationship => {
+
+                const fromFieldCandidates = fromIdFieldNames.map(
+                  fromIdFieldName => relationship[fromIdFieldName]
+                )
+
+                const toFieldCandidates = toIdFieldNames.map(
+                  toIdFieldName => relationship[toIdFieldName]
+                )
+
+                return (
+                  fromFieldCandidates.includes(thisCaseType.id)
+                  && toFieldCandidates.includes(relatedCaseType.id)
+                )
+
+              })
+
+            // Fetch all related cases per relationship.
+            const relatedCasesRequestPromises =
+              relevantRelationships.map(relationship => {
+
+                const query = `${relationship.to_key}:${thisCaseType[relationship.from_key]}`
+
+                return Case._search_via_api(relatedCaseType.code, query).then(cases => ({relationship, cases}))
+
+              })
+
+            return Promise.all(relatedCasesRequestPromises)
+
+          })
+
+      )
 
     }
 
