@@ -1,0 +1,17 @@
+[
+  {
+    "id": 9,
+    "from_fieldset_key": "basic_details",
+    "to_fieldset_key": "basic_details",
+    "position": 0,
+    "from_people_type_id": 15,
+    "to_work_type_id": 22,
+    "fields": [
+      40,
+      41,
+      42
+    ],
+    "from_key": "person_reference",
+    "to_key": "weapon_reference"
+  }
+]

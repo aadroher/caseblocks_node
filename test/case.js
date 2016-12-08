@@ -1,7 +1,7 @@
-var helper = require("./helpers/spec_helper")
+const helper = require("./helpers/spec_helper")
 
-var should = require('chai').should(),
-    Caseblocks = require('../index')
+const should = require('chai').should(),
+      Caseblocks = require('../index')
 
 describe('case', function() {
 
@@ -22,6 +22,7 @@ describe('case', function() {
   });
 
   describe("updating", function(done) {
+
     it("should update a document", function(done) {
       Caseblocks.Case.get("support_requests", "550c40d9841976debf000011").then(function(doc) {
         doc.attributes._id.should.equal("550c40d9841976debf000011")
@@ -55,12 +56,13 @@ describe('case', function() {
         done(err);
       });
     })
+
     it("does not alter local document if update fails", function(done) {
       Caseblocks.Case.get("support_requests", "550c40d9841976debf000011").then(function(doc) {
         doc.attributes.validated_field = "invalid-format"
 
-        // adding chai-as-promised to detect failed call... need to detect error as currently no mock error being given which causes test to pass
-
+        // Adding chai-as-promised to detect failed call...
+        // need to detect error as currently no mock error being given which causes test to pass.
         doc.save().should.be.rejectedWith("Error saving case").and.notify(done);
 
       }).catch(function(err){
@@ -91,41 +93,78 @@ describe('case', function() {
     });
   })
 
-  it("should search for a document and return match", function(done) {
-    Caseblocks.Case.search(42, 'match-result').then(function(docs) {
-      docs.length.should.to.be.above(1)
-      docs[0].attributes.title.should.equal("test1")
-      done()
-    }).catch(function(err){
-      done(err);
-    });
+  describe("searching", function () {
 
-  })
+    describe("using legacy behaviour", function () {
 
-  it("should search for a document and return no matches", function(done) {
-    Caseblocks.Case.search(42, 'no-match-result').then(function(docs) {
-      docs.length.should.equal(0)
-      done()
-    }).catch(function(err){
-      done(err);
-    });
+      it("should search for a document and return match", function(done) {
+        Caseblocks.Case.search(42, 'match-result').then(function(docs) {
+          docs.length.should.to.be.above(1)
+          docs[0].attributes.title.should.equal("test1")
+          done()
+        }).catch(function(err){
+          done(err);
+        });
 
-  })
-
-  it ("should find related documents", function(done) {
-    Caseblocks.Case.get("customers", "54524f696b949172a7000001").then(function(doc) {
-      doc.related("web_enquiries", 28).then(function(related_docs) {
-        related_docs.length.should.equal(1);
-        related_docs[0].id.should.equal("554379ab841976f73700011c");
-        done()
-      }).catch(function(err) {
-        done(err);
       })
-    }).catch(function(err) {
-      done(err);
+
+      it("should search for a document and return no matches", function(done) {
+        Caseblocks.Case.search(42, 'no-match-result').then(function(docs) {
+          docs.length.should.equal(0)
+          done()
+        }).catch(function(err){
+          done(err);
+        });
+
+      })
+
+    })
+
+    describe("using recommended behaviour", function () {
+
+      it("should search for a document and return match", function(done) {
+
+        const query = 'first_name:Han Solo'
+        Caseblocks.Case.search('person', query)
+          .catch(err => {
+            throw err
+          })
+
+        done()
+
+      })
+
     })
 
   })
+  
+  describe("on related cases", function () {
+    
+    describe("using legacy behaviour", function () {
+
+      it ("should find related documents", function(done) {
+        Caseblocks.Case.get("customers", "54524f696b949172a7000001").then(function(doc) {
+          doc.related("web_enquiries", 28).then(function(related_docs) {
+            related_docs.length.should.equal(1);
+            related_docs[0].id.should.equal("554379ab841976f73700011c");
+            done()
+          }).catch(function(err) {
+            done(err);
+          })
+        }).catch(function(err) {
+          done(err);
+        })
+
+      })
+      
+    })
+    
+    describe("using recommended behaviour", function () {
+      
+    })
+
+  })
+
 
   describe("participants", function() {
     it("should return a list of users", function(done) {

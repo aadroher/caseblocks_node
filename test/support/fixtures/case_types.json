@@ -1,0 +1,152 @@
+[
+  {
+    "id": 15,
+    "name": "Person",
+    "description": "",
+    "created_at": "2016-03-17T10:02:59.000Z",
+    "updated_at": "2016-03-17T10:05:11.000Z",
+    "additional_months": 0,
+    "additional_days": 0,
+    "additional_hours": 0,
+    "schema": [
+      {
+        "name": "Person",
+        "events": {},
+        "fieldsets": [
+          {
+            "name": "basic_details",
+            "fields": [
+              {
+                "name": "first_name",
+                "type": "string"
+              },
+              {
+                "name": "last_name",
+                "type": "string"
+              },
+              {
+                "name": "email",
+                "type": "string"
+              }
+            ]
+          },
+          {
+            "name": "references",
+            "fields": [
+              {
+                "name": "person_reference",
+                "type": "number",
+                "readonly": true,
+                "sequence": true
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "code": "person",
+    "default_owner_id": null,
+    "default_owner_type": null,
+    "unique_identifier_field": "_id",
+    "system_category": "P",
+    "account_id": 2,
+    "default_unrecognized_users_team_id": null,
+    "exclude_contacts_from_conversations": false,
+    "total_no_cases": 2,
+    "account": 21,
+    "case_states": [
+      1150,
+      1152,
+      1158
+    ],
+    "tasklists": [],
+    "resources": [
+      1136,
+      1139,
+      1137
+    ],
+    "bucket_groups": [],
+    "buckets": [
+      21
+    ],
+    "teams": [],
+    "direct_relationships": [],
+    "indirect_relationships": [],
+    "lifecycle_functions": [],
+    "display_fields": [],
+    "default_bucket_id": 21
+  },
+  {
+    "id": 22,
+    "name": "Weapon",
+    "description": "",
+    "created_at": "2016-03-17T10:02:59.000Z",
+    "updated_at": "2016-03-17T10:05:11.000Z",
+    "additional_months": 0,
+    "additional_days": 0,
+    "additional_hours": 0,
+    "schema": [
+      {
+        "name": "Person",
+        "events": {},
+        "fieldsets": [
+          {
+            "name": "basic_details",
+            "fields": [
+              {
+                "name": "weight",
+                "type": "number"
+              },
+              {
+                "name": "weight_unit",
+                "type": "string"
+              }
+            ]
+          },
+          {
+            "name": "references",
+            "fields": [
+              {
+                "name": "weapon_reference",
+                "type": "number",
+                "readonly": true,
+                "sequence": true
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "code": "weapon",
+    "default_owner_id": null,
+    "default_owner_type": null,
+    "unique_identifier_field": "_id",
+    "system_category": "W",
+    "account_id": 2,
+    "default_unrecognized_users_team_id": null,
+    "exclude_contacts_from_conversations": false,
+    "total_no_cases": 2,
+    "account": 21,
+    "case_states": [
+      1157,
+      1159,
+      1160
+    ],
+    "tasklists": [],
+    "resources": [
+      1136,
+      1139,
+      1137
+    ],
+    "bucket_groups": [],
+    "buckets": [
+      23
+    ],
+    "teams": [],
+    "direct_relationships": [],
+    "indirect_relationships": [],
+    "lifecycle_functions": [],
+    "display_fields": [],
+    "default_bucket_id": 23
+  }
+]

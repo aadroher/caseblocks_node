@@ -9,14 +9,21 @@ const User = require('./user.js')
 const Team = require("./team.js")
 const _ = require('underscore')
 
-
 class Case {
 
+  // ################
+  // Static constants
+  // ################
+
+  // TODO: This is hardcoded. Move it to a config file.
   static get maxPageSize() {
     return 1000
   }
 
+
+  // ##############
   // Static methods
+  // ##############
 
   static create(caseTypeName, caseTypeId, properties, options) {
 
@@ -94,10 +101,10 @@ class Case {
 
   }
 
-  // TODO: Add deprecation warning to the combinationof argument values that trigger `_search`.
+  // TODO: Add deprecation warning to the combination of argument values that trigger `_search`.
   /**
-   * @param caseTypeRepresentation {number|string}
-   * @param query {string|object}
+   * @param {number|string} caseTypeRepresentation
+   * @param {string|object} query
    * @return {Promise.<[object]>}
    */
   static search(caseTypeRepresentation, query) {
@@ -116,7 +123,7 @@ class Case {
 
       if (caseTypeRepresentationIsNumeric && queryIsString) {
 
-        return this._search(parseInt(caseTypeRepresentation), query)
+        return Case._search(parseInt(caseTypeRepresentation), query)
 
       } else {
 
@@ -124,7 +131,7 @@ class Case {
           query_string: query
         }
 
-        return this._search_via_api(caseTypeRepresentation, params)
+        return Case._searchViaApi(caseTypeRepresentation, params)
 
       }
 
@@ -132,183 +139,10 @@ class Case {
 
   }
 
-  /**
-   * This is a new implementation of the old search function.
-   * @param caseTypeId {number}
-   * @param query {string}
-   * @return {Promise.<[object]>}
-   * @private
-   */
-  static _search(caseTypeId, query) {
 
-    const uri = Case.Caseblocks.buildUrl(`/case_blocks/search.json?query=${query}`)
-
-    return rest.get(uri,  {headers: {"Accept": "application/json"}})
-      .then(results => {
-
-        const caseTypeResults = results.find(result =>
-            result.case_type_id === caseTypeId
-          ) || []
-
-        return (caseTypeResults.cases || []).map(attributes => new Case(attributes))
-
-      })
-      .catch(err => {
-        console.log(err.message)
-        throw err
-      })
-
-  }
-
-  /**
-   * @param caseTypeName {string} A singular underscored case type name.
-   * @param query {object} A filter query representation with the following the pattern:
-   *  {
-   *    field_name_0: value_to_match_0,
-   *    ...
-   *    field_name_n: value_to_match_n,
-   *  }
-   * @return {Promise.<[object]>}
-   * @private
-   */
-  static _search_via_api(caseTypeName, query) {
-
-    // The API endpoint expects URI encoded spaces to separate case type
-    // name words.
-    const cleanCaseTypeName = encodeURIComponent(caseTypeName.replace('_', ' '))
-
-    const options = {
-      headers: {"Accept": "application/json"},
-      query: query
-    }
-
-    return Case._getSearchRequestChain(cleanCaseTypeName, options)
-
-  }
-
-  /**
-   * Since there is no guarantee that the Case.maxPageSize is greater
-   * than the amount of cases to be returned (although it's an edge case)
-   * a chain of request promises has to be built in order to retrieve them
-   * all.
-   * @param caseTypeName
-   * @param options
-   * @return {Promise.<[Case]>}
-   * @private
-   */
-  // TODO: The logic in this function is not DRY but 1 + loop(N). Abstract it.
-  static _getSearchRequestChain(caseTypeName, options) {
-
-    // Manually build URI. Hardcoded GET query in URL (as Caseblocks.buildURL generates)
-    // seems to take precedence to the `query` option in `restler.get`.
-    const baseUri = `${Case.Caseblocks.host}/case_blocks/${caseTypeName}/search.json`
-
-    const queryDefaults = {
-      page_size: Case.maxPageSize,
-      page: 0,
-      auth_token: Case.Caseblocks.token
-    }
-
-    const getParams = Object.assign(queryDefaults, options.query)
-
-    const getQueryStr = qs.stringify(getParams)
-    const uri = `${baseUri}?${getQueryStr}`
-
-    return fetch(uri)
-      .then(response => {
-        if (response.ok) {
-
-          return response.json()
-
-        } else {
-
-          const msg = `Error ${response.status}: ${response.statusText}`
-          throw new Error(msg)
-
-        }
-      })
-      .then(result => {
-
-        // The total count comes with each response.
-        const availableCases = (result.summary || {}).available_cases
-
-        if (availableCases === undefined) {
-
-          const msg = 'Number of available cases unknown.'
-          throw new Error(msg)
-
-        } else {
-
-          const caseAttributes = result[caseTypeName] || []
-          const cases = caseAttributes.map(attributes => new Case(attributes))
-
-          const numAdditionalRequests = Math.max(0, Math.ceil(availableCases / Case.maxPageSize) - 1)
-
-          if (numAdditionalRequests === 0) {
-
-            return cases
-
-          } else {
-
-            // This just creates a sequence [1, 2, ..., n].
-            // Empty if numAdditionalRequests == 0.
-            const pageNumbers = Array.from(new Array(numAdditionalRequests).keys()).map(i => i + 1)
-
-            const requestPromises =
-              pageNumbers.map(pageNumber => {
-
-                const getParams = Object.assign(getParams, {
-                  page: pageNumber
-                })
-
-                // Harmless shadowing.
-                const getQueryStr = qs.stringify(getParams)
-                const uri = `${baseUri}?${getQueryStr}`
-
-                return fetch(uri)
-                  .then(response => {
-                    if (response.ok) {
-
-                      return response.json()
-
-                    } else {
-
-                      const msg = `Error ${response.status}: ${response.statusText}`
-                      throw new Error(msg)
-
-                    }
-                  })
-                  .then(result => {
-
-                    const caseAttributes = result[caseTypeName] || []
-
-                    return {
-                      page: pageNumber,
-                      cases: caseAttributes.map(attributes => new Case(attributes))
-                    }
-
-                  })
-
-              })
-
-            return Promise.all(requestPromises).then(results =>
-              // Sort and flatten
-              results.sort(
-                (a, b) => parseInt(a.page) - parseInt(b.page)
-              ).reduce(
-                (alreadyFlattened, result) => [...alreadyFlattened, ...result.cases], []
-              )
-            )
-
-          }
-
-        }
-
-      })
-
-  }
-
+  // ################
   // Instance methods
+  // ################
 
   constructor(attributes) {
 
@@ -426,7 +260,51 @@ class Case {
 
   }
 
-  related(relatedCaseTypeName) {
+  /**
+   *
+   * @param {string} relatedCaseTypeName
+   * @param {number} [relationshipId=undefined]
+   * @param {} [query=undefined]
+   * @return {Promise.<[object]>}
+   */
+  related(relatedCaseTypeName, relationshipId) {
+
+    if (!Case.Caseblocks) {
+
+      throw new Error("Must call Caseblocks.setup")
+
+    } else {
+
+      const path = `/case_blocks/${relatedCaseTypeName}.json`
+      const pageSize = 10000
+      const page = 0
+
+      const params = {
+        relation_id: relationshipId,
+        relationship_type: 'CaseBlocks::CaseTypeDirectRelationship',
+        case_from_id: this.id,
+        page_size: pageSize,
+        page: page
+      }
+
+      const queryString = Object.keys(params).map(key =>
+        `${encodeURIComponent(`related_cases[${key}]`)}=${encodeURIComponent(params[key])}`
+      ).join('&')
+
+      const uri = Case.Caseblocks.buildUrl(`${path}?${queryString}`)
+
+      return rest.get(uri, {headers: {"Accept": "application/json"}})
+        .then(result =>
+
+          result[relatedCaseTypeName].map(attributes => new Case(attributes))
+
+        )
+
+    }
+
+  }
+
+  relatedByName(relatedCaseTypeName, query) {
 
     if (!Case.Caseblocks) {
 
@@ -535,9 +413,11 @@ class Case {
             const relatedCasesRequestPromises =
               relevantRelationships.map(relationship => {
 
-                const query = `${relationship.to_key}:${thisCaseType[relationship.from_key]}`
+                const searchQuery = `${relationship.to_key}:${this.attributes[relationship.from_key]} AND (${query})`
 
-                return Case._search_via_api(relatedCaseType.code, query).then(cases => ({relationship, cases}))
+
+                return Case._searchViaApi(relatedCaseType.code, {query_string: searchQuery})
+                  .then(cases => ({relationship, cases}))
 
               })
 
@@ -600,8 +480,218 @@ class Case {
 
   }
 
-}
 
+  // #################
+  // "Private" methods
+  // #################
+
+  // Static
+
+  /**
+   * This is a new implementation of the old search function.
+   * @param {number} caseTypeId
+   * @param {string} query
+   * @return {Promise.<[object]>}
+   * @private
+   */
+  static _search(caseTypeId, query) {
+
+    const queryObject = {query}
+
+    const uri = Case.Caseblocks.buildUrl(`/case_blocks/search.json?query=${qs.stringify(queryObject)}`)
+
+    return rest.get(uri,  {headers: {"Accept": "application/json"}})
+      .then(results => {
+
+        const caseTypeResults = results.find(result =>
+            result.case_type_id === caseTypeId
+          ) || []
+
+        return (caseTypeResults.cases || []).map(attributes => new Case(attributes))
+
+      })
+      .catch(err => {
+        console.log(err.message)
+        throw err
+      })
+
+  }
+
+  /**
+   * @param {string} caseTypeName - A singular underscored case type name.
+   * @param {object|string} query - A filter query representation with the following the pattern:
+   *  {
+   *    field_name_0: value_to_match_0,
+   *    ...
+   *    field_name_n: value_to_match_n,
+   *  }
+   *  or an elasticsearch query string.
+   * @return {Promise.<[object]>}
+   * @private
+   */
+  static _searchViaApi(caseTypeName, query) {
+
+    // The API endpoint expects URI encoded spaces to separate case type
+    // name words.
+    const encodedCaseTypeName = encodeURIComponent(caseTypeName.replace(/_/g, ' '))
+
+    const options = {
+      headers: {"Accept": "application/json"},
+      query: query
+    }
+
+    return Case._getSearchRequests(encodedCaseTypeName, options)
+
+  }
+
+  /**
+   * Since there is no guarantee that the Case.maxPageSize is greater
+   * than the amount of cases to be returned (although it's an edge case)
+   * a chain of request promises has to be built in order to retrieve them
+   * all.
+   * @param encodedCaseTypeName
+   * @param options
+   * @return {Promise.<[Case]>}
+   * @private
+   */
+  // TODO: The logic in this function is not DRY but 1 + N. Abstract it.
+  static _getSearchRequests(encodedCaseTypeName, options) {
+
+    // Manually build URI. Hardcoded GET query in URL (as Caseblocks.buildURL generates)
+    // seems to take precedence to the `query` option in `restler.get`.
+    const baseUri = `${Case.Caseblocks.host}/case_blocks/${encodedCaseTypeName}/search.json`
+
+    const queryDefaults = {
+      page_size: Case.maxPageSize,
+      page: 0,
+      auth_token: Case.Caseblocks.token
+    }
+
+    const getParams = Object.assign(queryDefaults, options.query)
+
+    console.log(getParams)
+
+    const getQueryStr = qs.stringify(getParams, { format : 'RFC1738' })
+
+    console.log(getQueryStr)
+    const uri = `${baseUri}?${getQueryStr}`
+
+    console.log(uri)
+
+    return fetch(uri)
+      .then(response => {
+
+        if (response.ok) {
+
+          return response.json()
+
+        } else {
+
+          return response.text()
+
+          const msg = `Error ${response.status}: ${response.statusText}`
+          throw new Error(msg)
+
+        }
+      })
+      .then(result => {
+
+        // The total count comes with each response.
+        const availableCases = (result.summary || {}).available_cases
+
+        if (availableCases === undefined) {
+
+          const msg = 'Number of available cases unknown.'
+          throw new Error(msg)
+
+        } else {
+
+          return { availableCases, result }
+
+        }
+
+      })
+      .then(({ availableCases, result }) => {
+
+        const caseTypeKey = decodeURIComponent(encodedCaseTypeName).replace(/_/g, ' ')
+        const caseAttributes = result[caseTypeKey] || []
+        const cases = caseAttributes.map(attributes => new Case(attributes))
+
+        const numAdditionalRequests = Math.max(0, Math.ceil(availableCases / Case.maxPageSize) - 1)
+
+        if (numAdditionalRequests === 0) {
+
+          return cases
+
+        } else {
+
+          // This just creates a sequence [1, 2, ..., n].
+          // Empty if numAdditionalRequests == 0.
+          const pageNumbers = Array.from(new Array(numAdditionalRequests).keys()).map(i => i + 1)
+
+          const requestPromises =
+            pageNumbers.map(pageNumber => {
+
+              const getParams = Object.assign(getParams, {
+                page: pageNumber
+              })
+
+              // Harmless shadowing.
+              const getQueryStr = qs.stringify(getParams)
+              const uri = `${baseUri}?${getQueryStr}`
+
+              return fetch(uri)
+                .then(response => {
+                  if (response.ok) {
+
+                    return response.json()
+
+                  } else {
+
+                    const msg = `Error ${response.status}: ${response.statusText}`
+                    throw new Error(msg)
+
+                  }
+                })
+                .then(result => {
+
+                  const caseAttributes = result[caseTypeKey] || []
+
+                  return {
+                    page: pageNumber,
+                    cases: caseAttributes.map(attributes => new Case(attributes))
+                  }
+
+                })
+                .catch(err => {
+                  console.log(err.message)
+                  throw err
+                })
+
+            })
+
+          return Promise.all(requestPromises).then(results =>
+            // Sort and flatten
+            results.sort(
+              (a, b) => parseInt(a.page) - parseInt(b.page)
+            ).reduce(
+              (alreadyFlattened, newResult) => [...alreadyFlattened, ...newResult.cases],
+              cases // This is the result of the first call.
+            )
+          ).catch(err => {
+            console.log(err.message)
+            throw err
+          })
+
+        }
+      })
+      .catch(err => {
+        console.log(err.message)
+        throw err
+      })
+  }
+
+}
 
 
 module.exports = Case
