@@ -1,10 +1,10 @@
-const nock = require("nock");
-const chai = require("chai");
-const fs = require("fs");
-const chaiAsPromised = require("chai-as-promised");
+const nock = require('nock')
+const chai = require('chai')
+const fs = require('fs')
+const qs = require('qs')
+const chaiAsPromised = require('chai-as-promised')
 
 chai.use(chaiAsPromised);
-
 
 const caseTypeData = JSON.parse(
   fs.readFileSync("./test/support/case-type.json", "utf8")
@@ -14,23 +14,16 @@ const telkom_application_case_type = JSON.parse(
   fs.readFileSync("./test/support/telkom-application-case-type.json", "utf8")
 );
 
-// const caseBlocksBaseURL = 'http://test-caseblocks-location'
-
-const casePayloadPath = './test/support/case.json'
-const htmlDocumentPath = './test/support/example.html'
-
-const caseTypeName = {
-  sing: 'pirate',
-  plu: 'pirates'
-}
-
-const casePayload = JSON.parse(
-  fs.readFileSync(casePayloadPath, 'utf-8')
-)
-
-const htmlDocumentString = fs.readFileSync(htmlDocumentPath, 'utf-8')
+const encodeQueryObject = queryObject =>
+  Object.keys(queryObject).reduce((prevVal, key) =>
+    Object.assign(prevVal, {
+      [encodeURIComponent(key)]: encodeURIComponent(queryObject[key])
+    })
+  , {})
 
 const nockHttp = () => {
+
+  let getQueryStr
 
   nock('http://test-caseblocks-location', {
     reqheaders: {
@@ -157,16 +150,17 @@ const nockHttp = () => {
     .query({auth_token: 'tnqhvzxYaRnVt7zRWYhr'})
     .reply(200, {support_request: {_id: '554379ab841976f73700011c'}});
 
+  getQueryStr = qs.stringify({
+    "related_cases[relation_id]": 28,
+    "related_cases[relationship_type]": "CaseBlocks::CaseTypeDirectRelationship",
+    "related_cases[case_from_id]": "554379ab841976f73700011c",
+    "related_cases[page_size]": 10000,
+    "related_cases[page]": 0,
+    "auth_token": "tnqhvzxYaRnVt7zRWYhr"
+  })
+
   nock('http://test-caseblocks-location', {reqheaders: {'accept': 'application/json'}})
-    .get('/case_blocks/web_enquiries.json')
-    .query({
-      "related_cases[relation_id]": 28,
-      "related_cases[relationship_type]": "CaseBlocks::CaseTypeDirectRelationship",
-      "related_cases[case_from_id]": "554379ab841976f73700011c",
-      "related_cases[page_size]": 10000,
-      "related_cases[page]": 0,
-      "auth_token": "tnqhvzxYaRnVt7zRWYhr"
-    })
+    .get(`/case_blocks/web_enquiries.json?${getQueryStr}`)
     .reply(200, {web_enquiries: [{_id: "554379ab841976f73700011c"}]});
 
 
@@ -415,9 +409,10 @@ const nockHttp = () => {
       }
     });
 
+  getQueryStr = qs.stringify({"ids[]": 6, auth_token: 'tnqhvzxYaRnVt7zRWYhr'})
+
   nock('http://test-caseblocks-location', {reqheaders: {'accept': 'application/json'}})
-    .get('/case_blocks/team_memberships')
-    .query({"ids[]": 6, auth_token: 'tnqhvzxYaRnVt7zRWYhr'})
+    .get(`/case_blocks/team_memberships?${getQueryStr}`)
     .reply(200, {"team_memberships": [{"id": 6, "user_id": 6, "team_id": 5, "leader": null}]});
 
   // BUCKETS

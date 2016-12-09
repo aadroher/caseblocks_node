@@ -3,19 +3,20 @@ const util = require('util')
 
 // Account dependant constants
 // const caseBlocksAuthToken = 'iuW2v4Kj9BJAKUmrzwzm'
-const caseBlocksAuthToken = 'sswwxuWt8oLTbvkPaMv8'
-// const caseBlocksAPIBaseURL = 'https://login.caseblocks.com'
-const caseBlocksAPIBaseURL = 'http://localhost:8888'
+const caseBlocksAuthToken = 'dwHK6481mt5tg3UFExoq'
+const caseBlocksAPIBaseURL = 'https://test3.caseblocks.com'
+// const caseBlocksAPIBaseURL = 'http://localhost:8888'
 
-const caseTypeName = 'customer'
+const caseTypeName = 'configuration_item'
+const caseTypeId = 58
 
 Caseblocks.setup(caseBlocksAPIBaseURL, caseBlocksAuthToken)
 
-const query = 'current_state:*'
+const query = 'priority:High'
 
 Caseblocks.Case.search(caseTypeName, query)
   .then(cases =>
-    cases.pop().related('claim')
+    cases
   )
   .then(results => console.log(util.inspect(results, {depth: null})))
   .catch(err => {console.log(err.message)})

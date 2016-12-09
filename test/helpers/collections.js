@@ -2,7 +2,7 @@ const faker = require('faker')
 const Factory = require('rosie').Factory
 const fs = require('fs')
 const mongodb = require('mongodb')
-
+const _ = require('underscore')
 
 const fixturesPath = `${__dirname}/../support/fixtures`
 
@@ -17,7 +17,7 @@ const caseFixtures = JSON.parse(
 )
 
 const peopleFixtures = caseFixtures.filter(caseInstance => caseInstance.case_type === 'Person')
-const weaponFixtures = caseFixtures.filter(caseInstance => caseInstance.case_type === 'Weapon')
+const weaponsFixtures = caseFixtures.filter(caseInstance => caseInstance.case_type === 'Weapon')
 
 const relationshipFixtures = JSON.parse(
   fs.readFileSync(`${fixturesPath}/relationships.json`)
@@ -89,9 +89,7 @@ function getPeopleFactory() {
 
 const peopleFactory = getPeopleFactory()
 const genericPeople = peopleFactory.buildList(peopleNumber)
-const people = peopleFixtures.concat(genericPeople)
 
-console.log(people.slice(0, 4))
 
 
 // #################
@@ -116,7 +114,7 @@ function getWeaponFactory() {
   const idFields = ['_id']
 
   // Build upon the first fixture.
-  Object.getOwnPropertyNames(weaponFixtures[0]).forEach(fieldName => {
+  Object.getOwnPropertyNames(weaponsFixtures[0]).forEach(fieldName => {
 
     if (idFields.includes(fieldName)) {
 
@@ -147,6 +145,10 @@ function getWeaponFactory() {
 
       weaponFactory.sequence(fieldName, (i) => i + 2)
 
+    } else if (fieldName === 'person_reference') {
+
+      weaponFactory.attr(fieldName, null)
+
     } else {
 
       weaponFactory.attr(fieldName, peopleFixtures[0][fieldName])
@@ -161,14 +163,75 @@ function getWeaponFactory() {
 
 const weaponFactory = getWeaponFactory()
 const genericWeapons = weaponFactory.buildList(weaponsNumber)
-const weapons = weaponFixtures.concat(genericWeapons)
 
-console.log(weapons)
+// ########################
+// Relationships collection
+// ########################
+
+const relationships = relationshipFixtures
+
+// ##############################
+// Establish random relationships
+// ##############################
+
+const numWeaponOwners = Math.ceil(peopleNumber / 3)
+const maxWeaponsPerOwner = 3
+
+function relatePeopleAndWeapons({people, weapons}) {
+
+  const weaponOwners = _.sample(people, numWeaponOwners)
+  const nonWeaponOwners = people.filter(person =>
+    !weaponOwners.includes(person)
+  )
+
+  const ownedWeapons = weaponOwners.reduce((assignedWeapons, person) => {
+
+    const numWeapons = Math.ceil(maxWeaponsPerOwner * Math.random())
+    const freeWeapons = weapons.filter(weapon =>
+      !assignedWeapons.includes(weapon)
+    )
+
+    const personWeapons = _.sample(freeWeapons, numWeapons).map(weapon =>
+      Object.assign(weapon, {
+        person_reference: person.person_reference
+      })
+    )
+
+    return [...assignedWeapons, ...personWeapons]
+
+  }, [])
+
+  const nonOwnedWeapons = weapons.filter(weapon =>
+    !ownedWeapons.includes(weapon)
+  )
+
+  const updatedPeople = [...weaponOwners, ...nonWeaponOwners].sort(
+    (a, b) => parseInt(a.id) - parseInt(b.id)
+  )
+
+  const updatedWeapons = [...ownedWeapons, ...nonOwnedWeapons].sort(
+    (a, b) => parseInt(a.id) - parseInt(b.id)
+  )
+
+  return {
+    people: updatedPeople,
+    weapons: updatedWeapons
+  }
+
+}
+
+
+const generatedData = relatePeopleAndWeapons({people: genericPeople, weapons: genericWeapons})
+
+const people = peopleFixtures.concat(generatedData.people)
+const weapons = weaponsFixtures.concat(generatedData.weapons)
+
 
 module.exports = {
   caseTypes,
   people,
-  weapons
+  weapons,
+  relationships
 }
 
 
