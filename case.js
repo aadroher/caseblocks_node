@@ -123,7 +123,7 @@ class Case {
 
       if (caseTypeRepresentationIsNumeric && queryIsString) {
 
-        return this._search(parseInt(caseTypeRepresentation), query)
+        return Case._search(parseInt(caseTypeRepresentation), query)
 
       } else {
 
@@ -131,7 +131,7 @@ class Case {
           query_string: query
         }
 
-        return this._searchViaApi(caseTypeRepresentation, params)
+        return Case._searchViaApi(caseTypeRepresentation, params)
 
       }
 
@@ -413,9 +413,11 @@ class Case {
             const relatedCasesRequestPromises =
               relevantRelationships.map(relationship => {
 
-                const query = `${relationship.to_key}:${thisCaseType[relationship.from_key]}`
+                const searchQuery = `${relationship.to_key}:${this.attributes[relationship.from_key]} AND (${query})`
 
-                return Case._searchViaApi(relatedCaseType.code, query).then(cases => ({relationship, cases}))
+
+                return Case._searchViaApi(relatedCaseType.code, {query_string: searchQuery})
+                  .then(cases => ({relationship, cases}))
 
               })
 
@@ -494,7 +496,9 @@ class Case {
    */
   static _search(caseTypeId, query) {
 
-    const uri = Case.Caseblocks.buildUrl(`/case_blocks/search.json?query=${query}`)
+    const queryObject = {query}
+
+    const uri = Case.Caseblocks.buildUrl(`/case_blocks/search.json?query=${qs.stringify(queryObject)}`)
 
     return rest.get(uri,  {headers: {"Accept": "application/json"}})
       .then(results => {
@@ -529,14 +533,14 @@ class Case {
 
     // The API endpoint expects URI encoded spaces to separate case type
     // name words.
-    const cleanCaseTypeName = encodeURIComponent(caseTypeName.replace('_', ' '))
+    const encodedCaseTypeName = encodeURIComponent(caseTypeName.replace(/_/g, ' '))
 
     const options = {
       headers: {"Accept": "application/json"},
       query: query
     }
 
-    return Case._getSearchRequests(cleanCaseTypeName, options)
+    return Case._getSearchRequests(encodedCaseTypeName, options)
 
   }
 
@@ -545,17 +549,17 @@ class Case {
    * than the amount of cases to be returned (although it's an edge case)
    * a chain of request promises has to be built in order to retrieve them
    * all.
-   * @param caseTypeName
+   * @param encodedCaseTypeName
    * @param options
    * @return {Promise.<[Case]>}
    * @private
    */
   // TODO: The logic in this function is not DRY but 1 + N. Abstract it.
-  static _getSearchRequests(caseTypeName, options) {
+  static _getSearchRequests(encodedCaseTypeName, options) {
 
     // Manually build URI. Hardcoded GET query in URL (as Caseblocks.buildURL generates)
     // seems to take precedence to the `query` option in `restler.get`.
-    const baseUri = `${Case.Caseblocks.host}/case_blocks/${caseTypeName}/search.json`
+    const baseUri = `${Case.Caseblocks.host}/case_blocks/${encodedCaseTypeName}/search.json`
 
     const queryDefaults = {
       page_size: Case.maxPageSize,
@@ -565,16 +569,25 @@ class Case {
 
     const getParams = Object.assign(queryDefaults, options.query)
 
-    const getQueryStr = qs.stringify(getParams)
+    console.log(getParams)
+
+    const getQueryStr = qs.stringify(getParams, { format : 'RFC1738' })
+
+    console.log(getQueryStr)
     const uri = `${baseUri}?${getQueryStr}`
+
+    console.log(uri)
 
     return fetch(uri)
       .then(response => {
+
         if (response.ok) {
 
           return response.json()
 
         } else {
+
+          return response.text()
 
           const msg = `Error ${response.status}: ${response.statusText}`
           throw new Error(msg)
@@ -593,14 +606,15 @@ class Case {
 
         } else {
 
-          return result
+          return { availableCases, result }
 
         }
 
       })
-      .then(result => {
+      .then(({ availableCases, result }) => {
 
-        const caseAttributes = result[caseTypeName] || []
+        const caseTypeKey = decodeURIComponent(encodedCaseTypeName).replace(/_/g, ' ')
+        const caseAttributes = result[caseTypeKey] || []
         const cases = caseAttributes.map(attributes => new Case(attributes))
 
         const numAdditionalRequests = Math.max(0, Math.ceil(availableCases / Case.maxPageSize) - 1)
@@ -641,7 +655,7 @@ class Case {
                 })
                 .then(result => {
 
-                  const caseAttributes = result[caseTypeName] || []
+                  const caseAttributes = result[caseTypeKey] || []
 
                   return {
                     page: pageNumber,
