@@ -12,6 +12,21 @@
       42
     ],
     "from_key": "person_reference",
+    "to_key": "person_reference"
+  },
+  {
+    "id": 10,
+    "from_fieldset_key": "basic_details",
+    "to_fieldset_key": "basic_details",
+    "position": 0,
+    "from_work_type_id": 22,
+    "to_people_type_id": 15,
+    "fields": [
+      40,
+      41,
+      42
+    ],
+    "from_key": "person_reference",
     "to_key": "weapon_reference"
   }
 ]
