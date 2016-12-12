@@ -131,7 +131,7 @@
   {
     "_id": "09eef94cbc39370046000da0",
     "title": "Blaster Pistol AA-9",
-    "weapon_model": "BlasTech DL-44",
+    "weapon_model": "Blaster Pistol AA-9",
     "weapon_reference": 3,
     "weight": 2500,
     "weight_unit": "g",
@@ -147,7 +147,7 @@
     "owned_by_type": "CaseBlocks::Team",
     "case_type": "Weapon",
     "current_state_id": 1159,
-    "_title": "BlasTech DL-44",
+    "_title": "Blaster Pistol AA-9",
     "participating_users": [],
     "account_id": 21,
     "participating_teams": [],

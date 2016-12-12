@@ -129,8 +129,11 @@ class Case {
 
       } else {
 
+        // If query is "falsey" return all results.
+        const queryStringIsEmpty = queryIsString && query === ''
+
         const params = !queryIsString ? query : {
-          query_string: query
+          query_string: queryStringIsEmpty ? '*:*' : query
         }
 
         return Case._searchViaApi(caseTypeRepresentation, params)
@@ -643,12 +646,11 @@ class Case {
           const requestPromises =
             pageNumbers.map(pageNumber => {
 
-              const getParams = Object.assign(getParams, {
+              const pageGetParams = Object.assign(getParams, {
                 page: pageNumber
               })
 
-              // Harmless shadowing.
-              const getQueryStr = qs.stringify(getParams)
+              const getQueryStr = qs.stringify(pageGetParams)
               const uri = `${baseUri}?${getQueryStr}`
 
               return fetch(uri, Case._requestOptions())

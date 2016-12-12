@@ -2,9 +2,19 @@ const helper = require("./helpers/spec_helper")
 const caseTestsHelper = require('./helpers/case_tests_helper')
 const fetch = require('node-fetch')
 const Headers = require('node-fetch').Headers
+const _ = require('underscore')
 
 const should = require('chai').should(),
       Caseblocks = require('../index')
+
+// Mock collections
+// Import collections.
+const {
+  caseTypes,
+  people,
+  weapons,
+  relationships
+} = require('./helpers/collections')
 
 describe('case', function() {
 
@@ -125,44 +135,121 @@ describe('case', function() {
 
     })
 
-    // describe("using recommended behaviour", function () {
-    //
-    //   beforeEach(() => {
-    //
-    //
-    //
-    //   });
-    //
-    //   it("should search for a document and return match", function(done) {
-    //
-    //     Caseblocks.setup("http://test-caseblocks-location", "tnqhvzxYaRnVt7zRWYhr")
-    //
-    //     caseTestsHelper.nockHttp()
-    //
-    //     // fetch('http://test-caseblocks-location/hi.json', {
-    //     //   headers: new Headers({
-    //     //     'Accept': 'application/json'
-    //     //   })
-    //     // })
-    //     //   .then(console.log)
-    //     //   .then(done)
-    //     //   .catch(done)
-    //
-    //     const query = 'person_reference:1'
-    //     Caseblocks.Case.search('person', query)
-    //       .then(cases => {
-    //           console.log(cases)
-    //           done()
-    //       })
-    //       .catch(err => {
-    //         // throw err
-    //         done(err)
-    //       })
-    //
-    //
-    //   })
-    //
-    // })
+    describe("using recommended behaviour", function () {
+
+      beforeEach(() => {
+
+        Caseblocks.setup("http://test-caseblocks-location", "tnqhvzxYaRnVt7zRWYhr")
+
+      });
+
+      it("should search for a document by non existing unique key and return no matches", function(done) {
+
+        const personReference = people.length + 100
+        caseTestsHelper.setSinglePersonSearchResult(personReference)
+
+        const query = `person_reference:${personReference}`
+
+        Caseblocks.Case.search('person', query)
+          .then(cases => {
+
+            cases.length.should.equal(0)
+            done()
+
+          })
+          .catch(err => {
+
+            done(err)
+
+          })
+
+      })
+
+      it("should search for a document by unique key and return single match", function(done) {
+
+        const personReference = 50
+        caseTestsHelper.setSinglePersonSearchResult(personReference)
+
+        const expectedCase = people.find(person => person.person_reference === personReference)
+
+        const query = `person_reference:${personReference}`
+
+        Caseblocks.Case.search('person', query)
+          .then(cases => {
+
+            cases.length.should.equal(1)
+
+            const person = cases.pop()
+            person.should.be.instanceOf(Caseblocks.Case)
+            person.attributes.last_name.should.equal(expectedCase.last_name)
+
+            done()
+
+          })
+          .catch(err => {
+
+            done(err)
+
+          })
+
+      })
+
+      it("should return a collection of cases", function(done) {
+
+        const personReference = 2
+        caseTestsHelper.setMutipleWeaponSearchResult(personReference)
+
+        const expectedCases = weapons.filter(weapon => weapon.person_reference === personReference)
+
+        const query = `person_reference:${personReference}`
+
+        Caseblocks.Case.search('weapon', query)
+          .then(cases => {
+
+            cases.length.should.equal(2)
+
+            cases.forEach(weapon => {
+              weapon.should.be.instanceOf(Caseblocks.Case)
+            })
+
+            const weaponsAttributes = cases.map(weapon => weapon.attributes)
+
+            _.isEqual(expectedCases, weaponsAttributes).should.equal(true)
+
+            done()
+
+          })
+          .catch(err => {
+
+            done(err)
+
+          })
+
+      })
+
+
+      it('should return all cases with empty query string', function(done) {
+
+        caseTestsHelper.setWithEmptyQueryString(1000)
+
+        const emptyQueryString = ''
+
+        Caseblocks.Case.search('person', emptyQueryString)
+          .then(cases => {
+
+            cases.length.should.equal(people.length)
+            done()
+
+          })
+          .catch(err => {
+
+            done(err)
+
+          })
+
+      })
+
+    })
 
   })
   
