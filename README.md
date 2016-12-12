@@ -1,26 +1,29 @@
+
 CaseBlocks
 =========
 
-Library of functions for interacting with the CaseBlocks API
+The `caseblocks` NPM package is a library to interact with the [CaseBlocks](http://www.emergeadapt.com/) REST API.
+
+It assumes that it will be executed in a _Node.js_ envirnoment.
 
 ## Installation
 
+As with any NPM package:
+
 `npm install caseblocks --save`
 
-## Usage
+## Initialization
+
+The `Caseblocks` object, which is the main proxy with the Caseblocks REST API, has to first be initialized with the proper parameters: 
+
 ```javascript
-var Caseblocks = require('caseblocks');
+const Caseblocks = require('caseblocks')
 
-Caseblocks.setup("http://yourpathtocaseblocks.com:8080", "your_user_token");
+Caseblocks.setup("http://yourpathtocaseblocks.com:8080", "your_user_token")
 
-Caseblocks.Case.get("support_requests", "550c40d1841976debf000003")
-    .then(function(doc) {
-      doc.id.should.equal("550c40d1841976debf000003")
-      console.log("Got Case: " + doc.attributes.title )
-    }).catch(function(err){
-      console.log(err)
-    });
 ```
+
+The user token may be found in the _User settings_ section of the Caseblocks web interface. 
 
 ## CaseType
 
@@ -28,11 +31,21 @@ Caseblocks.Case.get("support_requests", "550c40d1841976debf000003")
 
 `new Caseblocks.Casetype(attributes)`
 
-The constructor for Casetype takes the attributes of the case type to create
+- arguments:
+
+  - `{object} attributes`  The attributes of the case type to create
+
+- returns: `{Casetype}` The instance of `Casetype`
+
+  ​
 
 ### Class Methods
 
 `get(caseTypeId)`
+
+- arguments:
+  - `{string} caseTypeId`  the `id`  (primary key) attribute of a case type.
+- returns: `{Promise.<Case>} `
 
 Gets the case type from the server and returns the casetype object.
 
@@ -66,7 +79,13 @@ Caseblocks.Casetype.get("15").then(function(casetype) {
 
 `create(caseTypeCode, caseTypeId, caseData)`
 
-Creates a case document in the supplied case type (case_type_code and case_type_id) with the data supplied.
+- arguments:
+  - `{string} caseTypeCode`  The plural underscored name of the case type this case will belong to.
+  - `{number|string} caseTypeId`  The id of the case type this case will belong to.
+  - `{object} caseData` The attributes this case will have.
+- returns: `{Promise.<Case>}`
+
+Creates a case document in the supplied case type (`case_type_code` and `case_type_id`) with the data supplied.
 
 ```javascript
 Caseblocks.Case.create("support_requests", 42, {title: 'test1'})
@@ -77,8 +96,12 @@ Caseblocks.Case.create("support_requests", 42, {title: 'test1'})
     });
 ```
 
-
 `get(caseTypeCode, caseId)`
+
+- arguments:
+  - `{string} caseTypeCode`  The plural underscored name of the case type this case belongs to.
+  - `{string} caseId`  The primary key for the case. As of today it is an instance of `mongodb.ObjectId` from the [MongoDB](https://www.npmjs.com/package/mongodb) NPM package.
+- returns `{Promise.<Case>}`
 
 Retrieves a case from caseblocks supplying the case type code and the id of the document.
 
@@ -93,17 +116,31 @@ Caseblocks.Case.get("support_requests", "550c40d1841976debf000003")
     });
 ```
 
-`search(caseTypeId, searchTerm)`
+`search(caseTypeId, searchQuery)`
 
-Provides the ability to search for docuemnts and return an array of matching cases.  Each case is a Case object the same as you get from the __get__ method.
+This function provides the ability to search for documents and return an array of matching cases. As of version 1.2.0 it has **two different behaviours** depending on the nature of the arguments passed:
+
+#### Legacy behaviour
+
+**WARNING**: This way of usign it is **deprecated** and will eventually be removed.
+
+- arguments:
+  - `{string|number} caseTypeId` The id of the case type we want to search cases into.
+  -  `{string} searchQuery ` A search query following the [_Elasticsearch_ string query mini language syntax](https://www.elastic.co/guide/en/elasticsearch/reference/2.3/query-dsl-query-string-query.html#query-string-syntax).
+- returns `{Promise.<[Case]>}` An array of `Case` instances which are  the same as you get from the `get` method. The length of the resulting `[Case]` array is **limited to 10 elements**.  
+
+#### Recomended behaviour
+
+A new, more convenient way of searching for 
 
 ```javascript
-Caseblocks.Case.search(case_type_id, 'search term').then(function(docs) {
-  console.log("Found " + docs.length + " Results!")
-  docs.map(function(doc) {console.log(doc.attributes.title)})
-}).catch(function(err){
-  console.error(err);
-});
+Caseblocks.Case.search(31416, 'full_name:"Rick Sanchez" AND dimension:"C-137"')
+  .then(function(docs) {
+    console.log("Found " + docs.length + " Results!")
+    docs.map(function(doc) {console.log(doc.attributes.title)})
+  }).catch(function(err){
+    console.error(err);
+  });
 ```
 
 ### Instance Methods
@@ -211,7 +248,7 @@ The constructor for document takes the attributes of the document and the case o
     - `fileName {string}` The name of the file
     - `contents {string}` The content of the file
 - Returns: `{Promise.<Document>}` A promise that resolves to the metadata about the saved file.
-   
+
 This function creates a document from a string and attaches it to `caseInstance`.
 
 
@@ -523,9 +560,9 @@ Instantiate a new Caseblocks.Email object passing in your initial configuration,
 Mandrill is set as default and requires 'key' to be passed in when instantiating the object.
 
 Other properties available are
-  * serverType - 'mandrillapp' or 'smtp' values are valid.
-  * smtpServer - required if serverType is smtp and is host of smtp server to use
-  * key        - required if serverType is mandrill and is they access token key for your account
+* serverType - 'mandrillapp' or 'smtp' values are valid.
+* smtpServer - required if serverType is smtp and is host of smtp server to use
+    * key        - required if serverType is mandrill and is they access token key for your account
 
 
 Example:
@@ -641,5 +678,4 @@ npm publish
 
 ## Contributing
 
-In lieu of a formal styleguide, take care to maintain the existing coding style.
-Add unit tests for any new or changed functionality. Lint and test your code.
+In lieu of a formal styleguide, just assume the basic good practice of taking care to maintain the existing coding style. Add unit tests for any new or changed functionality. Lint and test your code.
