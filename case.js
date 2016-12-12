@@ -1,6 +1,7 @@
 const qs = require('qs')
 const rest = require('restler-q')
 const fetch = require('node-fetch')
+const Headers = require('node-fetch').Headers
 const inflection = require( 'inflection' )
 const Conversation = require('./conversation.js')
 const Document = require('./document.js')
@@ -17,9 +18,10 @@ class Case {
 
   // TODO: This is hardcoded. Move it to a config file.
   static get maxPageSize() {
-    return 1000
-  }
 
+    return 1000
+
+  }
 
   // ##############
   // Static methods
@@ -327,7 +329,7 @@ class Case {
                 const path = `/case_blocks/${caseTypeClassName}.json`
                 const uri = Case.Caseblocks.buildUrl(path)
 
-                return fetch(uri)
+                return fetch(uri, Case._requestOptions())
                   .then(response => response.json())
                   .then(result =>
                     [
@@ -363,7 +365,7 @@ class Case {
 
             const uri = Case.Caseblocks.buildUrl(`${path}?${getQueryString}`)
 
-            return fetch(uri)
+            return fetch(uri, Case._requestOptions())
               .then(response => response.json())
               .then(result => {
 
@@ -487,6 +489,20 @@ class Case {
 
   // Static
 
+  static _requestOptions(options={}) {
+
+    const defaultHeaders = new Headers({
+      'Accept': 'application/json'
+    })
+
+    const defaultOptions = {
+      headers: defaultHeaders
+    }
+
+    return Object.assign(defaultOptions, options)
+
+  }
+
   /**
    * This is a new implementation of the old search function.
    * @param {number} caseTypeId
@@ -498,7 +514,7 @@ class Case {
 
     const queryObject = {query}
 
-    const uri = Case.Caseblocks.buildUrl(`/case_blocks/search.json?query=${qs.stringify(queryObject)}`)
+    const uri = Case.Caseblocks.buildUrl(`/case_blocks/search.json?${qs.stringify(queryObject)}`)
 
     return rest.get(uri,  {headers: {"Accept": "application/json"}})
       .then(results => {
@@ -569,16 +585,11 @@ class Case {
 
     const getParams = Object.assign(queryDefaults, options.query)
 
-    console.log(getParams)
-
     const getQueryStr = qs.stringify(getParams, { format : 'RFC1738' })
 
-    console.log(getQueryStr)
     const uri = `${baseUri}?${getQueryStr}`
 
-    console.log(uri)
-
-    return fetch(uri)
+    return fetch(uri, Case._requestOptions())
       .then(response => {
 
         if (response.ok) {
@@ -640,7 +651,7 @@ class Case {
               const getQueryStr = qs.stringify(getParams)
               const uri = `${baseUri}?${getQueryStr}`
 
-              return fetch(uri)
+              return fetch(uri, Case._requestOptions())
                 .then(response => {
                   if (response.ok) {
 

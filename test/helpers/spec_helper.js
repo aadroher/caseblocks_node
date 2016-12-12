@@ -5,7 +5,6 @@ const chaiAsPromised = require("chai-as-promised");
 
 chai.use(chaiAsPromised);
 
-
 const caseTypeData = JSON.parse(
   fs.readFileSync("./test/support/case-type.json", "utf8")
 );
@@ -13,22 +12,6 @@ const caseTypeData = JSON.parse(
 const telkom_application_case_type = JSON.parse(
   fs.readFileSync("./test/support/telkom-application-case-type.json", "utf8")
 );
-
-// const caseBlocksBaseURL = 'http://test-caseblocks-location'
-
-const casePayloadPath = './test/support/case.json'
-const htmlDocumentPath = './test/support/example.html'
-
-const caseTypeName = {
-  sing: 'pirate',
-  plu: 'pirates'
-}
-
-const casePayload = JSON.parse(
-  fs.readFileSync(casePayloadPath, 'utf-8')
-)
-
-const htmlDocumentString = fs.readFileSync(htmlDocumentPath, 'utf-8')
 
 const nockHttp = () => {
 

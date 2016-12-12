@@ -1,14 +1,19 @@
 const helper = require("./helpers/spec_helper")
+const caseTestsHelper = require('./helpers/case_tests_helper')
+const fetch = require('node-fetch')
+const Headers = require('node-fetch').Headers
 
 const should = require('chai').should(),
       Caseblocks = require('../index')
 
 describe('case', function() {
 
-  beforeEach(function() {
+  beforeEach(() => {
+
     Caseblocks.setup("http://test-caseblocks-location", "tnqhvzxYaRnVt7zRWYhr")
 
     helper.nockHttp()
+
   });
 
   it("document should include id", function(done) {
@@ -21,7 +26,7 @@ describe('case', function() {
     });
   });
 
-  describe("updating", function(done) {
+  describe("updating", function() {
 
     it("should update a document", function(done) {
       Caseblocks.Case.get("support_requests", "550c40d9841976debf000011").then(function(doc) {
@@ -120,21 +125,44 @@ describe('case', function() {
 
     })
 
-    describe("using recommended behaviour", function () {
-
-      it("should search for a document and return match", function(done) {
-
-        const query = 'first_name:Han Solo'
-        Caseblocks.Case.search('person', query)
-          .catch(err => {
-            throw err
-          })
-
-        done()
-
-      })
-
-    })
+    // describe("using recommended behaviour", function () {
+    //
+    //   beforeEach(() => {
+    //
+    //
+    //
+    //   });
+    //
+    //   it("should search for a document and return match", function(done) {
+    //
+    //     Caseblocks.setup("http://test-caseblocks-location", "tnqhvzxYaRnVt7zRWYhr")
+    //
+    //     caseTestsHelper.nockHttp()
+    //
+    //     // fetch('http://test-caseblocks-location/hi.json', {
+    //     //   headers: new Headers({
+    //     //     'Accept': 'application/json'
+    //     //   })
+    //     // })
+    //     //   .then(console.log)
+    //     //   .then(done)
+    //     //   .catch(done)
+    //
+    //     const query = 'person_reference:1'
+    //     Caseblocks.Case.search('person', query)
+    //       .then(cases => {
+    //           console.log(cases)
+    //           done()
+    //       })
+    //       .catch(err => {
+    //         // throw err
+    //         done(err)
+    //       })
+    //
+    //
+    //   })
+    //
+    // })
 
   })
   
