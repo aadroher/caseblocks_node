@@ -195,6 +195,7 @@ describe('case', function() {
 
 
   describe("participants", function() {
+
     it("should return a list of users", function(done) {
       Caseblocks.Case.get("customers", "54524f696b949172a7000002").then(function(doc) {
         doc.users().then(function(users) {
@@ -205,6 +206,7 @@ describe('case', function() {
         })
       })
     })
+
     it ("should return a list of teams", function(done) {
       Caseblocks.Case.get("customers", "54524f696b949172a7000002").then(function(doc) {
         doc.teams().then(function(teams) {
@@ -215,6 +217,7 @@ describe('case', function() {
         })
       })
     })
+
     it ("should return a list of users for users and teams", function(done) {
       Caseblocks.Case.get("customers", "54524f696b949172a7000002").then(function(doc) {
         doc.participants().then(function(users) {
@@ -225,6 +228,7 @@ describe('case', function() {
         })
       })
     })
+
     it ("should return a de-duplicated list of users for participants", function(done) {
       Caseblocks.Case.get("customers", "54524f696b949172a7000002").then(function(doc) {
         doc.participants().then(function(users) {
@@ -237,6 +241,7 @@ describe('case', function() {
         })
       })
     })
+
   })
 
 })
