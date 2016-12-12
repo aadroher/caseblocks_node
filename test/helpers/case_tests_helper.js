@@ -29,10 +29,14 @@ const defaultPaginationQuery = {
 }
 
 
-const getQueryMatcher = subQueryToMatch =>
+const getQueryMatcher = (subQueryToMatch={}, withPagination=true) =>
   receivedQueryObject => {
 
-    const queryObjectToMatch = Object.assign(authQuery, defaultPaginationQuery, subQueryToMatch)
+    const queryObjectToMatch = Object.assign(
+      authQuery,
+      withPagination ? defaultPaginationQuery : {},
+      subQueryToMatch
+    )
 
     return _.isEqual(queryObjectToMatch, receivedQueryObject)
 
@@ -124,34 +128,83 @@ function setWithEmptyQueryString(pageSize) {
 
 }
 
-function setPaginationSensitive(queryObject) {
+function setRelatedDocuments(personCaseId) {
 
-  nock(caseBlocksBaseURL)
-    .get('/case_blocks/person/search.json')
-    .query(receivedQueryObject =>
-      getQueryMatcher({ query_string: `person_reference:${personReference}` })(receivedQueryObject)
-    )
+  const scope =
+    nock(caseBlocksBaseURL)
+    .get(`/case_blocks/people/${personCaseId}.json`)
+    .query(getQueryMatcher({}, false))
     .reply(200, (uri, requestBody) => {
 
-      const matches = people.filter(person => person.person_reference === personReference)
+      const matchedPerson = people.find(person => person._id === personCaseId)
 
       const responseBody = {
-        summary: {
-          available_cases: matches.length
-        },
-        person: matches
+        person: matchedPerson
       }
 
-      return JSON.stringify(responseBody)
+      return responseBody
 
     })
 
+  const caseTypeClassNames = [
+    ['case_types', 'W'],
+    ['people_types', 'P'],
+    ['organization_types', '']
+  ]
+
+  caseTypeClassNames.forEach(entry => {
+
+    const caseTypeClassName = entry[0]
+
+    const matches = caseTypes.filter(caseType => caseType.system_category === entry[1])
+
+    scope
+      .get(`/case_blocks/${caseTypeClassName}.json?auth_token=${authToken}`)
+      // .query(getQueryMatcher({}, false))
+      .reply(200, (uri, requestBody) => {
+
+        const responseBody = {
+          [caseTypeClassName]: matches
+        }
+
+        return JSON.stringify(responseBody)
+
+      })
+
+  })
+
+  // Manually build get query string for relationships
+
+  const idsGetQuerySubstring = relationships.map(
+    relationship => `ids[]=${relationship.id}`
+  ).join('&')
+
+  const getQueryString = `${idsGetQuerySubstring}&auth_token=${authToken}`
+
+  scope
+    .get(`/case_blocks/case_type_direct_relationships.json?${getQueryString}`)
+    .reply(200, (uri, requestBody) => {
+
+      return JSON.stringify({
+        case_type_direct_relationships: relationships
+      })
+
+    })
+
+
+  // TODO: Assuming seach by person reference from weapon to person through person_reference.
+  // TODO: Parameterize this.
+
+  setMutipleWeaponSearchResult(2)
+
 }
+
 
 
 
 module.exports = {
   setSinglePersonSearchResult,
   setMutipleWeaponSearchResult,
-  setWithEmptyQueryString
+  setWithEmptyQueryString,
+  setRelatedDocuments
 }

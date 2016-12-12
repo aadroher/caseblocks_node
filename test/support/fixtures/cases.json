@@ -16,6 +16,7 @@
     "owned_by_id": 187,
     "owned_by_type": "CaseBlocks::Team",
     "case_type": "Person",
+    "people_type_id": 15,
     "current_state_id": 1158,
     "participating_users": [
       692
@@ -49,6 +50,7 @@
     "owned_by_id": 187,
     "owned_by_type": "CaseBlocks::Team",
     "case_type": "Person",
+    "people_type_id": 15,
     "current_state_id": 1158,
     "participating_users": [
       692
@@ -83,6 +85,7 @@
     "owned_by_id": 187,
     "owned_by_type": "CaseBlocks::Team",
     "case_type": "Weapon",
+    "case_type_id": 22,
     "current_state_id": 1159,
     "_title": "BlasTech DL-44",
     "participating_users": [],

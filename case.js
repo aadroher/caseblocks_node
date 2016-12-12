@@ -309,7 +309,9 @@ class Case {
 
   }
 
-  relatedByName(relatedCaseTypeName, query) {
+  // TODO: Add the possibility to return the related cases filtered by a query.
+
+  relatedByName(relatedCaseTypeName) {
 
     if (!Case.Caseblocks) {
 
@@ -355,6 +357,7 @@ class Case {
                   ].includes(caseType.id)
               )
 
+            console.log(relatedCaseTypeName)
             const relatedCaseType =
               caseTypes.find(
                 caseType => caseType.code === relatedCaseTypeName
@@ -380,6 +383,7 @@ class Case {
 
           })
           .then(({ thisCaseType, relatedCaseType, directRelationships }) => {
+
 
             const relationshipCaseTypeClassNames = [
               'work',
@@ -418,7 +422,7 @@ class Case {
             const relatedCasesRequestPromises =
               relevantRelationships.map(relationship => {
 
-                const searchQuery = `${relationship.to_key}:${this.attributes[relationship.from_key]} AND (${query})`
+                const searchQuery = `${relationship.to_key}:${this.attributes[relationship.from_key]}`
 
 
                 return Case._searchViaApi(relatedCaseType.code, {query_string: searchQuery})

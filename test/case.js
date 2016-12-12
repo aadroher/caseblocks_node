@@ -22,23 +22,27 @@ describe('case', function() {
 
     Caseblocks.setup("http://test-caseblocks-location", "tnqhvzxYaRnVt7zRWYhr")
 
-    helper.nockHttp()
-
   });
 
   it("document should include id", function(done) {
+
+    helper.nockHttp()
+
     Caseblocks.Case.get("support_requests", "550c40d9841976debf000011").then(function(doc) {
       doc.attributes._id.should.equal("550c40d9841976debf000011")
       done();
     }).catch(function(err){
-      // console.log(err);
       done(err);
     });
+
   });
 
   describe("updating", function() {
 
     it("should update a document", function(done) {
+
+      helper.nockHttp()
+
       Caseblocks.Case.get("support_requests", "550c40d9841976debf000011").then(function(doc) {
         doc.attributes._id.should.equal("550c40d9841976debf000011")
         doc.attributes.systems_involved.should.equal("1")
@@ -52,9 +56,13 @@ describe('case', function() {
       }).catch(function(err){
         done(err);
       });
+
     })
 
     it("updates multiple local values with updated calculated fields values that were not altered directly by client", function(done) {
+
+      helper.nockHttp()
+
       Caseblocks.Case.get("support_requests", "550c40d9841976debf000011").then(function(doc) {
         doc.attributes._id.should.equal("550c40d9841976debf000011")
         doc.attributes.systems_involved.should.equal("1")
@@ -70,9 +78,13 @@ describe('case', function() {
       }).catch(function(err){
         done(err);
       });
+
     })
 
     it("does not alter local document if update fails", function(done) {
+
+      helper.nockHttp()
+
       Caseblocks.Case.get("support_requests", "550c40d9841976debf000011").then(function(doc) {
         doc.attributes.validated_field = "invalid-format"
 
@@ -90,6 +102,9 @@ describe('case', function() {
   });
 
   it("should create a document", function(done) {
+
+    helper.nockHttp()
+
     Caseblocks.Case.create("support_requests", 42, {title: 'test1'}).then(function(doc) {
       doc.attributes.title.should.equal("test1")
       done()
@@ -100,12 +115,16 @@ describe('case', function() {
   })
 
   it("should create a unique document", function(done) {
+
+    helper.nockHttp()
+
     Caseblocks.Case.create("support_requests", 42, {title: 'test1'}, {unique: true}).then(function(doc) {
       doc.attributes.title.should.equal("test1")
       done()
     }).catch(function(err){
       done(err);
     });
+
   })
 
   describe("searching", function () {
@@ -113,6 +132,9 @@ describe('case', function() {
     describe("using legacy behaviour", function () {
 
       it("should search for a document and return match", function(done) {
+
+        helper.nockHttp()
+
         Caseblocks.Case.search(42, 'match-result').then(function(docs) {
           docs.length.should.to.be.above(1)
           docs[0].attributes.title.should.equal("test1")
@@ -124,6 +146,9 @@ describe('case', function() {
       })
 
       it("should search for a document and return no matches", function(done) {
+
+        helper.nockHttp()
+
         Caseblocks.Case.search(42, 'no-match-result').then(function(docs) {
           docs.length.should.equal(0)
           done()
@@ -253,11 +278,14 @@ describe('case', function() {
 
   })
   
-  describe("on related cases", function () {
+  describe("fetching related cases", function () {
     
-    describe("using legacy behaviour", function () {
+    describe("using simple legacy function", function () {
 
       it ("should find related documents", function(done) {
+
+        helper.nockHttp()
+
         Caseblocks.Case.get("customers", "54524f696b949172a7000001").then(function(doc) {
           doc.related("web_enquiries", 28).then(function(related_docs) {
             related_docs.length.should.equal(1);
@@ -274,8 +302,47 @@ describe('case', function() {
       
     })
     
-    describe("using recommended behaviour", function () {
-      
+    describe("using `relatedByName` function", function () {
+
+      it('should find related documents', function(done) {
+
+        const lukeAttributes = people.find(person => person.person_reference === 2)
+        const lukeWeaponsAttributes = weapons.filter(weapon => weapon.person_reference === 2)
+
+        caseTestsHelper.setRelatedDocuments(lukeAttributes._id)
+
+        Caseblocks.Case.get('people', lukeAttributes._id)
+          .then(luke =>
+            luke.relatedByName('weapon')
+              .then(results => {
+
+                results.length.should.equal(1)
+
+                const lukeWeapons = results.pop().cases
+
+                lukeWeapons.length.should.equal(2)
+
+                lukeWeapons.forEach(lukeWeapon => {
+
+                  lukeWeapon.should.be.instanceOf(Caseblocks.Case)
+
+                })
+
+                _.isEqual(
+                  lukeWeaponsAttributes,
+                  lukeWeapons.map(lukeWeapon => lukeWeapon.attributes)
+                ).should.equal(true)
+
+                done()
+
+              })
+          )
+          .catch(err => {
+            done(err)
+          })
+
+      })
+
     })
 
   })
