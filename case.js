@@ -357,7 +357,6 @@ class Case {
                   ].includes(caseType.id)
               )
 
-            console.log(relatedCaseTypeName)
             const relatedCaseType =
               caseTypes.find(
                 caseType => caseType.code === relatedCaseTypeName
