@@ -259,7 +259,7 @@ Caseblocks.Case.get("support_requests", "550c40d1841976debf000003")
 Retrieves the cases that _belong to_ this one and are of the case type that corresponds to the value of `relatedCaseTypeCode` .  For example:
 
 ```{javascript}
-Caseblocks.Case.get('mas_scientists', '550c40d1841976debf000003')
+Caseblocks.Case.get('584fd9201e7d66d2870d80ba')
 	.then(result => {
       result.related('grandchild')
         .then(relationships => {
