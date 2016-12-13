@@ -1,4 +1,3 @@
-
 CaseBlocks
 =========
 
@@ -204,7 +203,7 @@ Caseblocks.Case.get("support_requests", "550c40d1841976debf000003")
     });
 ```
 
-#### `relatedbyName(relatedCaseTypeCode)`
+#### `relatedByName(relatedCaseTypeCode)`
 
 - arguments:
 
