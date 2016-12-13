@@ -20,7 +20,6 @@ The `Caseblocks` object, which is the main proxy with the Caseblocks REST API, h
 const Caseblocks = require('caseblocks')
 
 Caseblocks.setup("http://yourpathtocaseblocks.com:8080", "your_user_token")
-
 ```
 
 The user token may be found in the _User settings_ section of the Caseblocks web interface. 
@@ -125,28 +124,46 @@ This function provides the ability to search for documents and return an array o
 **WARNING**: This way of usign it is **deprecated** and will eventually be removed.
 
 - arguments:
-  - `{string|number} caseTypeId` The id of the case type we want to search cases into.
-  -  `{string} searchQuery ` A search query following the [_Elasticsearch_ string query mini language syntax](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-query-string-query.html#query-string-syntax).
+  - `{string|number} caseTypeRepresentation` The id of the case type that we want to search instances of.
+  - `{string} searchQuery ` A search query following the [_Elasticsearch_ string query mini language syntax](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-query-string-query.html#query-string-syntax).
 - returns `{Promise.<[Case]>}` An array of `Case` instances which are  the same as you get from the `get` method. The length of the resulting `[Case]` array is **limited to 10 elements**.  
+
+```javascript
+Caseblocks.Case.search(31416, 'full_name:"Rick Sanchez" AND dimension:"C-137"')
+  .then(results => {
+    console.log("Found " + results.length + " cases!")
+    resulsts.map(caseInstance => {
+      console.log(caseInstance.attributes.title)
+    })
+  })
+  .catch(err => {
+    console.error(err.message)
+  })
+```
 
 ##### Recomended usage
 
 A new, more convenient way of searching cases uses the following signarture:
 
 -  arguments:
-  - `{string} case`
+   -  `{string} caseTypeRepresentation` The singular underscored name of the case type we want to search instances of.
+   -   `{string} searchQuery ` A search query following the [_Elasticsearch_ string query mini language syntax](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-query-string-query.html#query-string-syntax).
+-  returns `{Promise.<[Case]>}` An array of `Case` instances which are  the same as you get from the `get` method. There is no limit on the number of cases retrieved.
 
-```javascript
-Caseblocks.Case.search(31416, 'full_name:"Rick Sanchez" AND dimension:"C-137"')
-  .then(function(docs) {
-    console.log("Found " + docs.length + " Results!")
-    docs.map(function(doc) {console.log(doc.attributes.title)})
-  }).catch(function(err){
-    console.error(err);
-  });
+```{javascript}
+Caseblocks.Case.search('mad_scientists', 'full_name:"Rick Sanchez" AND dimension:"C-137"')
+  .then(results => {
+    console.log("Found " + results.length + " cases!")
+    resulsts.map(caseInstance => {
+      console.log(caseInstance.attributes.title)
+    })
+  })
+  .catch(err => {
+    console.error(err.message)
+  })
 ```
 
-### Instance Methods
+
 
 #### `save()`
 
@@ -187,7 +204,72 @@ Caseblocks.Case.get("support_requests", "550c40d1841976debf000003")
     });
 ```
 
-#### `related(relatedCaseTypeCode, relationshipId)`
+#### `relatedbyName(relatedCaseTypeCode)`
+
+- arguments:
+
+  - `{string} relatedCaseTypeCode` The singular underscored name of the case type we want to search instances of.
+
+- returns: `{Promise.<[object]>}`  A promise that resolves into an array of objects, one for each different relationship for which there are cases of the type that corresponds to `relatedCaseTypeCode`.  It has the following internal structure:
+
+  ```javascript
+  [ 
+    { 
+      relationship_0: { 
+        id: 530,
+        from_fieldset_key: 'field_set_name_0',
+        to_fieldset_key: 'field_set_name_1',
+        position: 1,
+        to_organization_type_id: 161,
+        from_work_type_id: 162,
+        // ...
+        from_key: 'field_name_0',
+        to_key: 'field_name_1' 
+     	 },
+     	cases: [ 
+        case_00,
+        // ...
+        case_0n
+      ] 
+    },
+    // ...
+    { 
+      relationship_m: { 
+        id: 530,
+        from_fieldset_key: 'field_set_name_0',
+        to_fieldset_key: 'field_set_name_1',
+        position: 1,
+        to_organization_type_id: 161,
+        from_work_type_id: 162,
+        // ...
+        from_key: 'field_name_0',
+        to_key: 'field_name_1' 
+     	 },
+     	cases: [ 
+        case_m0,
+        // ...
+        case_mn
+      ] 
+    },
+  ]
+  ```
+
+  ​
+
+Retrieves the cases that _belong to_ this one and are of the case type that corresponds to the value of `relatedCaseTypeCode` .  For example:
+
+```{javascript}
+Caseblocks.Case.get('mas_scientists', '550c40d1841976debf000003')
+	.then(result => {
+      result.related('grandchild')
+        .then(relationships => {
+            console.log(relationships[0].cases[0].attributes.full_name)
+        })
+    })
+  	.catch(err => {
+      console.log(err.message)
+    });
+```
 
 
 
@@ -250,11 +332,11 @@ The constructor for document takes the attributes of the document and the case o
 #### `fromString(caseTypeId, caseInstance, fileName, contents)`
 
 - arguments:
-    - `caseTypeId {string | number}` The id of the case type this case belongs to
-    - `caseInstance {object}` The case to attach it to
-    - `fileName {string}` The name of the file
-    - `contents {string}` The content of the file
-- Returns: `{Promise.<Document>}` A promise that resolves to the metadata about the saved file.
+    - `{string|number} caseTypeId` The id of the case type this case belongs to
+    - `{object} caseInstance ` The case to attach it to
+    - `{string} fileName ` The name of the file
+    - `{string} contents ` The content of the file
+- returns: `{Promise.<Document>}` A promise that resolves to the metadata about the saved file.
 
 This function creates a document from a string and attaches it to `caseInstance`.
 
