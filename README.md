@@ -29,7 +29,7 @@ The user token may be found in the _User settings_ section of the Caseblocks web
 
 ### Constructor
 
-`new Caseblocks.Casetype(attributes)`
+#### `new Caseblocks.Casetype(attributes)`
 
 - arguments:
 
@@ -41,7 +41,7 @@ The user token may be found in the _User settings_ section of the Caseblocks web
 
 ### Class Methods
 
-`get(caseTypeId)`
+#### `Casetype.get(caseTypeId)`
 
 - arguments:
   - `{string} caseTypeId`  the `id`  (primary key) attribute of a case type.
@@ -59,7 +59,7 @@ Caseblocks.Casetype.get("15").then(function(casetype) {
 
 ### Instance Methods
 
-`fieldsOfType(fieldType)`
+#### `fieldsOfType(fieldType)`
 
 Returns all the field objects in the casetype of the specified type, for example 'documents'.
 
@@ -77,7 +77,7 @@ Caseblocks.Casetype.get("15").then(function(casetype) {
 
 ### Class Methods
 
-`create(caseTypeCode, caseTypeId, caseData)`
+#### `create(caseTypeCode, caseTypeId, caseData)`
 
 - arguments:
   - `{string} caseTypeCode`  The plural underscored name of the case type this case will belong to.
@@ -96,7 +96,7 @@ Caseblocks.Case.create("support_requests", 42, {title: 'test1'})
     });
 ```
 
-`get(caseTypeCode, caseId)`
+#### `get(caseTypeCode, caseId)`
 
 - arguments:
   - `{string} caseTypeCode`  The plural underscored name of the case type this case belongs to.
@@ -116,22 +116,25 @@ Caseblocks.Case.get("support_requests", "550c40d1841976debf000003")
     });
 ```
 
-`search(caseTypeId, searchQuery)`
+#### `search(caseTypeRepresentation, query)`
 
-This function provides the ability to search for documents and return an array of matching cases. As of version 1.2.0 it has **two different behaviours** depending on the nature of the arguments passed:
+This function provides the ability to search for documents and return an array of matching cases. As of version 1.2.0 it has **two different usages** depending on the nature of the arguments passed:
 
-#### Legacy behaviour
+##### Legacy usage
 
 **WARNING**: This way of usign it is **deprecated** and will eventually be removed.
 
 - arguments:
   - `{string|number} caseTypeId` The id of the case type we want to search cases into.
-  -  `{string} searchQuery ` A search query following the [_Elasticsearch_ string query mini language syntax](https://www.elastic.co/guide/en/elasticsearch/reference/2.3/query-dsl-query-string-query.html#query-string-syntax).
+  -  `{string} searchQuery ` A search query following the [_Elasticsearch_ string query mini language syntax](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-query-string-query.html#query-string-syntax).
 - returns `{Promise.<[Case]>}` An array of `Case` instances which are  the same as you get from the `get` method. The length of the resulting `[Case]` array is **limited to 10 elements**.  
 
-#### Recomended behaviour
+##### Recomended usage
 
-A new, more convenient way of searching for 
+A new, more convenient way of searching cases uses the following signarture:
+
+-  arguments:
+  - `{string} case`
 
 ```javascript
 Caseblocks.Case.search(31416, 'full_name:"Rick Sanchez" AND dimension:"C-137"')
@@ -145,7 +148,7 @@ Caseblocks.Case.search(31416, 'full_name:"Rick Sanchez" AND dimension:"C-137"')
 
 ### Instance Methods
 
-`save()`
+#### `save()`
 
 Saves any changes made to the current case object.
 
@@ -163,11 +166,11 @@ Caseblocks.Case.get("support_requests", "550c40d1841976debf000003")
     });
 ```
 
-`delete()`
+#### `delete()`
 
   **Not implemented yet**
 
-`related(relatedCaseTypeCode, relationshipId)`
+#### `related(relatedCaseTypeCode, relationshipId)`
 
 Retrieves related cases from caseblocks supplying the case type code and the id of the document.
 
@@ -184,7 +187,11 @@ Caseblocks.Case.get("support_requests", "550c40d1841976debf000003")
     });
 ```
 
-`teams`
+#### `related(relatedCaseTypeCode, relationshipId)`
+
+
+
+#### `teams()`
 
 Retrieves the teams that are participants in this case
 
@@ -199,7 +206,7 @@ Caseblocks.Case.get("support_requests", "550c40d1841976debf000003")
     });
 ```
 
-`users`
+#### `users()`
 
 Retrieves the users that are listed as an individual user as a participant on this case
 
@@ -214,7 +221,7 @@ Caseblocks.Case.get("support_requests", "550c40d1841976debf000003")
     });
 ```
 
-`participants`
+#### `participants()`
 
 Retrieves all the users that are participants including team members.
 
@@ -234,15 +241,15 @@ Caseblocks.Case.get("support_requests", "550c40d1841976debf000003")
 
 ### Constructor
 
-`new Caseblocks.Document(attributes, caseInstance)`
+#### `new Caseblocks.Document(attributes, caseInstance)`
 
 The constructor for document takes the attributes of the document and the case object it is contained within.
 
 ### Class Methods
 
-`fromString(caseTypeId, caseInstance, fileName, contents)`
+#### `fromString(caseTypeId, caseInstance, fileName, contents)`
 
-- Arguments:
+- arguments:
     - `caseTypeId {string | number}` The id of the case type this case belongs to
     - `caseInstance {object}` The case to attach it to
     - `fileName {string}` The name of the file
@@ -287,7 +294,7 @@ will be `fileName` and `contents`.
 
 ### Instance Methods
 
-`rename(newFilename)`
+#### `rename(newFilename)`
 
 Renames the document in the case and updates any related document fields
 
@@ -311,7 +318,7 @@ Caseblocks.Case.get("support_requests", "case-with-documents")
 
 ### Class Methods
 
-`get(taskListId)`
+#### `get(taskListId)`
 
 Retrieve a tasklist matching the __id__ supplied.
 
@@ -323,8 +330,7 @@ Retrieve a tasklist matching the __id__ supplied.
     })
 ```
 
-
-`getAll(taskListIds)`
+#### `getAll(taskListIds)`
 
 Retrieves multiple tasklists in one go.  Pass in an array of string id's and the matching Tasklists will be returned in an array.
 
@@ -342,7 +348,7 @@ Caseblocks.Tasklist.getAll(ids).then(function(tasklists) {
 });
 ```
 
-`tasks()`
+#### `tasks()`
 
 Retrieves all tasks associated with this tasklist, returns a promise with an array of tasks.
 
@@ -377,7 +383,7 @@ Caseblocks.Tasklist.getAll(ids).then(function(tasklists) {
 
 ### Class Methods
 
-`get(taskId)`
+#### `get(taskId)`
 
 Retrieves a task matching the **id** supplied
 
@@ -390,7 +396,7 @@ Caseblocks.Task.get("550c40d1841976debf000004").then(function(task) {
 })
 ```
 
-`getAll(taskIds)`
+#### `getAll(taskIds)`
 
 Retrieves multiple tasks in one go.  Pass in an array of string id's and the matching Tasks will be returned in an array.
 
@@ -418,7 +424,7 @@ Caseblocks.Task.getAll(ids).then(function(tasks) {
 
 ### Public Methods
 
-`get`
+#### `get(teamId)`
 
 Retrieves a team matching the __id__ supplied
 
@@ -432,7 +438,7 @@ Caseblocks.Team.get(5).then(function(team) {
 
 ### Instance Methods
 
-`members`
+#### `members()`
 
 Retrieves the users that are members in this team.
 
@@ -452,7 +458,7 @@ Caseblocks.Team.get(5).then(function(team) {
 
 ### Public Methods
 
-`get`
+#### `get(userId)`
 
 Retrieves a user matching the __id__ supplied
 
@@ -464,7 +470,7 @@ Caseblocks.User.get(5).then(function(user) {
 })
 ```
 
-`getAll`
+#### `getAll()`
 
 Retrieves the complete list of users for an account
 
@@ -482,7 +488,7 @@ Caseblocks.User.getAll().then(function(users) {
 
 ### Class Methods
 
-`get(bucketId, caseTypeCode)`
+#### `get(bucketId, caseTypeCode)`
 
 Retrieves a bucket from caseblocks supplying the id of the bucket and its case type code.
 
@@ -495,7 +501,7 @@ Caseblocks.Bucket.get(6, "bulk_uplifts").then(function(bucket) {
 })
 ```
 
-`stats()`
+#### `stats()`
 
 Saves any changes made to the current document.
 
@@ -526,7 +532,7 @@ Caseblocks.Bucket.get(6, "bulk_uplifts").then(function(bucket) {
 })
 ```
 
-`cases(page, pageSize)`
+#### `cases(page, pageSize)`
 
 Retrieves cases contained in the bucket by page. Parameters are optional and `page` defaults to 0 and `pageSize` defaults to 10.
 
@@ -583,48 +589,47 @@ email.send().then(function(result) {
 
 The above example sets up the key for mandrill then adds a to address, bcc address, sets up the from address, subject and then adds an html body, then sends the email.
 
-***Note*** SMTP is not implemented yet
+***Note***: Sending through SMTP is not implemented yet.
 
 ### Class Methods
 
-`to(email, name)`
+#### `to(email, name)`
 
 You can call to many times to add recipients to the email.  Name is an optional parameter.
 
-`cc(email, name)`
+#### `cc(email, name)`
 
 You can call cc many times to add recipients to the email.  Name is an optional parameter.
 
-`bcc(email, name)`
+#### `bcc(email, name)`
 
 You can call bcc many times to add recipients to the email.  Name is an optional parameter.
 
-`from(email, name)`
+#### `from(email, name)`
 
 The from function, sets the from address of the email.  Again, name is optional.
 
-`subject(text)`
+#### `subject(text)`
 
 Sets the subject for the email, text should be a string that will be used as the subject in the email.
 
-`body(data)`
+#### `body(data)`
 
 Sets the html body of the email, which will also automatically set the text using an html-to-text conversion tool.
 
-`html(data)`
+#### `html(data)`
 
-Alias of **body**
+Alias of `body`
 
-`text(data)`
+#### `text(data)`
 
 Sets the text only version of the email.  This should be set after html as setting html overwrites this value.
 
-
-`send()`
+#### `send()`
 
 This function sends an email using either mandrill or smtp (to be implemented).  The above example shows how to setup an email before you call send.
 
-`sendTemplate(template, data)`
+#### `sendTemplate(template, data)`
 
 Sends an email using a mandrill template.  The first parameter is a string that should match an existing mandrill template you wish to use.  The second parameter is a hash of data to be used with the template, eg
 
@@ -641,7 +646,7 @@ This data will then be used with the fields in the mandrill template to render t
 
 ### Writing
 
-  You will find the existing specs under the test folder.  HTTP calls are mocked in the *spec_helper.js* using *nock* file and you should add to this the calls and their results you expect to make.
+You will find the existing specs under the test folder.  HTTP calls are mocked in the *spec_helper.js* using *nock* file and you should add to this the calls and their results you expect to make.
 
 ### Running
 
