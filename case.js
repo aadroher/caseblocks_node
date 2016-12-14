@@ -1,14 +1,15 @@
 const qs = require('qs')
-const rest = require('restler-q')
 const fetch = require('node-fetch')
 const Headers = require('node-fetch').Headers
 const inflection = require( 'inflection' )
+const _ = require('underscore')
+
 const Conversation = require('./conversation.js')
 const Document = require('./document.js')
 const Casetype = require('./casetype.js')
 const User = require('./user.js')
 const Team = require("./team.js")
-const _ = require('underscore')
+
 
 class Case {
 
@@ -304,11 +305,10 @@ class Case {
 
       const uri = Case.Caseblocks.buildUrl(`${path}?${queryString}`)
 
-      return rest.get(uri, {headers: {"Accept": "application/json"}})
+      return fetch(uri, Case._requestOptions())
+        .then(response => response.json())
         .then(result =>
-
           result[relatedCaseTypeName].map(attributes => new Case(attributes))
-
         )
 
     }
@@ -460,8 +460,27 @@ class Case {
       }
 
       const uri = Case.Caseblocks.buildUrl(`/case_blocks/${this.case_type_name}/${this.id}.json`)
+      const requestOptions = {
+        method: 'put',
+        body: JSON.stringify(payload)
+      }
 
-      return rest.putJson(uri, payload, {headers: {"Accept": "application/json"}})
+      return fetch(uri, Case._requestOptions(requestOptions))
+        .then(response => {
+
+          if (response.ok) {
+
+            return response.json()
+
+          } else {
+
+            const msg = 'Error saving case' +
+                        `Error: ${response.status} - ${response.statusText}`
+
+            throw Error(msg)
+          }
+
+        })
         .then(caseData => {
 
           const caseTypeCode = Object.keys(caseData).pop()
@@ -473,15 +492,6 @@ class Case {
           return this
 
         })
-        .catch(err => {
-
-          const msg = 'Error saving case' +
-                      `Error: ${err.message}`
-
-          throw Error(msg)
-
-        })
-
 
     }
 
@@ -528,7 +538,8 @@ class Case {
 
     const uri = Case.Caseblocks.buildUrl(`/case_blocks/search.json?${qs.stringify(queryObject)}`)
 
-    return rest.get(uri,  {headers: {"Accept": "application/json"}})
+    return fetch(uri, Case._requestOptions())
+      .then(response => response.json())
       .then(results => {
 
         const caseTypeResults = results.find(result =>
@@ -586,7 +597,6 @@ class Case {
   static _getSearchRequests(encodedCaseTypeName, options) {
 
     // Manually build URI. Hardcoded GET query in URL (as Caseblocks.buildURL generates)
-    // seems to take precedence to the `query` option in `restler.get`.
     const baseUri = `${Case.Caseblocks.host}/case_blocks/${encodedCaseTypeName}/search.json`
 
     const queryDefaults = {

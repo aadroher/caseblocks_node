@@ -62,9 +62,9 @@ Bucket.prototype.stats = function() {
   if (!Bucket.Caseblocks)
     throw new Error("Must call Caseblocks.setup");
 
-  let _this = this;
+  let self = this;
   const url = addAdditionalSearchTermsToURL(
-    "/case_blocks/bucket_stats/" + _this.id, _this.attributes.searchField, _this.attributes.searchTerm
+    "/case_blocks/bucket_stats/" + self.id, self.attributes.searchField, self.attributes.searchTerm
   );
 
   return fetch(Bucket.Caseblocks.buildUrl(url), requestOptions())
@@ -75,7 +75,7 @@ Bucket.prototype.cases = function(page, pageSize) {
   if (!Bucket.Caseblocks)
     throw new Error("Must call Caseblocks.setup");
 
-  let _this = this;
+  let self = this;
 
   if (typeof page == "undefined") {
     page = 0
@@ -85,16 +85,16 @@ Bucket.prototype.cases = function(page, pageSize) {
   }
 
   const url = addAdditionalSearchTermsToURL(
-    "/case_blocks/" + _this.case_type_code + "?bucket_id=" +
-    _this.id + "&page=" + page + "&page_size=" +
-    pageSize, _this.attributes.searchField, _this.attributes.searchTerm
+    "/case_blocks/" + self.case_type_code + "?bucket_id=" +
+    self.id + "&page=" + page + "&page_size=" +
+    pageSize, self.attributes.searchField, self.attributes.searchTerm
   )
 
   return fetch(Bucket.Caseblocks.buildUrl(url), requestOptions())
     .then(response => response.json())
     .then(function(data) {
       cases = []
-      for (kase of data[_this.case_type_code]) {
+      for (kase of data[self.case_type_code]) {
         cases.push(new Case(kase))
       }
       return cases;

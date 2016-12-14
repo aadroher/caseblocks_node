@@ -1,18 +1,14 @@
+const fetch = require('node-fetch');
+const htmlToText = require('html-to-text');
 
-//var rest = require('rest')
-var rest = require('restler-q');
-var inflection = require( 'inflection' );
-var htmlToText = require('html-to-text');
-var Q = require('q');
+let Email = function(attributes) {
 
-var Email = function(attributes) {
-
-  reservedFields = ["to", "cc", "bcc", "subject", "body"]
+  const reservedFields = ["to", "cc", "bcc", "subject", "body"]
 
   this.serverType = "mandrillapp"
   this.format = "html"
 
-  for(k in attributes) {
+  for(let k in attributes) {
     if (reservedFields.indexOf(k) < 0) {
       this[k] = attributes[k]
     }
@@ -80,8 +76,8 @@ Email.prototype.sendTemplate = function(templateName, data, options) {
     throw new Error("A 'to' address is required")
   }
 
-  var recipients = generateRecipients(this.to_addresses, this.cc_addresses, this.bcc_addresses)
-  var message_data = {
+  const recipients = generateRecipients(this.to_addresses, this.cc_addresses, this.bcc_addresses)
+  let message_data = {
     "key": this.key,
     "message": {
       "subject": this.internal_subject,
@@ -92,11 +88,11 @@ Email.prototype.sendTemplate = function(templateName, data, options) {
   message_data.template_name = templateName;
 
   message_data.template_content = []
-  for(k in data) {
+  for(let k in data) {
     message_data.template_content.push({name: k, content: data[k]})
   }
   message_data.message.global_merge_vars = []
-  for(k in data) {
+  for(let k in data) {
     message_data.message.global_merge_vars.push({name: k, content: data[k]})
   }
 
@@ -104,13 +100,18 @@ Email.prototype.sendTemplate = function(templateName, data, options) {
   if (this.from_address.name !== undefined)
     message_data.message.from_name = this.from_address.name
 
-  return Q.fcall(function(data) {
-    return rest.putJson("https://mandrillapp.com/api/1.0/messages/send-template.json", message_data).then(function(response) {
-      return response;
-    }).fail(function(err) {
-      throw err;
-    });
-  });
+  const requestBody = JSON.stringify(message_data)
+
+  const requestOptions = {
+    method: 'put',
+    body: requestBody
+  }
+
+  const uri = "https://mandrillapp.com/api/1.0/messages/send-template.json"
+
+  return fetch(uri, requestOptions)
+    .then(response => response.text())
+
 }
 
 Email.prototype.send = function() {
@@ -118,8 +119,8 @@ Email.prototype.send = function() {
     throw new Error("A 'to' address is required")
   }
 
-  var recipients = generateRecipients(this.to_addresses, this.cc_addresses, this.bcc_addresses)
-  var message_data = {
+  const recipients = generateRecipients(this.to_addresses, this.cc_addresses, this.bcc_addresses)
+  let message_data = {
     "key": this.key,
     "message": {
       "subject": this.internal_subject,
@@ -136,13 +137,37 @@ Email.prototype.send = function() {
   if (this.from_address.name !== undefined)
     message_data.message.from_name = this.from_address.name
 
-  return Q.fcall(function(data) {
-    return rest.putJson("https://mandrillapp.com/api/1.0/messages/send.json", message_data).then(function(response) {
-      return response;
-    }).fail(function(err) {
-      throw err;
-    });
-  });
+  const requestBody = JSON.stringify(message_data)
+
+  const requestOptionsExtension = {
+    method: 'put',
+    body: requestBody,
+  }
+
+  const uri = "https://mandrillapp.com/api/1.0/messages/send.json"
+
+  return fetch(uri, requestOptionsExtension)
+    .then(response => {
+
+      if (response.ok) {
+
+        return response.text()
+
+      } else {
+
+        return response.text()
+          .then(responseBody => {
+
+            const msg = `Error: ${response.status} - ${response.statusText}\n` +
+                        `Message: ${responseBody}`
+            throw new Error(msg)
+
+          })
+
+      }
+
+    })
+
 }
 
 function generateRecipients(to, cc, bcc) {

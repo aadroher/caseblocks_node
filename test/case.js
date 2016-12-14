@@ -1,8 +1,9 @@
+const fetch = require('node-fetch')
+const _ = require('underscore')
+
 const helper = require("./helpers/spec_helper")
 const caseTestsHelper = require('./helpers/case_tests_helper')
-const fetch = require('node-fetch')
-const Headers = require('node-fetch').Headers
-const _ = require('underscore')
+
 
 const should = require('chai').should(),
       Caseblocks = require('../index')
@@ -10,10 +11,8 @@ const should = require('chai').should(),
 // Mock collections
 // Import collections.
 const {
-  caseTypes,
   people,
-  weapons,
-  relationships
+  weapons
 } = require('./helpers/collections')
 
 describe('case', function() {

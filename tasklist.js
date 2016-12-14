@@ -1,12 +1,24 @@
-
-var rest = require('restler-q');
-var inflection = require( 'inflection' );
-var Task = require('./task.js');
-var Q = require('q');
+const fetch = require('node-fetch')
+const Headers = require('node-fetch').Headers
+const Task = require('./task.js')
 
 
-var Tasklist = function(attributes) {
-  for(var k in attributes) {
+function requestOptions(options={}) {
+
+  const defaultHeaders = new Headers({
+    'Accept': 'application/json'
+  })
+
+  const defaultOptions = {
+    headers: defaultHeaders
+  }
+
+  return Object.assign(defaultOptions, options)
+
+}
+
+let Tasklist = function(attributes) {
+  for(let k in attributes) {
     if (k != "tasks") {
       this[k] = attributes[k]
     } else {
@@ -19,36 +31,33 @@ Tasklist.get = function(id) {
   if (!Tasklist.Caseblocks)
     throw new Error("Must call Caseblocks.setup");
 
-  url = Tasklist.Caseblocks.buildUrl("/case_blocks/tasklists.json?ids%5B%5D="+ id)
+  const url = Tasklist.Caseblocks.buildUrl("/case_blocks/tasklists.json?ids%5B%5D="+ id)
 
-  return Q.fcall(function(data) {
-    return rest.get(url, {headers: {"Accept": "application/json"}}).then(function (payload) {
-      payload = payload.tasklists
-      tasklist = new Tasklist(payload[0])
-      return tasklist
-    }).fail(function(err) {
-      throw err;
-    });
-  });
+  return fetch(url, requestOptions())
+    .then(response => response.json())
+    .then(responseBody => {
+
+      const taskListAttributes = responseBody.tasklists.pop()
+
+      return new Tasklist(taskListAttributes)
+
+    })
+
 }
 
 Tasklist.getAll = function(tasklist_ids) {
   if (!Tasklist.Caseblocks)
     throw new Error("Must call Caseblocks.setup");
 
-  url = Tasklist.Caseblocks.buildUrl("/case_blocks/tasklists.json?" + tasklist_ids.map(function(id) {return "ids%5B%5D="+id}).join("&"))
-  return Q.fcall(function(data) {
-    return rest.get(url, {headers: {"Accept": "application/json"}}).then(function (payload) {
-      payload = payload.tasklists
-      tasklists = []
-      for(t in payload) {
-        tasklists.push(new Tasklist(payload[t]))
-      }
-      return tasklists
-    }).fail(function(err) {
-      throw err;
-    });
-  });
+  const url = Tasklist.Caseblocks.buildUrl("/case_blocks/tasklists.json?" + tasklist_ids.map(id => "ids%5B%5D="+id).join("&"))
+
+  return fetch(url, requestOptions())
+    .then(response => response.json())
+    .then(responseBody =>
+      responseBody.tasklists.map(
+        tasklistAttributes =>  new Tasklist(tasklistAttributes)
+      )
+    )
 }
 
 Tasklist.prototype.tasks = function() {
@@ -57,23 +66,21 @@ Tasklist.prototype.tasks = function() {
 
   if (this._tasks !== undefined && this._tasks.length > 0) {
 
-    var url = Tasklist.Caseblocks.buildUrl("/case_blocks/tasks.json?" + this._tasks.map(function(id) {return "ids%5B%5D="+id}).join("&"))
-    _this = this
-    return Q.fcall(function(data) {
-      return rest.get(url, {headers: {"Accept": "application/json"}}).then(function(payload) {
-        var tasks = []
-        for(t in payload.tasks) {
-          tasks.push(new Task(payload.tasks[t]))
-        }
-        return tasks
-      }).fail(function(err) {
-        throw err;
-      });
-    })
+    const url = Tasklist.Caseblocks.buildUrl("/case_blocks/tasks.json?" + this._tasks.map(id => "ids%5B%5D="+id).join("&"))
+    // let self = this
+
+    return fetch(url, requestOptions())
+      .then(response => response.json())
+      .then(responseBody =>
+        responseBody.tasks.map(
+          taskAttributes =>  new Task(taskAttributes)
+        )
+      )
+
   } else {
-    return Q.fcall(function(data) {
-      return []
-    })
+
+    return Promise.resolve([])
+
   }
 }
 

@@ -1,4 +1,5 @@
-const rest = require('restler-q')
+const fetch = require('node-fetch')
+const Headers = require('node-fetch').Headers
 
 class Casetype {
 
@@ -12,7 +13,8 @@ class Casetype {
 
       const uri = Casetype.Caseblocks.buildUrl(`/case_blocks/case_types/${id}.json`)
 
-      return rest.get(uri, { headers: { "Accept": "application/json" }})
+      return fetch(uri, Casetype._requestOptions())
+        .then(response => response.json())
         .then(caseTypeData =>
 
           new Casetype(caseTypeData.case_type)
@@ -45,6 +47,26 @@ class Casetype {
       return [...prevVal, ...newFields]
 
       }, [])
+
+  }
+
+  // #################
+  // "Private" methods
+  // #################
+
+  // Static
+
+  static _requestOptions(options={}) {
+
+    const defaultHeaders = new Headers({
+      'Accept': 'application/json'
+    })
+
+    const defaultOptions = {
+      headers: defaultHeaders
+    }
+
+    return Object.assign(defaultOptions, options)
 
   }
 
