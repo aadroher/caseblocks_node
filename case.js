@@ -50,8 +50,13 @@ class Case {
       )
 
       const uri = Case.Caseblocks.buildUrl(`/case_blocks/${caseTypeName}.json`)
+      const requestOptions = {
+        method: 'post',
+        body: JSON.stringify(payload)
+      }
 
-      return rest.postJson(uri, payload, {headers: {"Accept": "application/json"}})
+      return fetch(uri, Case._requestOptions(requestOptions))
+        .then(response => response.json())
         .then(caseData => {
 
           // Get the name of the first key.
@@ -81,7 +86,8 @@ class Case {
       // Follow the same pattern as in `Case.create`.
       const uri = Case.Caseblocks.buildUrl(`/case_blocks/${caseTypeName}/${id}.json`)
 
-      return rest.get(uri, {headers: {"Accept": "application/json"}})
+      return fetch(uri, Case._requestOptions())
+        .then(response => response.json())
         .then(caseData => {
 
           const caseTypeCode = Object.keys(caseData).pop()
