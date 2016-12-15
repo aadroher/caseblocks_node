@@ -1,7 +1,6 @@
 const faker = require('faker')
 const Factory = require('rosie').Factory
 const fs = require('fs')
-const mongodb = require('mongodb')
 const _ = require('underscore')
 
 const fixturesPath = `${__dirname}/../support/fixtures`
@@ -22,7 +21,6 @@ const weaponsFixtures = caseFixtures.filter(caseInstance => caseInstance.case_ty
 const relationshipFixtures = JSON.parse(
   fs.readFileSync(`${fixturesPath}/relationships.json`)
 )
-
 
 // ####################
 // Case type collection
@@ -48,7 +46,7 @@ function getPeopleFactory() {
 
     if (idFields.includes(fieldName)) {
 
-      peopleFactory.sequence(fieldName, () => new mongodb.ObjectID())
+      peopleFactory.sequence(fieldName, i => (2 + i).toString())
 
     } else if (fieldName === 'first_name') {
 
@@ -118,7 +116,7 @@ function getWeaponFactory() {
 
     if (idFields.includes(fieldName)) {
 
-      weaponFactory.sequence(fieldName, () => new mongodb.ObjectID())
+      weaponFactory.sequence(fieldName, i => (3 + i).toString())
 
     } else if (fieldName === 'weapon_model') {
 

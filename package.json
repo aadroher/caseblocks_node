@@ -29,7 +29,6 @@
     "chai-as-promised": "5.1.0",
     "faker": "^3.1.0",
     "mocha": "^2.5.3",
-    "mongodb": "^2.2.12",
     "nock": "^9.0.2",
     "rosie": "^1.6.0"
   },
