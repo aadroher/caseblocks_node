@@ -1,7 +1,8 @@
-
 const https = require('https');
 const url = require('url');
-const rest = require('restler-q');
+
+const fetch = require('node-fetch')
+const Headers = require('node-fetch').Headers
 
 // Utility functions and constants not to be exposed.
 // This is a poor mans (and more functional) way of defining private
@@ -14,17 +15,21 @@ const getDocumentsEndPointPath = (caseTypeId, caseInstance) => {
 
   const accountId = caseInstance.attributes.account_id;
   const caseId = caseInstance.attributes._id;
+
   return `/documents/${accountId}/${caseTypeId}/${caseId}/`;
 
 
 };
 
 const getBoundary = () => {
+
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
   const randomString = [...Array(randomStringLength).keys()].reduce((acc, position) =>
     acc + chars.charAt(Math.floor(Math.random() * chars.length))
   );
+
   return `${randomString}`;
+
 };
 
 class Document {
@@ -186,33 +191,36 @@ class Document {
 
     } else {
 
-      const originalFilename = this.file_name;
-      const originalURL = this.url;
-
       this.debug.push("starting rename");
 
       const url = this.url;
-      const formData = {
-        new_file_name: newFilename
-      };
-
       const requestUrl = `${Document.Caseblocks.buildUrl(url)}&new_file_name=${newFilename}`;
 
-      return rest.put(requestUrl, { data: formData }).then(jsonResponse => {
+      const requestOptions = {
+        method: 'put',
+        body: `new_file_name=${newFilename}`,
+        headers: new Headers({
+          'Accept': 'application/json',
+          'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8'
+        })
+      }
 
-                const response = JSON.parse(jsonResponse);
+      return fetch(requestUrl, requestOptions)
+        .then(response => response.json())
+        .then(responseBody => {
 
-                return {
-                  file_name: response.file_name,
-                  url: response.url
-                }
+          return {
+            file_name: responseBody.file_name,
+            url: responseBody.url
+          }
 
-              }).fail(err => {
+        })
+        .catch(err => {
 
-                console.log(err);
-                throw new Error("Error renaming document");
+          console.log(err.message);
+          throw new Error("Error renaming document");
 
-              });
+        });
 
     }
 

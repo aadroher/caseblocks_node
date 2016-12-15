@@ -1,46 +1,74 @@
-var rest = require('restler-q');
-var inflection = require( 'inflection' );
-var Q = require('q');
-var User = require('./user.js');
-var _ = require('underscore');
+const fetch = require('node-fetch')
+const Headers = require('node-fetch').Headers
+const User = require('./user.js')
 
-var Team = function(attributes) {
-  for(var k in attributes) {
+
+function requestOptions(options={}) {
+
+  const defaultHeaders = new Headers({
+    'Accept': 'application/json'
+  })
+
+  const defaultOptions = {
+    headers: defaultHeaders
+  }
+
+  return Object.assign(defaultOptions, options)
+
+}
+
+
+let Team = function(attributes) {
+
+  for(let k in attributes) {
     this[k] = attributes[k];
   }
-};
+
+}
 
 Team.get = function(id) {
   if (!Team.Caseblocks)
     throw new Error("Must call Caseblocks.setup");
-  return Q.fcall(function(data) {
-    return rest.get(Team.Caseblocks.buildUrl("/case_blocks/teams/" + id),  {headers: {"Accept": "application/json"}}).then(function(data) {
-      return new Team(data.team);
-    });
-  });
+
+  const uri = Team.Caseblocks.buildUrl("/case_blocks/teams/" + id)
+  return fetch(uri, requestOptions())
+    .then(response => response.json())
+    .then(responseBody =>
+      new Team(responseBody.team)
+    )
+
 };
 
 Team.prototype.members = function() {
   if (!Team.Caseblocks)
     throw new Error("Must call Caseblocks.setup");
 
-  var query = this.team_membership_ids.map(function(id) {return "ids%5B%5D=" + id}).join("&")
+  const query = this.team_membership_ids.map(id => "ids%5B%5D=" + id).join("&")
+  const uri = Team.Caseblocks.buildUrl("/case_blocks/team_memberships?" + query)
 
-  return rest.get(Team.Caseblocks.buildUrl("/case_blocks/team_memberships?" + query),  {headers: {"Accept": "application/json"}}).then(function(data) {
-    var user_ids = data.team_memberships.map(function(team_membership) {return team_membership.user_id})
-    return Q.allSettled(
-      user_ids.map(function(id) {
-        return rest.get(Team.Caseblocks.buildUrl("/case_blocks/users/" + id),  {headers: {"Accept": "application/json"}}).then(function(data) {
-          return new User(data.user)
-        }).catch(function(err) {
-          throw err;
-        });
+  return fetch(uri, requestOptions())
+    .then(response => response.json())
+    .then(responseBody => {
+
+      const userIds = responseBody.team_memberships.map(
+        team_membership => team_membership.user_id
+      )
+
+      const userRequestPromises = userIds.map(userId => {
+
+        const uri = Team.Caseblocks.buildUrl("/case_blocks/users/" + userId)
+
+        return fetch(uri, requestOptions())
+          .then(response => response.json())
+          .then(responseBody =>
+            new User(responseBody.user)
+          )
+
       })
-    ).then(function(returned_users) {
-      var fulfilled_users = _.filter(returned_users, function(u){return u.state == "fulfilled"});
-      return _.map(fulfilled_users, function(u){return u.value});
-    });
-  })
+
+      return Promise.all(userRequestPromises)
+
+    })
 
 };
 

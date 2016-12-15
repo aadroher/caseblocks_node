@@ -1,11 +1,24 @@
+const fetch = require('node-fetch')
+const Headers = require('node-fetch').Headers
 
-//var rest = require('rest')
-var rest = require('restler-q');
-var inflection = require( 'inflection' );
-var Q = require('q');
 
-var Task = function(attributes) {
-  for(var k in attributes) {
+function requestOptions(options={}) {
+
+  const defaultHeaders = new Headers({
+    'Accept': 'application/json'
+  })
+
+  const defaultOptions = {
+    headers: defaultHeaders
+  }
+
+  return Object.assign(defaultOptions, options)
+
+}
+
+let Task = function(attributes) {
+
+  for(let k in attributes) {
     this[k] = attributes[k]
   }
   this.id = attributes["_id"]
@@ -16,51 +29,55 @@ Task.get = function(id) {
   if (!Task.Caseblocks)
     throw new Error("Must call Caseblocks.setup");
 
-  url = Task.Caseblocks.buildUrl("/case_blocks/tasks.json?ids%5B%5D="+id)
-  return Q.fcall(function(data) {
-    return rest.get(url, {headers: {"Accept": "application/json"}}).then(function (payload) {
-      payload = payload.tasks
-      return new Task(payload[0])
-    }).fail(function(err) {
-      throw err;
-    });
-  });
+  const url = Task.Caseblocks.buildUrl("/case_blocks/tasks.json?ids%5B%5D="+id)
+
+  return fetch(url, requestOptions())
+    .then(response => response.json())
+    .then(responseBody => {
+
+      const taskAttributes = responseBody.tasks.pop()
+      return new Task(taskAttributes)
+
+    })
+
 }
 
 Task.getAll = function(ids) {
   if (!Task.Caseblocks)
     throw new Error("Must call Caseblocks.setup");
 
-  url = Task.Caseblocks.buildUrl("/case_blocks/tasks.json?" + ids.map(function(id) {return "ids%5B%5D="+id}).join("&"))
+  const url = Task.Caseblocks.buildUrl("/case_blocks/tasks.json?" + ids.map(function(id) {return "ids%5B%5D="+id}).join("&"))
 
-  return Q.fcall(function(data) {
-    return rest.get(url, {headers: {"Accept": "application/json"}}).then(function (payload) {
-      var tasks = []
-      for(t in payload.tasks) {
-        tasks.push(new Task(payload.tasks[t]))
-      }
-      return tasks
-    }).fail(function(err) {
-      throw err;
-    });
-  });
+  return fetch(url, requestOptions())
+    .then(response => response.json())
+    .then(responseBody =>
+      responseBody.tasks.map(
+        taskAttributes => new Task(taskAttributes)
+      )
+    )
 }
 
 Task.prototype.execute = function() {
   if (!Task.Caseblocks)
     throw new Error("Must call Caseblocks.setup");
 
-  url = Task.Caseblocks.buildUrl("/case_blocks/tasks/" + this.id + ".json")
-  _this = this
-  _this.status = "in_progress"
-  payload = {task: _this}
-  return Q.fcall(function(data) {
-    return rest.putJson(url, payload, {headers: {"Accept": "application/json"}}).then(function(data) {
-      return _this
-    }).fail(function(err) {
-      throw err;
-    });
-  })
+  const url = Task.Caseblocks.buildUrl("/case_blocks/tasks/" + this.id + ".json")
+
+  let self = this
+  self.status = "in_progress"
+
+  const payload = {
+    task: self
+  }
+
+  const optionsExtension = {
+    method: 'put',
+    body: JSON.stringify(payload)
+  }
+
+  return fetch(url, requestOptions(optionsExtension))
+    .then(_ => self)
+
 }
 
 module.exports = Task;

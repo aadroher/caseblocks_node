@@ -39,7 +39,7 @@ describe('document', function() {
         docs = kase.documents()
         docs[0].id.should.equal("573af74181e9a82979000008")
         done();
-      }).fail(function(err){
+      }).catch(function(err){
         console.error(err);
         done(err);
       });
@@ -50,7 +50,7 @@ describe('document', function() {
         docs = kase.documents()
         docs[0].caseInstance.should.equal(kase)
         done();
-      }).fail(function(err){
+      }).catch(function(err){
         console.error(err);
         done(err);
       });
@@ -61,7 +61,7 @@ describe('document', function() {
         docs = kase.documents()
         docs.length.should.equal(1)
         done();
-      }).fail(function(err){
+      }).catch(function(err){
         console.error(err);
         done(err);
       });
@@ -77,10 +77,10 @@ describe('document', function() {
         docs[0].rename("new-filename.pdf").then(function(doc) {
           doc.file_name.should.equal("new-filename.pdf")
           done();
-        }).fail(function(err){
+        }).catch(function(err){
           done(err);
         })
-      }).fail(function(err){
+      }).catch(function(err){
         done(err);
       })
     })

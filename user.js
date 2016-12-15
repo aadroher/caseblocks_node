@@ -1,31 +1,56 @@
-var rest = require('restler-q');
-var inflection = require( 'inflection' );
-var Q = require('q');
+const fetch = require('node-fetch')
+const Headers = require('node-fetch').Headers
 
-var User = function(attributes) {
-  for(var k in attributes) {
+function requestOptions(options={}) {
+
+  const defaultHeaders = new Headers({
+    'Accept': 'application/json'
+  })
+
+  const defaultOptions = {
+    headers: defaultHeaders
+  }
+
+  return Object.assign(defaultOptions, options)
+
+}
+
+let User = function(attributes) {
+
+  for(let k in attributes) {
     this[k] = attributes[k];
   }
-};
+
+}
 
 User.get = function(id) {
   if (!User.Caseblocks)
     throw new Error("Must call Caseblocks.setup");
-  return Q.fcall(function(data) {
-    return rest.get(User.Caseblocks.buildUrl("/case_blocks/users/" + id),  {headers: {"Accept": "application/json"}}).then(function(data) {
-      return new User(data.user);
-    });
-  });
+
+  const uri = User.Caseblocks.buildUrl("/case_blocks/users/" + id)
+
+  return fetch(uri, requestOptions())
+    .then(response => response.json())
+    .then(responseBody =>
+      new User(responseBody.user)
+    )
+
 };
 
 User.getAll = function() {
   if (!User.Caseblocks)
     throw new Error("Must call Caseblocks.setup");
-  return Q.fcall(function(data) {
-    return rest.get(User.Caseblocks.buildUrl("/case_blocks/users"),  {headers: {"Accept": "application/json"}}).then(function(data) {
-      return data.users.map( (userData) => new User(userData) )
-    });
-  });
+
+  const uri = User.Caseblocks.buildUrl("/case_blocks/users")
+
+  return fetch(uri, requestOptions())
+    .then(response => response.json())
+    .then(
+      responseBody => responseBody.users.map(
+        userAttributes => new User(userAttributes)
+      )
+    )
+
 };
 
 module.exports = User;

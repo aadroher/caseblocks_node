@@ -1,38 +1,49 @@
 CaseBlocks
 =========
 
-Library of functions for interacting with the CaseBlocks API
+The `caseblocks` NPM package is a library to interact with the [CaseBlocks](http://www.emergeadapt.com/) REST API.
+
+It assumes that it will be executed in a _Node.js_ envirnoment.
 
 ## Installation
 
+As with any NPM package:
+
 `npm install caseblocks --save`
 
-## Usage
+## Initialization
+
+The `Caseblocks` object, which is the main proxy with the Caseblocks REST API, has to first be initialized with the proper parameters: 
+
 ```javascript
-var Caseblocks = require('caseblocks');
+const Caseblocks = require('caseblocks')
 
-Caseblocks.setup("http://yourpathtocaseblocks.com:8080", "your_user_token");
-
-Caseblocks.Case.get("support_requests", "550c40d1841976debf000003")
-    .then(function(doc) {
-      doc.id.should.equal("550c40d1841976debf000003")
-      console.log("Got Case: " + doc.attributes.title )
-    }).catch(function(err){
-      console.log(err)
-    });
+Caseblocks.setup("http://yourpathtocaseblocks.com:8080", "your_user_token")
 ```
+
+The user token may be found in the _User settings_ section of the Caseblocks web interface. 
 
 ## CaseType
 
 ### Constructor
 
-`new Caseblocks.Casetype(attributes)`
+#### `new Caseblocks.Casetype(attributes)`
 
-The constructor for Casetype takes the attributes of the case type to create
+- arguments:
+
+  - `{object} attributes`  The attributes of the case type to create
+
+- returns: `{Casetype}` The instance of `Casetype`
+
+  ​
 
 ### Class Methods
 
-`get(caseTypeId)`
+#### `Casetype.get(caseTypeId)`
+
+- arguments:
+  - `{string} caseTypeId`  the `id`  (primary key) attribute of a case type.
+- returns: `{Promise.<Case>} `
 
 Gets the case type from the server and returns the casetype object.
 
@@ -46,7 +57,7 @@ Caseblocks.Casetype.get("15").then(function(casetype) {
 
 ### Instance Methods
 
-`fieldsOfType(fieldType)`
+#### `fieldsOfType(fieldType)`
 
 Returns all the field objects in the casetype of the specified type, for example 'documents'.
 
@@ -64,9 +75,15 @@ Caseblocks.Casetype.get("15").then(function(casetype) {
 
 ### Class Methods
 
-`create(caseTypeCode, caseTypeId, caseData)`
+#### `create(caseTypeCode, caseTypeId, caseData)`
 
-Creates a case document in the supplied case type (case_type_code and case_type_id) with the data supplied.
+- arguments:
+  - `{string} caseTypeCode`  The plural underscored name of the case type this case will belong to.
+  - `{number|string} caseTypeId`  The id of the case type this case will belong to.
+  - `{object} caseData` The attributes this case will have.
+- returns: `{Promise.<Case>}`
+
+Creates a case document in the supplied case type (`case_type_code` and `case_type_id`) with the data supplied.
 
 ```javascript
 Caseblocks.Case.create("support_requests", 42, {title: 'test1'})
@@ -77,8 +94,12 @@ Caseblocks.Case.create("support_requests", 42, {title: 'test1'})
     });
 ```
 
+#### `get(caseTypeCode, caseId)`
 
-`get(caseTypeCode, caseId)`
+- arguments:
+  - `{string} caseTypeCode`  The plural underscored name of the case type this case belongs to.
+  - `{string} caseId`  The primary key for the case. As of today it is an instance of `mongodb.ObjectId` from the [MongoDB](https://www.npmjs.com/package/mongodb) NPM package.
+- returns `{Promise.<Case>}`
 
 Retrieves a case from caseblocks supplying the case type code and the id of the document.
 
@@ -93,22 +114,57 @@ Caseblocks.Case.get("support_requests", "550c40d1841976debf000003")
     });
 ```
 
-`search(caseTypeId, searchTerm)`
+#### `search(caseTypeRepresentation, query)`
 
-Provides the ability to search for docuemnts and return an array of matching cases.  Each case is a Case object the same as you get from the __get__ method.
+This function provides the ability to search for documents and return an array of matching cases. As of version 1.2.0 it has **two different usages** depending on the nature of the arguments passed:
+
+##### Legacy usage
+
+**WARNING**: This way of usign it is **deprecated** and will eventually be removed.
+
+- arguments:
+  - `{string|number} caseTypeRepresentation` The id of the case type that we want to search instances of.
+  - `{string} searchQuery ` A search query following the [_Elasticsearch_ string query mini language syntax](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-query-string-query.html#query-string-syntax).
+- returns `{Promise.<[Case]>}` An array of `Case` instances which are  the same as you get from the `get` method. The length of the resulting `[Case]` array is **limited to 10 elements**.  
 
 ```javascript
-Caseblocks.Case.search(case_type_id, 'search term').then(function(docs) {
-  console.log("Found " + docs.length + " Results!")
-  docs.map(function(doc) {console.log(doc.attributes.title)})
-}).catch(function(err){
-  console.error(err);
-});
+Caseblocks.Case.search(31416, 'full_name:"Rick Sanchez" AND dimension:"C-137"')
+  .then(results => {
+    console.log("Found " + results.length + " cases!")
+    resulsts.map(caseInstance => {
+      console.log(caseInstance.attributes.title)
+    })
+  })
+  .catch(err => {
+    console.error(err.message)
+  })
 ```
 
-### Instance Methods
+##### Recomended usage
 
-`save()`
+A new, more convenient way of searching cases uses the following signarture:
+
+-  arguments:
+   -  `{string} caseTypeRepresentation` The singular underscored name of the case type we want to search instances of.
+   -   `{string} searchQuery ` A search query following the [_Elasticsearch_ string query mini language syntax](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-query-string-query.html#query-string-syntax).
+-  returns `{Promise.<[Case]>}` An array of `Case` instances which are  the same as you get from the `get` method. There is no limit on the number of cases retrieved.
+
+```{javascript}
+Caseblocks.Case.search('mad_scientists', 'full_name:"Rick Sanchez" AND dimension:"C-137"')
+  .then(results => {
+    console.log("Found " + results.length + " cases!")
+    resulsts.map(caseInstance => {
+      console.log(caseInstance.attributes.title)
+    })
+  })
+  .catch(err => {
+    console.error(err.message)
+  })
+```
+
+
+
+#### `save()`
 
 Saves any changes made to the current case object.
 
@@ -126,11 +182,11 @@ Caseblocks.Case.get("support_requests", "550c40d1841976debf000003")
     });
 ```
 
-`delete()`
+#### `delete()`
 
   **Not implemented yet**
 
-`related(relatedCaseTypeCode, relationshipId)`
+#### `related(relatedCaseTypeCode, relationshipId)`
 
 Retrieves related cases from caseblocks supplying the case type code and the id of the document.
 
@@ -147,7 +203,76 @@ Caseblocks.Case.get("support_requests", "550c40d1841976debf000003")
     });
 ```
 
-`teams`
+#### `relatedByName(relatedCaseTypeCode)`
+
+- arguments:
+
+  - `{string} relatedCaseTypeCode` The singular underscored name of the case type we want to search instances of.
+
+- returns: `{Promise.<[object]>}`  A promise that resolves into an array of objects, one for each different relationship for which there are cases of the type that corresponds to `relatedCaseTypeCode`.  It has the following internal structure:
+
+  ```javascript
+  [ 
+    { 
+      relationship_0: { 
+        id: 530,
+        from_fieldset_key: 'field_set_name_0',
+        to_fieldset_key: 'field_set_name_1',
+        position: 1,
+        to_organization_type_id: 161,
+        from_work_type_id: 162,
+        // ...
+        from_key: 'field_name_0',
+        to_key: 'field_name_1' 
+     	 },
+     	cases: [ 
+        case_00,
+        // ...
+        case_0n
+      ] 
+    },
+    // ...
+    { 
+      relationship_m: { 
+        id: 530,
+        from_fieldset_key: 'field_set_name_0',
+        to_fieldset_key: 'field_set_name_1',
+        position: 1,
+        to_organization_type_id: 161,
+        from_work_type_id: 162,
+        // ...
+        from_key: 'field_name_0',
+        to_key: 'field_name_1' 
+     	 },
+     	cases: [ 
+        case_m0,
+        // ...
+        case_mn
+      ] 
+    },
+  ]
+  ```
+
+  ​
+
+Retrieves the cases that _belong to_ this one and are of the case type that corresponds to the value of `relatedCaseTypeCode` .  For example:
+
+```{javascript}
+Caseblocks.Case.get('584fd9201e7d66d2870d80ba')
+	.then(result => {
+      result.related('grandchild')
+        .then(relationships => {
+            console.log(relationships[0].cases[0].attributes.full_name)
+        })
+    })
+  	.catch(err => {
+      console.log(err.message)
+    });
+```
+
+
+
+#### `teams()`
 
 Retrieves the teams that are participants in this case
 
@@ -162,7 +287,7 @@ Caseblocks.Case.get("support_requests", "550c40d1841976debf000003")
     });
 ```
 
-`users`
+#### `users()`
 
 Retrieves the users that are listed as an individual user as a participant on this case
 
@@ -177,7 +302,7 @@ Caseblocks.Case.get("support_requests", "550c40d1841976debf000003")
     });
 ```
 
-`participants`
+#### `participants()`
 
 Retrieves all the users that are participants including team members.
 
@@ -197,21 +322,21 @@ Caseblocks.Case.get("support_requests", "550c40d1841976debf000003")
 
 ### Constructor
 
-`new Caseblocks.Document(attributes, caseInstance)`
+#### `new Caseblocks.Document(attributes, caseInstance)`
 
 The constructor for document takes the attributes of the document and the case object it is contained within.
 
 ### Class Methods
 
-`fromString(caseTypeId, caseInstance, fileName, contents)`
+#### `fromString(caseTypeId, caseInstance, fileName, contents)`
 
-- Arguments:
-    - `caseTypeId {string | number}` The id of the case type this case belongs to
-    - `caseInstance {object}` The case to attach it to
-    - `fileName {string}` The name of the file
-    - `contents {string}` The content of the file
-- Returns: `{Promise.<Document>}` A promise that resolves to the metadata about the saved file.
-   
+- arguments:
+    - `{string|number} caseTypeId` The id of the case type this case belongs to
+    - `{object} caseInstance ` The case to attach it to
+    - `{string} fileName ` The name of the file
+    - `{string} contents ` The content of the file
+- returns: `{Promise.<Document>}` A promise that resolves to the metadata about the saved file.
+
 This function creates a document from a string and attaches it to `caseInstance`.
 
 
@@ -250,7 +375,7 @@ will be `fileName` and `contents`.
 
 ### Instance Methods
 
-`rename(newFilename)`
+#### `rename(newFilename)`
 
 Renames the document in the case and updates any related document fields
 
@@ -274,7 +399,7 @@ Caseblocks.Case.get("support_requests", "case-with-documents")
 
 ### Class Methods
 
-`get(taskListId)`
+#### `get(taskListId)`
 
 Retrieve a tasklist matching the __id__ supplied.
 
@@ -286,8 +411,7 @@ Retrieve a tasklist matching the __id__ supplied.
     })
 ```
 
-
-`getAll(taskListIds)`
+#### `getAll(taskListIds)`
 
 Retrieves multiple tasklists in one go.  Pass in an array of string id's and the matching Tasklists will be returned in an array.
 
@@ -305,7 +429,7 @@ Caseblocks.Tasklist.getAll(ids).then(function(tasklists) {
 });
 ```
 
-`tasks()`
+#### `tasks()`
 
 Retrieves all tasks associated with this tasklist, returns a promise with an array of tasks.
 
@@ -340,7 +464,7 @@ Caseblocks.Tasklist.getAll(ids).then(function(tasklists) {
 
 ### Class Methods
 
-`get(taskId)`
+#### `get(taskId)`
 
 Retrieves a task matching the **id** supplied
 
@@ -353,7 +477,7 @@ Caseblocks.Task.get("550c40d1841976debf000004").then(function(task) {
 })
 ```
 
-`getAll(taskIds)`
+#### `getAll(taskIds)`
 
 Retrieves multiple tasks in one go.  Pass in an array of string id's and the matching Tasks will be returned in an array.
 
@@ -381,7 +505,7 @@ Caseblocks.Task.getAll(ids).then(function(tasks) {
 
 ### Public Methods
 
-`get`
+#### `get(teamId)`
 
 Retrieves a team matching the __id__ supplied
 
@@ -395,7 +519,7 @@ Caseblocks.Team.get(5).then(function(team) {
 
 ### Instance Methods
 
-`members`
+#### `members()`
 
 Retrieves the users that are members in this team.
 
@@ -415,7 +539,7 @@ Caseblocks.Team.get(5).then(function(team) {
 
 ### Public Methods
 
-`get`
+#### `get(userId)`
 
 Retrieves a user matching the __id__ supplied
 
@@ -427,7 +551,7 @@ Caseblocks.User.get(5).then(function(user) {
 })
 ```
 
-`getAll`
+#### `getAll()`
 
 Retrieves the complete list of users for an account
 
@@ -445,7 +569,7 @@ Caseblocks.User.getAll().then(function(users) {
 
 ### Class Methods
 
-`get(bucketId, caseTypeCode)`
+#### `get(bucketId, caseTypeCode)`
 
 Retrieves a bucket from caseblocks supplying the id of the bucket and its case type code.
 
@@ -458,7 +582,7 @@ Caseblocks.Bucket.get(6, "bulk_uplifts").then(function(bucket) {
 })
 ```
 
-`stats()`
+#### `stats()`
 
 Saves any changes made to the current document.
 
@@ -489,7 +613,7 @@ Caseblocks.Bucket.get(6, "bulk_uplifts").then(function(bucket) {
 })
 ```
 
-`cases(page, pageSize)`
+#### `cases(page, pageSize)`
 
 Retrieves cases contained in the bucket by page. Parameters are optional and `page` defaults to 0 and `pageSize` defaults to 10.
 
@@ -523,9 +647,9 @@ Instantiate a new Caseblocks.Email object passing in your initial configuration,
 Mandrill is set as default and requires 'key' to be passed in when instantiating the object.
 
 Other properties available are
-  * serverType - 'mandrillapp' or 'smtp' values are valid.
-  * smtpServer - required if serverType is smtp and is host of smtp server to use
-  * key        - required if serverType is mandrill and is they access token key for your account
+* serverType - 'mandrillapp' or 'smtp' values are valid.
+* smtpServer - required if serverType is smtp and is host of smtp server to use
+    * key        - required if serverType is mandrill and is they access token key for your account
 
 
 Example:
@@ -546,48 +670,47 @@ email.send().then(function(result) {
 
 The above example sets up the key for mandrill then adds a to address, bcc address, sets up the from address, subject and then adds an html body, then sends the email.
 
-***Note*** SMTP is not implemented yet
+***Note***: Sending through SMTP is not implemented yet.
 
 ### Class Methods
 
-`to(email, name)`
+#### `to(email, name)`
 
 You can call to many times to add recipients to the email.  Name is an optional parameter.
 
-`cc(email, name)`
+#### `cc(email, name)`
 
 You can call cc many times to add recipients to the email.  Name is an optional parameter.
 
-`bcc(email, name)`
+#### `bcc(email, name)`
 
 You can call bcc many times to add recipients to the email.  Name is an optional parameter.
 
-`from(email, name)`
+#### `from(email, name)`
 
 The from function, sets the from address of the email.  Again, name is optional.
 
-`subject(text)`
+#### `subject(text)`
 
 Sets the subject for the email, text should be a string that will be used as the subject in the email.
 
-`body(data)`
+#### `body(data)`
 
 Sets the html body of the email, which will also automatically set the text using an html-to-text conversion tool.
 
-`html(data)`
+#### `html(data)`
 
-Alias of **body**
+Alias of `body`
 
-`text(data)`
+#### `text(data)`
 
 Sets the text only version of the email.  This should be set after html as setting html overwrites this value.
 
-
-`send()`
+#### `send()`
 
 This function sends an email using either mandrill or smtp (to be implemented).  The above example shows how to setup an email before you call send.
 
-`sendTemplate(template, data)`
+#### `sendTemplate(template, data)`
 
 Sends an email using a mandrill template.  The first parameter is a string that should match an existing mandrill template you wish to use.  The second parameter is a hash of data to be used with the template, eg
 
@@ -604,7 +727,7 @@ This data will then be used with the fields in the mandrill template to render t
 
 ### Writing
 
-  You will find the existing specs under the test folder.  HTTP calls are mocked in the *spec_helper.js* using *nock* file and you should add to this the calls and their results you expect to make.
+You will find the existing specs under the test folder.  HTTP calls are mocked in the *spec_helper.js* using *nock* file and you should add to this the calls and their results you expect to make.
 
 ### Running
 
@@ -641,5 +764,4 @@ npm publish
 
 ## Contributing
 
-In lieu of a formal styleguide, take care to maintain the existing coding style.
-Add unit tests for any new or changed functionality. Lint and test your code.
+In lieu of a formal styleguide, just assume the basic good practice of taking care to maintain the existing coding style. Add unit tests for any new or changed functionality. Lint and test your code.

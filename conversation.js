@@ -1,54 +1,103 @@
-var rest = require('restler-q');
-var inflection = require( 'inflection' );
-var _ = require('underscore')
+const fetch = require('node-fetch')
+const Headers = require('node-fetch').Headers
+const inflection = require( 'inflection' );
+const _ = require('underscore')
 
-var Q = require('q');
+function requestOptions(options={}) {
 
-var Conversation = function(attributes) {
+  const defaultHeaders = new Headers({
+    'Accept': 'application/json'
+  })
+
+  const defaultOptions = {
+    headers: defaultHeaders
+  }
+
+  return Object.assign(defaultOptions, options)
+
+}
+
+let Conversation = function(attributes) {
+
   this.attributes = {};
-  for(var k in attributes) {
+
+  for(let k in attributes) {
     this.attributes[k] = attributes[k];
   }
+
   this.id = this.attributes._id;
+
 };
 
 // create a new conversation
 Conversation.create = function(kase, attributes) {
-  var recipientsList = [];
-    if (typeof(attributes.recipients) != 'undefined') {
-      for (recipient in attributes.recipients){
-        recipientsList.push({"email":attributes.recipients[recipient],"type":"Custom","display_name":attributes.recipients[recipient]});
+
+  let recipientsList = [];
+
+  if (typeof(attributes.recipients) != 'undefined') {
+
+    for (let recipient in attributes.recipients){
+
+      recipientsList.push({
+        "email":attributes.recipients[recipient],
+        "type":"Custom",
+        "display_name":attributes.recipients[recipient]
+      });
+
     }
+
   }
-  var attachments = [];
+
+  let attachments = [];
 
   if (typeof(attributes.attachments)=="undefined") {
+
     attachments = []
+
   } else {
-    attachments = _.map(attributes.attachments, function(attachment) {
+
+    attachments = _.map(attributes.attachments, attachment => {
       if (typeof(attachment._id) != "undefined") {
+
         return attachment._id
+
       } else if (typeof(attachment.file_name) != "undefined") {
-        var doc = _.find(kase.attributes._documents, function(d) { return d.file_name == attachment.file_name } )
+
+        let doc = _.find(kase.attributes._documents,
+          d => d.file_name == attachment.file_name
+        )
         return doc._id
+
       } else {
+
         return null
+
       }
     })
+
   }
 
   attachments = _.compact(attachments)
 
-  var conversationMessage = {"message":{"body":attributes.body,"case_id":kase.id,"subject":attributes.subject,"recipients":recipientsList,"attachments":attachments, author_id: attributes.author_id}};
+  const conversationMessage = {
+    "message": {
+      "body":attributes.body,
+      "case_id":kase.id,
+      "subject":attributes.subject,
+      "recipients":recipientsList,
+      "attachments":attachments,
+      author_id: attributes.author_id
+    }
+  };
 
-  return Q.fcall(function(data) {
-    return rest.postJson(Conversation.Caseblocks.buildUrl("/case_blocks/messages"), conversationMessage, {headers: {"Accept": "application/json"}}).then(function (message) {
-        // return new Message(message);
-        return message;
-    }).fail(function(err) {
-      throw err;
-    });
-  });
+  const options = {
+    method: 'post',
+    body: JSON.stringify(conversationMessage)
+  }
+
+  return fetch(Conversation.Caseblocks.buildUrl("/case_blocks/messages"), options)
+    .then(response => response.json())
+
 }
 
 Conversation.prototype.messages = function() {

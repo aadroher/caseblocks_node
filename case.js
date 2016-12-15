@@ -1,253 +1,729 @@
+const qs = require('qs')
+const fetch = require('node-fetch')
+const Headers = require('node-fetch').Headers
+const inflection = require( 'inflection' )
+const _ = require('underscore')
 
-//var rest = require('rest')
-var rest = require('restler-q');
-var inflection = require( 'inflection' );
-var Conversation = require('./conversation.js');
-var Document = require('./document.js');
-var Casetype = require('./casetype.js');
-var User = require("./user.js");
-var Team = require("./team.js");
-var _ = require("underscore")
+const Conversation = require('./conversation.js')
+const Document = require('./document.js')
+const Casetype = require('./casetype.js')
+const User = require('./user.js')
+const Team = require("./team.js")
 
-var Q = require('q');
 
-var Case = function(attributes) {
-  this.attributes = {};
+class Case {
 
-  for (var k in attributes) {
-    this.attributes[k] = attributes[k];
-  }
-  this.id = this.attributes._id;
+  // ################
+  // Static constants
+  // ################
 
-};
+  // TODO: This is hardcoded. Move it to a config file.
+  static get maxPageSize() {
 
-Case.create = function(case_type_name, case_type_id, properties, options) {
-  if (!Case.Caseblocks)
-    throw new Error("Must call Caseblocks.setup");
+    return 1000
 
-  if (typeof(options) == "undefined") {
-    options = {};
   }
 
+  // ##############
+  // Static methods
+  // ##############
 
-  var payload = {};
-  properties.case_type_id = case_type_id;
-  if (typeof(options.unique) !== 'undefined') {
-    payload.unique = options.unique;
-  }
-  payload.case = properties;
+  static create(caseTypeName, caseTypeId, properties, options) {
 
-  return Q.fcall(function(data) {
-    return rest.postJson(Case.Caseblocks.buildUrl("/case_blocks/"+case_type_name+ ".json"), payload, {headers: {"Accept": "application/json"}}).then(function (caseData) {
-      case_type_code = Object.keys(caseData)[0];
-      data = caseData[case_type_code];
+    // TODO: This recurring condition should be moved to a some sort of decorator.
+    if (!Case.Caseblocks) {
 
-      kase = new Case(data);
+      throw new Error("Must call Caseblocks.setup")
 
-      kase.case_type_code = case_type_code;
+    } else {
 
-      return kase;
-    });
-    return {};
-  });
-};
+      const caseProperties = Object.assign(properties, {
+        case_type_id: caseTypeId
+      })
 
-Case.get = function(case_type_name, id) {
-  if (!Case.Caseblocks)
-    throw new Error("Must call Caseblocks.setup");
+      const uniqueOption = _.pick(options,
+        (val, key) => key === 'unique' && val !== 'unidefined'
+      )
 
-  var _this = new Case();
-  _this.case_type_name = case_type_name;
-  _this.id = id;
-  return Q.fcall(function(data) {
-    return rest.get(Case.Caseblocks.buildUrl("/case_blocks/"+case_type_name+"/"+id+ ".json"), {headers: {"Accept": "application/json"}}).then(function (caseData) {
-      for (var k in caseData) {
-        _this.case_type_code = k;
-        _this.attributes = caseData[k];
+      const payload = Object.assign(
+        {'case': caseProperties},
+        uniqueOption
+      )
+
+      const uri = Case.Caseblocks.buildUrl(`/case_blocks/${caseTypeName}.json`)
+      const requestOptions = {
+        method: 'post',
+        body: JSON.stringify(payload)
       }
-      return _this;
-    }).fail(function(err) {
-      throw err;
-    });
-  });
-};
 
-Case.search = function(case_type_id, query) {
-  if (!Case.Caseblocks)
-    throw new Error("Must call Caseblocks.setup");
+      return fetch(uri, Case._requestOptions(requestOptions))
+        .then(response => response.json())
+        .then(caseData => {
 
-  return Q.fcall(function(data) {
-    return rest.get(Case.Caseblocks.buildUrl("/case_blocks/search.json?query="+query), {headers: {"Accept": "application/json"}}).then(function(data) {
-      case_type_results = data.filter(function(ct) {
-        return ct.case_type_id == case_type_id;
-      })[0];
-      if (typeof(case_type_results) != 'undefined') {
-        case_type_fields = case_type_results.cases;
-        return case_type_fields.map(function(d) {
-          return new Case(d);
-        });
-      } else {
-        return [];
-      }
-    }).fail(function(err) {
-      throw err;
-    });
-  });
-};
+          // Get the name of the first key.
+          const caseTypeCode = Object.keys(caseData).pop()
 
-Case.prototype.caseType = function() {
-  var _this = this;
+          const attributes = caseData[caseTypeCode]
 
-  var caseTypeId = this.attributes.case_type_id || this.attributes.work_type_id || this.attributes.organization_type_id || this.attributes.people_type_id;
+          return Object.assign(
+            new Case(attributes),
+            { case_type_code: caseTypeCode }
+          )
 
-  return Casetype.get(caseTypeId);
-};
-
-Case.prototype.documents = function() {
-  var _this = this;
-  if (typeof(_this.attributes._documents) != "undefined") {
-    return _this.attributes._documents.map(function(d) {return new Document(d, _this);} );
-  } else {
-    return [];
-  }
-};
-
-
-Case.prototype.addConversation = function(subject, body, recipients, attachments) {
-  if (!Case.Caseblocks)
-    throw new Error("Must call Caseblocks.setup");
-
-  var conversationData = {subject: subject, body: body, recipients: recipients, attachments};
-  var conversation = Conversation.create(this, conversationData);
-
-  return conversation;
-};
-
-Case.prototype.conversations = function() {
-  if (!Case.Caseblocks)
-    throw new Error("Must call Caseblocks.setup");
-
-  throw("Not implemented yet");
-};
-
-Case.prototype.teams = function() {
-  var promises = _.map(this.attributes.participating_teams, function(id){return Team.get(id);});
-  return Q.allSettled(promises).then(function(returned_teams) {
-    var fulfilled_teams = _.filter(returned_teams, function(t){return t.state == "fulfilled"});
-    return _.map(fulfilled_teams, function(t){return t.value});
-  });
-};
-
-Case.prototype.users = function() {
-  var promises = _.map(this.attributes.participating_users, function(id){return User.get(id);});
-  return Q.allSettled(promises).then(function(returned_users) {
-    var fulfilled_users = _.filter(returned_users, function(u){return u.state == "fulfilled"});
-    return _.map(fulfilled_users, function(u){return u.value});
-  });
-};
-
-Case.prototype.participants = function(options) {
-  if (!Case.Caseblocks)
-    throw new Error("Must call Caseblocks.setup");
-  if (typeof(options)=="undefined")
-    options = {};
-
-  var _this = this;
-
-  return Q.allSettled(
-    [_this.teams().then(function(teams) {
-      return Q.allSettled(
-        teams.map(function(team){
-          return team.members()
         })
-      ).then(function(returned_users) {
-          return _.filter(returned_users, function(u) {
-            return u.state == "fulfilled"
-          }).map(function(u) {
-            return u.value
-          })
-      });
-    }),
-    _this.users()]
-  ).then(function(returned_users) {
-    var users = _.flatten(_.filter(returned_users, function(u) {
-      return u.state == "fulfilled"
-    }).map(function(u) {
-      return u.value
-    }))
-    return _.uniq(users, false, function(u){return u.id})
-  });
- };
 
-Case.prototype.save = function() {
-  if (!Case.Caseblocks)
-    throw new Error("Must call Caseblocks.setup");
+    }
 
-// save current data to caseblocks
-  var _this = this;
-  return Q.fcall(function(data) {
-    payload = {};
-    payload[_this.case_type_code] = _this.attributes;
-    delete payload[_this.case_type_code].tasklists;
-    delete payload[_this.case_type_code]._documents;
-    delete payload[_this.case_type_code].version;
+  }
 
-    return rest.putJson(Case.Caseblocks.buildUrl("/case_blocks/"+_this.case_type_name+"/"+_this.id + ".json"), payload, {headers: {"Accept": "application/json"}}).then(function(caseData) {
-      for (var k in caseData) {
-        _this.case_type_code = k;
-        _this.attributes = caseData[k];
+  static get(caseTypeName, id) {
+
+    if (!Case.Caseblocks) {
+
+      throw new Error("Must call Caseblocks.setup")
+
+    } else {
+
+      // Follow the same pattern as in `Case.create`.
+      const uri = Case.Caseblocks.buildUrl(`/case_blocks/${caseTypeName}/${id}.json`)
+
+      return fetch(uri, Case._requestOptions())
+        .then(response => response.json())
+        .then(caseData => {
+
+          const caseTypeCode = Object.keys(caseData).pop()
+          const caseTypeName = inflection.pluralize(caseTypeCode)
+
+          const attributes = caseData[caseTypeCode]
+
+          return Object.assign(
+              new Case(attributes),
+              {
+                case_type_code: caseTypeCode,
+                case_type_name: caseTypeName
+              }
+            )
+
+        })
+
+    }
+
+  }
+
+  // TODO: Add deprecation warning to the combination of argument values that trigger `_search`.
+  /**
+   * @param {number|string} caseTypeRepresentation
+   * @param {string|object} query
+   * @return {Promise.<[object]>}
+   */
+  static search(caseTypeRepresentation, query) {
+
+    if (!Case.Caseblocks) {
+
+      throw new Error("Must call Caseblocks.setup")
+
+    } else {
+
+      // JS automatically typecasts, but it should not.
+      const caseTypeRepresentationStr = caseTypeRepresentation.toString()
+      const caseTypeRepresentationIsNumeric = /^[1-9][0-9]*$/.test(caseTypeRepresentationStr)
+
+      const queryIsString = typeof query === "string"
+
+      if (caseTypeRepresentationIsNumeric && queryIsString) {
+
+        return Case._search(parseInt(caseTypeRepresentation), query)
+
+      } else {
+
+        // If query is "falsey" return all results.
+        const queryStringIsEmpty = queryIsString && query === ''
+
+        const params = !queryIsString ? query : {
+          query_string: queryStringIsEmpty ? '*:*' : query
+        }
+
+        return Case._searchViaApi(caseTypeRepresentation, params)
+
       }
-      return _this;
-    }).fail(function(err) {
-      console.error(err);
-      throw new Error("Error saving case");
-    });
-  });
-};
 
-Case.prototype.delete = function() {
-  if (!Case.Caseblocks)
-    throw new Error("Must call Caseblocks.setup");
+    }
 
-  throw "Not implemented";
-};
-
-Case.prototype.related = function(related_case_type_code, relation_id) {
-  if (!Case.Caseblocks) {
-    throw new Error("Must call Caseblocks.setup");
-  }
-
-  path = "/case_blocks/"+related_case_type_code + ".json";
-  page_size = 100000;
-  page = 0;
-
-  params = {relation_id: relation_id, relationship_type: "CaseBlocks::CaseTypeDirectRelationship", case_from_id: this.id, page_size: page_size, page:page};
-  first = true;
-  for(var k in params) {
-    if (first)
-      path += "?";
-    else
-      path += "&";
-
-    first = false;
-
-    path += "related_cases%5B"+k+"%5D="+encodeURIComponent(params[k]);
   }
 
 
-  url = Case.Caseblocks.buildUrl(path);
-  _this = this;
-  return Q.fcall(function(data) {
-    return rest.get(url, {headers: {"Accept": "application/json"}}).then(function(data) {
-      return data[related_case_type_code].map(function(d) {
-        return new Case(d);
-      });
-    }).fail(function(err) {
-      throw err;
-    });
-  });
+  // ################
+  // Instance methods
+  // ################
 
-};
+  constructor(attributes) {
+
+    this.attributes = attributes
+    this.id = this.attributes._id
+
+  }
+
+  caseType() {
+
+    const attrNames = [
+      'case_type_id',
+      'work_type_id',
+      'organization_type_id',
+      'people_type_id'
+    ]
+
+    // Pick the first that is not undefined.
+    const caseTypeId = attrNames.reduce((prevVal, attrName) =>
+        prevVal !== undefined ? prevVal : this.attributes[attrName]
+      , undefined)
+
+    return Casetype.get(caseTypeId)
+
+  }
+
+  documents() {
+
+    const documents = this.attributes._documents || []
+
+    return documents.map(documentData =>
+      new Document(documentData, this)
+    )
+
+  }
+
+  addConversation(subject, body, recipients, attachments) {
+
+    if (!Case.Caseblocks) {
+
+      throw new Error("Must call Caseblocks.setup")
+
+    } else {
+
+      return Conversation.create(this, {subject, body, recipients, attachments})
+
+    }
+
+  }
+
+  conversations() {
+
+    throw new Error('Not implemented.')
+
+  }
+
+  teams() {
+
+    const requestPromises = this.attributes.participating_teams.map(id => Team.get(id))
+
+    return Promise.all(requestPromises)
+
+  }
+
+  users() {
+
+    const requestPromises = this.attributes.participating_users.map(id => User.get(id))
+
+    return Promise.all(requestPromises)
+
+  }
+
+  // TODO: Remove options argument if not needed.
+  participants(options={}) {
+
+    if (!Case.Caseblocks) {
+
+      throw new Error("Must call Caseblocks.setup")
+
+    } else {
+
+      const teamsPromise = this.teams()
+      const usersPromise = this.users()
+
+      return Promise.all([teamsPromise, usersPromise])
+        .then(([teams, users]) => {
+
+          const teamMembersPromises = teams.map(team => team.members())
+
+          return Promise.all(teamMembersPromises)
+            .then(teamMemberLists => {
+
+              // Flatten
+              const teamUsers = teamMemberLists.reduce((prevVal, memberList) =>
+                  [...prevVal, ...memberList]
+                , [])
+
+              const participants = users.reduce((prevVal, user) => {
+
+                const alreadyAdded = prevVal.some(addedUser =>
+                  addedUser.id === user.id
+                )
+
+                return alreadyAdded ? prevVal : [...prevVal, user]
+
+              }, teamUsers)
+
+              return participants
+
+            })
+
+        })
+
+    }
+
+  }
+
+  /**
+   *
+   * @param {string} relatedCaseTypeName
+   * @param {number} [relationshipId=undefined]
+   * @param {} [query=undefined]
+   * @return {Promise.<[object]>}
+   */
+  related(relatedCaseTypeName, relationshipId) {
+
+    if (!Case.Caseblocks) {
+
+      throw new Error("Must call Caseblocks.setup")
+
+    } else {
+
+      const path = `/case_blocks/${relatedCaseTypeName}.json`
+      const pageSize = 10000
+      const page = 0
+
+      const params = {
+        relation_id: relationshipId,
+        relationship_type: 'CaseBlocks::CaseTypeDirectRelationship',
+        case_from_id: this.id,
+        page_size: pageSize,
+        page: page
+      }
+
+      const queryString = Object.keys(params).map(key =>
+        `${encodeURIComponent(`related_cases[${key}]`)}=${encodeURIComponent(params[key])}`
+      ).join('&')
+
+      const uri = Case.Caseblocks.buildUrl(`${path}?${queryString}`)
+
+      return fetch(uri, Case._requestOptions())
+        .then(response => response.json())
+        .then(result =>
+          result[relatedCaseTypeName].map(attributes => new Case(attributes))
+        )
+
+    }
+
+  }
+
+  // TODO: Add the possibility to return the related cases filtered by a query.
+
+  relatedByName(relatedCaseTypeName) {
+
+    if (!Case.Caseblocks) {
+
+      throw new Error("Must call Caseblocks.setup")
+
+    } else {
+
+      const caseTypeClassNames = [
+        'case_types',
+        'people_types',
+        'organization_types'
+      ]
+
+      return (
+
+        caseTypeClassNames.reduce((requestPromiseChain, caseTypeClassName) =>
+            requestPromiseChain
+              .then(prevResults => {
+
+                const path = `/case_blocks/${caseTypeClassName}.json`
+                const uri = Case.Caseblocks.buildUrl(path)
+
+                return fetch(uri, Case._requestOptions())
+                  .then(response => response.json())
+                  .then(result =>
+                    [
+                      ...prevResults,
+                      ...result[caseTypeClassName].map(caseTypeAttributes => new Casetype(caseTypeAttributes))
+                    ]
+                  )
+
+              })
+          , Promise.resolve([]))
+          .then(caseTypes => {
+
+            const thisCaseType =
+              caseTypes.find(
+                caseType =>
+                  [
+                    this.attributes.case_type_id,
+                    this.attributes.people_type_id,
+                    this.attributes.organization_type_id
+                  ].includes(caseType.id)
+              )
+
+            const relatedCaseType =
+              caseTypes.find(
+                caseType => caseType.code === relatedCaseTypeName
+              )
+
+            // Fetch direct relationships
+            const path = `/case_blocks/case_type_direct_relationships.json`
+            const getQueryString = thisCaseType.direct_relationships.map(relationshipId =>
+              `ids[]=${relationshipId}`
+            ).join('&')
+
+            const uri = Case.Caseblocks.buildUrl(`${path}?${getQueryString}`)
+
+            return fetch(uri, Case._requestOptions())
+              .then(response => response.json())
+              .then(result => {
+
+                const directRelationships = result.case_type_direct_relationships
+
+                return { thisCaseType, relatedCaseType, directRelationships }
+
+              })
+
+          })
+          .then(({ thisCaseType, relatedCaseType, directRelationships }) => {
 
 
-module.exports = Case;
+            const relationshipCaseTypeClassNames = [
+              'work',
+              'people',
+              'organization'
+            ]
+
+            const fromIdFieldNames = relationshipCaseTypeClassNames.map(
+              relationshipCaseTypeClassName => `from_${relationshipCaseTypeClassName}_type_id`
+            )
+
+            const toIdFieldNames = relationshipCaseTypeClassNames.map(
+              relationshipCaseTypeClassName => `to_${relationshipCaseTypeClassName}_type_id`
+            )
+
+            // Catch relevant relationships
+            const relevantRelationships =
+              directRelationships.filter(relationship => {
+
+                const fromFieldCandidates = fromIdFieldNames.map(
+                  fromIdFieldName => relationship[fromIdFieldName]
+                )
+
+                const toFieldCandidates = toIdFieldNames.map(
+                  toIdFieldName => relationship[toIdFieldName]
+                )
+
+                return (
+                  fromFieldCandidates.includes(thisCaseType.id)
+                  && toFieldCandidates.includes(relatedCaseType.id)
+                )
+
+              })
+
+            // Fetch all related cases per relationship.
+            const relatedCasesRequestPromises =
+              relevantRelationships.map(relationship => {
+
+                const searchQuery = `${relationship.to_key}:${this.attributes[relationship.from_key]}`
+
+
+                return Case._searchViaApi(relatedCaseType.code, {query_string: searchQuery})
+                  .then(cases => ({relationship, cases}))
+
+              })
+
+            return Promise.all(relatedCasesRequestPromises)
+
+          })
+
+      )
+
+    }
+
+  }
+
+  save() {
+
+    if (!Case.Caseblocks) {
+
+      throw new Error("Must call Caseblocks.setup")
+
+    } else {
+
+      const payload = {
+
+        [this.case_type_code]: _.omit(this.attributes, 'tasklists', '_documents', 'version')
+
+      }
+
+      const uri = Case.Caseblocks.buildUrl(`/case_blocks/${this.case_type_name}/${this.id}.json`)
+      const requestOptions = {
+        method: 'put',
+        body: JSON.stringify(payload)
+      }
+
+      return fetch(uri, Case._requestOptions(requestOptions))
+        .then(response => {
+
+          if (response.ok) {
+
+            return response.json()
+
+          } else {
+
+            const msg = 'Error saving case' +
+                        `Error: ${response.status} - ${response.statusText}`
+
+            throw Error(msg)
+          }
+
+        })
+        .then(caseData => {
+
+          const caseTypeCode = Object.keys(caseData).pop()
+
+          const attributes = caseData[caseTypeCode]
+
+          this.attributes = attributes
+
+          return this
+
+        })
+
+    }
+
+  }
+
+  // TODO: Do not use a reserved word.
+  ['delete']() {
+
+    throw new Error('Not implemented.')
+
+  }
+
+
+  // #################
+  // "Private" methods
+  // #################
+
+  // Static
+
+  static _requestOptions(options={}) {
+
+    const defaultHeaders = new Headers({
+      'Accept': 'application/json'
+    })
+
+    const defaultOptions = {
+      headers: defaultHeaders
+    }
+
+    return Object.assign(defaultOptions, options)
+
+  }
+
+  /**
+   * This is a new implementation of the old search function.
+   * @param {number} caseTypeId
+   * @param {string} query
+   * @return {Promise.<[object]>}
+   * @private
+   */
+  static _search(caseTypeId, query) {
+
+    const queryObject = {query}
+
+    const uri = Case.Caseblocks.buildUrl(`/case_blocks/search.json?${qs.stringify(queryObject)}`)
+
+    return fetch(uri, Case._requestOptions())
+      .then(response => response.json())
+      .then(results => {
+
+        const caseTypeResults = results.find(result =>
+            result.case_type_id === caseTypeId
+          ) || []
+
+        return (caseTypeResults.cases || []).map(attributes => new Case(attributes))
+
+      })
+      .catch(err => {
+        console.log(err.message)
+        throw err
+      })
+
+  }
+
+  /**
+   * @param {string} caseTypeName - A singular underscored case type name.
+   * @param {object|string} query - A filter query representation with the following the pattern:
+   *  {
+   *    field_name_0: value_to_match_0,
+   *    ...
+   *    field_name_n: value_to_match_n,
+   *  }
+   *  or an elasticsearch query string.
+   * @return {Promise.<[object]>}
+   * @private
+   */
+  static _searchViaApi(caseTypeName, query) {
+
+    // The API endpoint expects URI encoded spaces to separate case type
+    // name words.
+    const encodedCaseTypeName = encodeURIComponent(caseTypeName.replace(/_/g, ' '))
+
+    const options = {
+      headers: {"Accept": "application/json"},
+      query: query
+    }
+
+    return Case._getSearchRequests(encodedCaseTypeName, options)
+
+  }
+
+  /**
+   * Since there is no guarantee that the Case.maxPageSize is greater
+   * than the amount of cases to be returned (although it's an edge case)
+   * a chain of request promises has to be built in order to retrieve them
+   * all.
+   * @param encodedCaseTypeName
+   * @param options
+   * @return {Promise.<[Case]>}
+   * @private
+   */
+  // TODO: The logic in this function is not DRY but 1 + N. Abstract it.
+  static _getSearchRequests(encodedCaseTypeName, options) {
+
+    // Manually build URI. Hardcoded GET query in URL (as Caseblocks.buildURL generates)
+    const baseUri = `${Case.Caseblocks.host}/case_blocks/${encodedCaseTypeName}/search.json`
+
+    const queryDefaults = {
+      page_size: Case.maxPageSize,
+      page: 0,
+      auth_token: Case.Caseblocks.token
+    }
+
+    const getParams = Object.assign(queryDefaults, options.query)
+
+    const getQueryStr = qs.stringify(getParams, { format : 'RFC1738' })
+
+    const uri = `${baseUri}?${getQueryStr}`
+
+    return fetch(uri, Case._requestOptions())
+      .then(response => {
+
+        if (response.ok) {
+
+          return response.json()
+
+        } else {
+
+          return response.text()
+
+          const msg = `Error ${response.status}: ${response.statusText}`
+          throw new Error(msg)
+
+        }
+      })
+      .then(result => {
+
+        // The total count comes with each response.
+        const availableCases = (result.summary || {}).available_cases
+
+        if (availableCases === undefined) {
+
+          const msg = 'Number of available cases unknown.'
+          throw new Error(msg)
+
+        } else {
+
+          return { availableCases, result }
+
+        }
+
+      })
+      .then(({ availableCases, result }) => {
+
+        const caseTypeKey = decodeURIComponent(encodedCaseTypeName).replace(/_/g, ' ')
+        const caseAttributes = result[caseTypeKey] || []
+        const cases = caseAttributes.map(attributes => new Case(attributes))
+
+        const numAdditionalRequests = Math.max(0, Math.ceil(availableCases / Case.maxPageSize) - 1)
+
+        if (numAdditionalRequests === 0) {
+
+          return cases
+
+        } else {
+
+          // This just creates a sequence [1, 2, ..., n].
+          // Empty if numAdditionalRequests == 0.
+          const pageNumbers = Array.from(new Array(numAdditionalRequests).keys()).map(i => i + 1)
+
+          const requestPromises =
+            pageNumbers.map(pageNumber => {
+
+              const pageGetParams = Object.assign(getParams, {
+                page: pageNumber
+              })
+
+              const getQueryStr = qs.stringify(pageGetParams)
+              const uri = `${baseUri}?${getQueryStr}`
+
+              return fetch(uri, Case._requestOptions())
+                .then(response => {
+                  if (response.ok) {
+
+                    return response.json()
+
+                  } else {
+
+                    const msg = `Error ${response.status}: ${response.statusText}`
+                    throw new Error(msg)
+
+                  }
+                })
+                .then(result => {
+
+                  const caseAttributes = result[caseTypeKey] || []
+
+                  return {
+                    page: pageNumber,
+                    cases: caseAttributes.map(attributes => new Case(attributes))
+                  }
+
+                })
+                .catch(err => {
+                  console.log(err.message)
+                  throw err
+                })
+
+            })
+
+          return Promise.all(requestPromises).then(results =>
+            // Sort and flatten
+            results.sort(
+              (a, b) => parseInt(a.page) - parseInt(b.page)
+            ).reduce(
+              (alreadyFlattened, newResult) => [...alreadyFlattened, ...newResult.cases],
+              cases // This is the result of the first call.
+            )
+          ).catch(err => {
+            console.log(err.message)
+            throw err
+          })
+
+        }
+      })
+      .catch(err => {
+        console.log(err.message)
+        throw err
+      })
+  }
+
+}
+
+
+module.exports = Case
