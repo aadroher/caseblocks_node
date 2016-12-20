@@ -42,7 +42,7 @@ class Case {
       })
 
       const uniqueOption = _.pick(options,
-        (val, key) => key === 'unique' && val !== 'unidefined'
+        (val, key) => key === 'unique' && val !== 'undefined'
       )
 
       const payload = Object.assign(
@@ -53,7 +53,10 @@ class Case {
       const uri = Case.Caseblocks.buildUrl(`/case_blocks/${caseTypeName}.json`)
       const requestOptions = {
         method: 'post',
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
+        headers: {
+          'Content-Type': 'application/json'
+        }
       }
 
       return fetch(uri, Case._requestOptions(requestOptions))
@@ -67,7 +70,10 @@ class Case {
 
           return Object.assign(
             new Case(attributes),
-            { case_type_code: caseTypeCode }
+            {
+              case_type_code: caseTypeCode,
+              case_type_name: caseTypeName
+            }
           )
 
         })
@@ -462,7 +468,10 @@ class Case {
       const uri = Case.Caseblocks.buildUrl(`/case_blocks/${this.case_type_name}/${this.id}.json`)
       const requestOptions = {
         method: 'put',
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
+        headers: {
+          'Content-Type': 'application/json'
+        }
       }
 
       return fetch(uri, Case._requestOptions(requestOptions))
@@ -513,15 +522,20 @@ class Case {
 
   static _requestOptions(options={}) {
 
-    const defaultHeaders = new Headers({
-      'Accept': 'application/json'
-    })
-
-    const defaultOptions = {
-      headers: defaultHeaders
+    const defaultHeaders = {
+      'Accept': 'application/json',
     }
 
-    return Object.assign(defaultOptions, options)
+    const headers = new Headers(
+      Object.assign(defaultHeaders, options.headers || {})
+    )
+
+    const defaultOptions = {
+      headers: headers
+    }
+
+
+    return Object.assign(defaultOptions, _.omit(options, 'headers'))
 
   }
 
