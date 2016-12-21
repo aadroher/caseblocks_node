@@ -117,12 +117,13 @@ describe('case', function() {
 
     helper.nockHttp()
 
-    Caseblocks.Case.create("support_requests", 42, {title: 'test1'}, {unique: true}).then(function(doc) {
-      doc.attributes.title.should.equal("test1")
-      done()
-    }).catch(function(err){
-      done(err);
-    });
+    Caseblocks.Case.create("support_requests", 42, {title: 'test1'}, {unique: true})
+      .then(function(doc) {
+        doc.attributes.title.should.equal("test1")
+        done()
+      }).catch(function(err){
+        done(err);
+      });
 
   })
 

@@ -42,7 +42,7 @@ class Case {
       })
 
       const uniqueOption = _.pick(options,
-        (val, key) => key === 'unique' && typeof val !== 'undefined'
+        (val, key) => key === 'unique' && typeof val === 'boolean'
       )
 
       const payload = Object.assign(

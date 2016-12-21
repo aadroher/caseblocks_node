@@ -170,7 +170,13 @@ const nockHttp = () => {
       'content-type': 'application/json'
     }
   })
-    .post("/case_blocks/support_requests.json", {"unique": true, "case": {"title": "test1", "case_type_id": 42}})
+    .post("/case_blocks/support_requests.json", {
+      "unique": true,
+      "case": {
+        "title": "test1",
+        "case_type_id": 42
+      }
+    })
     .query({auth_token: "tnqhvzxYaRnVt7zRWYhr"})
     .reply(200, {"case": {title: "test1"}})
 
