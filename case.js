@@ -55,7 +55,7 @@ class Case {
         method: 'post',
         body: JSON.stringify(payload),
         headers: {
-          'Content-Type': 'application/json'
+          'content-type': 'application/json'
         }
       }
 
@@ -470,7 +470,7 @@ class Case {
         method: 'put',
         body: JSON.stringify(payload),
         headers: {
-          'Content-Type': 'application/json'
+          'content-type': 'application/json'
         }
       }
 
@@ -523,7 +523,7 @@ class Case {
   static _requestOptions(options={}) {
 
     const defaultHeaders = {
-      'Accept': 'application/json',
+      'accept': 'application/json',
     }
 
     const headers = new Headers(

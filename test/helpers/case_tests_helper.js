@@ -133,7 +133,6 @@ function setRelatedDocuments(personCaseId) {
   const scope =
     nock(caseBlocksBaseURL)
     .get(`/case_blocks/people/${personCaseId}.json?auth_token=${authToken}`)
-    // .query(getQueryMatcher({}, false))
     .reply(200, (uri, requestBody) => {
 
       const matchedPerson = people.find(person => person._id === personCaseId)
