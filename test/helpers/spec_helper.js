@@ -14,13 +14,6 @@ const telkom_application_case_type = JSON.parse(
   fs.readFileSync("./test/support/telkom-application-case-type.json", "utf8")
 );
 
-const encodeQueryObject = queryObject =>
-  Object.keys(queryObject).reduce((prevVal, key) =>
-    Object.assign(prevVal, {
-      [encodeURIComponent(key)]: encodeURIComponent(queryObject[key])
-    })
-  , {})
-
 const nockHttp = () => {
 
   let getQueryStr
@@ -37,7 +30,8 @@ const nockHttp = () => {
 
   nock('http://test-caseblocks-location', {
     reqheaders: {
-      'accept': 'application/json'
+      'accept': 'application/json',
+      'content-type': 'application/json'
     }
   })
     .put('/case_blocks/support_requests/550c40d9841976debf000011.json', {
@@ -59,7 +53,8 @@ const nockHttp = () => {
 
   nock('http://test-caseblocks-location', {
     reqheaders: {
-      'accept': 'application/json'
+      'accept': 'application/json',
+      'content-type': 'application/json'
     }
   })
     .put('/case_blocks/support_requests/550c40d9841976debf000011.json', {
@@ -80,7 +75,8 @@ const nockHttp = () => {
 
   nock('http://test-caseblocks-location', {
     reqheaders: {
-      'accept': 'application/json'
+      'accept': 'application/json',
+      'content-type': 'application/json'
     }
   })
     .post('/case_blocks/support_requests.json', {
@@ -159,15 +155,30 @@ const nockHttp = () => {
     "auth_token": "tnqhvzxYaRnVt7zRWYhr"
   })
 
-  nock('http://test-caseblocks-location', {reqheaders: {'accept': 'application/json'}})
+  nock('http://test-caseblocks-location', {
+    reqheaders: {
+      'accept': 'application/json'
+    }
+  })
     .get(`/case_blocks/web_enquiries.json?${getQueryStr}`)
     .reply(200, {web_enquiries: [{_id: "554379ab841976f73700011c"}]});
 
 
-  nock('http://test-caseblocks-location', {reqheaders: {'accept': 'application/json'}})
-    .post("/case_blocks/support_requests.json", {"unique": true, "case": {"title": "test1", "case_type_id": 42}})
+  nock('http://test-caseblocks-location', {
+    reqheaders: {
+      'accept': 'application/json',
+      'content-type': 'application/json'
+    }
+  })
+    .post("/case_blocks/support_requests.json", {
+      "unique": true,
+      "case": {
+        "title": "test1",
+        "case_type_id": 42
+      }
+    })
     .query({auth_token: "tnqhvzxYaRnVt7zRWYhr"})
-    .reply(200, {"case": {title: "test1"}})
+    .reply(200, {"case": {title: "unique-test1"}})
 
 
   // Task
@@ -194,7 +205,11 @@ const nockHttp = () => {
     .get('/case_blocks/tasks.json?ids%5B%5D=550c40d9841976debf000019&auth_token=tnqhvzxYaRnVt7zRWYhr')
     .reply(200, {tasks: [{_id: '550c40d9841976debf000019', description: "test task"}]});
 
-  nock('http://test-caseblocks-location', {reqheaders: {'accept': 'application/json'}})
+  nock('http://test-caseblocks-location', {
+    reqheaders: {
+      'accept': 'application/json'
+    }
+  })
     .put('/case_blocks/tasks/550c40d9841976debf000019.json', {
       "task": {
         "_id": "550c40d9841976debf000019",
@@ -208,7 +223,11 @@ const nockHttp = () => {
 
   // tasklists
 
-  nock('http://test-caseblocks-location', {reqheaders: {'accept': 'application/json'}})
+  nock('http://test-caseblocks-location', {
+    reqheaders: {
+      'accept': 'application/json'
+    }
+  })
     .get('/case_blocks/tasklists.json?ids%5B%5D=550c40d9841976debf000018&ids%5B%5D=550c40d9841976debf00001a&ids%5B%5D=550c40d9841976debf00001c&auth_token=tnqhvzxYaRnVt7zRWYhr')
     .reply(200, {
       tasklists: [{
@@ -220,13 +239,22 @@ const nockHttp = () => {
       }, {_id: '550c40d9841976debf00001c', name: "Admin Tasks", _tasks: ['550c40d9841976debf000019']}]
     });
 
-  nock('http://test-caseblocks-location', {reqheaders: {'accept': 'application/json'}})
+  nock('http://test-caseblocks-location', {
+    reqheaders: {
+      'accept': 'application/json'
+    }
+  })
     .get('/case_blocks/tasklists.json?ids%5B%5D=550c40d9841976debf000018&auth_token=tnqhvzxYaRnVt7zRWYhr')
     .reply(200, {tasklists: [{_id: '550c40d9841976debf000018', name: "Development Tasks"}]});
 
 
   //conversations
-  nock('http://test-caseblocks-location', {reqheaders: {'accept': 'application/json'}})
+  nock('http://test-caseblocks-location', {
+    reqheaders: {
+      'accept': 'application/json',
+      'content-type': 'application/json'
+    }
+  })
     .post('/case_blocks/messages.json', {
       "message": {
         "body": "conv-body",
@@ -287,12 +315,20 @@ const nockHttp = () => {
 
   // case type
 
-  nock('http://test-caseblocks-location', {reqheaders: {'accept': 'application/json'}})
+  nock('http://test-caseblocks-location', {
+    reqheaders: {
+      'accept': 'application/json'
+    }
+  })
     .get('/case_blocks/case_types/15.json')
     .query({auth_token: 'tnqhvzxYaRnVt7zRWYhr'})
     .reply(200, caseTypeData)
 
-  nock('http://test-caseblocks-location', {reqheaders: {'accept': 'application/json'}})
+  nock('http://test-caseblocks-location', {
+    reqheaders: {
+      'accept': 'application/json'
+    }
+  })
     .get('/case_blocks/case_types/22.json')
     .query({auth_token: 'tnqhvzxYaRnVt7zRWYhr'})
     .reply(200, telkom_application_case_type)

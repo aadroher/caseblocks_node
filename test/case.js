@@ -113,18 +113,39 @@ describe('case', function() {
 
   })
 
-  it("should create a unique document", function(done) {
+  describe("defining unique option", function() {
 
-    helper.nockHttp()
+    it("should create a unique document", function(done) {
 
-    Caseblocks.Case.create("support_requests", 42, {title: 'test1'}, {unique: true}).then(function(doc) {
-      doc.attributes.title.should.equal("test1")
-      done()
-    }).catch(function(err){
-      done(err);
-    });
+      helper.nockHttp()
+
+      Caseblocks.Case.create("support_requests", 42, {title: 'test1'}, {unique: true})
+        .then(function(doc) {
+          doc.attributes.title.should.equal("unique-test1")
+          done()
+        }).catch(function(err){
+        done(err);
+      });
+
+    })
+
+    it("should not acknowledge a unique option with a wrong value", function(done) {
+
+      helper.nockHttp()
+
+      Caseblocks.Case.create("support_requests", 42, {title: 'test1'}, {unique: 'this is a wrong value'})
+        .then(function(doc) {
+          doc.attributes.title.should.equal("test1")
+          done()
+        }).catch(function(err){
+        done(err);
+      });
+
+    })
 
   })
+
+
 
   describe("searching", function () {
 
