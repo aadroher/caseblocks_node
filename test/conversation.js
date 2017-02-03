@@ -17,7 +17,7 @@ const authToken = 'tnqhvzxYaRnVt7zRWYhr'
 
 describe('conversation', function() {
 
-  describe.only('conversation creation', function() {
+  describe('conversation creation', function() {
 
     beforeEach(function() {
       this.timeout(5000);
@@ -27,7 +27,7 @@ describe('conversation', function() {
     });
 
     // TODO: Properly implement this.
-    it("should create a new conversation on a case", function(done) {
+    it.only("should create a new conversation on a case", function(done) {
 
       const caseInstance = new Caseblocks.Case(people[0])
       const conversationMessage = messages[0]
@@ -43,7 +43,7 @@ describe('conversation', function() {
 
     })
 
-    it("should create a new conversation on a case with recipients", function(done) {
+      it("should create a new conversation on a case with recipients", function(done) {
 
       const caseInstance = new Caseblocks.Case(people[0])
       const conversationMessage = messages[1]

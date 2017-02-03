@@ -1,5 +1,5 @@
 .PHONY: test
 test:
-		./node_modules/.bin/mocha --reporter spec
+		DEBUG=nock.* ./node_modules/.bin/mocha --reporter spec
 
 

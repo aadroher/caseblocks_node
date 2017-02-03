@@ -17,24 +17,18 @@ const authQuery = {
   auth_token: authToken
 }
 
-const getQueryMatcher = () =>
-  receivedQueryObject => {
-
-    const queryObjectToMatch = authQuery
-
-    return _.isEqual(queryObjectToMatch, receivedQueryObject)
-
-  }
+const headers = {
+  reqheaders: {'accept': 'application/json'}
+}
 
 function setConversationCreationResult() {
 
-  const requestBody = messages[0]
-
-  console.log(requestBody)
+  const postData = messages[0]
 
   nock(caseBlocksBaseURL)
-    .post('/caseblocks/messages', requestBody)
-    .query(getQueryMatcher())
+    .post('/caseblocks/messages?auth_token=tnqhvzxYaRnVt7zRWYhr', (requestBody) => {
+      console.log(requestBody)
+    })
     .reply(200, (uri, requestBody) => {
 
       console.log(requestBody)
@@ -42,9 +36,6 @@ function setConversationCreationResult() {
     })
 
 }
-
-
-
 
 
 module.exports = {
