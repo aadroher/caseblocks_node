@@ -1,47 +1,80 @@
-var helper = require("./helpers/spec_helper")
+const should = require('chai').should()
 
-var should = require('chai').should(),
-    Caseblocks = require('../index')
+const helper = require("./helpers/conversation_test_helper")
+
+const Caseblocks = require('../index')
+
+// Mock collections
+// Import collections.
+const {
+  people,
+  messages
+} = require('./helpers/collections')
+
+// Global constants
+const caseBlocksBaseURL = 'http://test-caseblocks-location'
+const authToken = 'tnqhvzxYaRnVt7zRWYhr'
 
 describe('conversation', function() {
 
-  beforeEach(function() {
-    this.timeout(5000);
-    Caseblocks.setup("http://test-caseblocks-location", "tnqhvzxYaRnVt7zRWYhr")
+  describe.only('conversation creation', function() {
 
-    helper.nockHttp()
-  });
+    beforeEach(function() {
+      this.timeout(5000);
+      Caseblocks.setup(caseBlocksBaseURL, authToken)
 
-  // TODO: Properly implement this.
-  it("should create a new conversation on a case"
-    // , function() {
-    //   Caseblocks.Conversation.create(new Caseblocks.Case({_id: 123}), {subject: 'test1', body: 'conv-bod'}).then(function(message) {
-    //     message.attributes.id.should.equal("321")
-    //     done()
-    //   }).catch(function(err){
-    //     done(err);
-    //   });
-    // }
-  )
-  it("should create a new conversation on a case with recipients"
-    // , function() {
-    //   Caseblocks.Conversation.create(new Caseblocks.Case({_id: 123}), {subject: 'test1', body: 'conv-bod', recipients: ["myemail@example.com"]}).then(function(message) {
-    //     message.attributes.id.should.equal("321")
-    //     done()
-    //   }).catch(function(err){
-    //     done(err);
-    //   });
-    // }
-  )
-  it("should create a new conversation on a case with attachments"
-    // , function() {
-    //   Caseblocks.Conversation.create(new Caseblocks.Case({_id: 123}), {subject: 'test1', body: 'conv-bod', attachments: [{filename: "a-file.pdf"}]}).then(function(message) {
-    //     message.attributes.id.should.equal("321")
-    //     done()
-    //   }).catch(function(err){
-    //     done(err);
-    //   });
-    // }
-  )
+      helper.setConversationCreationResult()
+    });
 
-});
+    // TODO: Properly implement this.
+    it("should create a new conversation on a case", function(done) {
+
+      const caseInstance = new Caseblocks.Case(people[0])
+      const conversationMessage = messages[0]
+
+      Caseblocks.Conversation.create(caseInstance, conversationMessage)
+        .then(message => {
+          message.attributes.id.should.equal("321")
+          done()
+        })
+        .catch(err => {
+          done(err)
+        })
+
+    })
+
+    it("should create a new conversation on a case with recipients", function(done) {
+
+      const caseInstance = new Caseblocks.Case(people[0])
+      const conversationMessage = messages[1]
+
+      Caseblocks.Conversation.create(caseInstance, conversationMessage)
+        .then(message => {
+          message.attributes.id.should.equal("321")
+          done()
+        })
+        .catch(err => {
+          done(err)
+        })
+
+    })
+
+    it("should create a new conversation on a case with attachments", function(done) {
+
+      const caseInstance = new Caseblocks.Case(people[0])
+      const conversationMessage = messages[2]
+
+      Caseblocks.Conversation.create(caseInstance, conversationMessage)
+        .then(message => {
+          message.attributes.id.should.equal("321")
+          done()
+        })
+        .catch(err => {
+          done(err)
+        })
+
+    })
+
+  })
+
+})
