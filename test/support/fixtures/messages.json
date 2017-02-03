@@ -1,0 +1,62 @@
+[
+  {
+    "message": {
+      "author_id": 5,
+      "author_display_name": "Black Owl",
+      "body": "<p>The chicken is in the barnyard.</p>",
+      "case_id": null,
+      "subject": "Top Secret",
+      "recipients": [],
+      "attachments": []
+    }
+  },
+  {
+    "message": {
+      "author_id": 5,
+      "author_display_name": "Black Owl",
+      "body": "<p>The chicken is in the barnyard.</p>",
+      "case_id": null,
+      "subject": "Top Secret",
+      "recipients": [
+        {
+          "name": "Euan",
+          "type": "Users",
+          "id": 7
+        }
+      ],
+      "attachments": []
+    }
+  },
+  {
+    "message": {
+      "author_id": 5,
+      "author_display_name": "Black Owl",
+      "body": "<p>The chicken is in the barnyard.</p>",
+      "case_id": null,
+      "subject": "Top Secret",
+      "recipients": [
+        {
+          "email": "armand@emergeadapt.com",
+          "type": "Custom"
+        }
+      ],
+      "attachments": []
+    }
+  },
+  {
+    "message": {
+      "author_id": 5,
+      "author_display_name": "Black Owl",
+      "body": "<p>The chicken is in the barnyard.</p>",
+      "case_id": null,
+      "subject": "Top Secret",
+      "recipients": [
+        {
+          "email": "armand@emergeadapt.com",
+          "type": "Custom"
+        }
+      ],
+      "attachments": []
+    }
+  }
+]
