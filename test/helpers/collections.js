@@ -22,10 +22,6 @@ const relationshipFixtures = JSON.parse(
   fs.readFileSync(`${fixturesPath}/relationships.json`)
 )
 
-const messagesFixtures = JSON.parse(
-  fs.readFileSync(`${fixturesPath}/messages.json`)
-)
-
 // ####################
 // Case type collection
 // ####################
@@ -37,7 +33,7 @@ const caseTypes = caseTypeFixtures
 // People collection
 // #################
 
-const peopleNumber = 200
+const peopleNumber = 2000
 
 function getPeopleFactory() {
 
@@ -98,7 +94,7 @@ const genericPeople = peopleFactory.buildList(peopleNumber)
 // Weapon collection
 // #################
 
-const weaponsNumber = 300
+const weaponsNumber = 3000
 
 const weaponNames = [
   'Blaster Rifle',
@@ -227,15 +223,13 @@ const generatedData = relatePeopleAndWeapons({people: genericPeople, weapons: ge
 
 const people = peopleFixtures.concat(generatedData.people)
 const weapons = weaponsFixtures.concat(generatedData.weapons)
-const messages = messagesFixtures
 
 
 module.exports = {
   caseTypes,
   people,
   weapons,
-  relationships,
-  messages
+  relationships
 }
 
 
