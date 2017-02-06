@@ -3,20 +3,6 @@ const Headers = require('node-fetch').Headers
 const inflection = require( 'inflection' );
 const _ = require('underscore')
 
-function requestOptions(options={}) {
-
-  const defaultHeaders = new Headers({
-    'Accept': 'application/json'
-  })
-
-  const defaultOptions = {
-    headers: defaultHeaders
-  }
-
-  return Object.assign(defaultOptions, options)
-
-}
-
 let Conversation = function(attributes) {
 
   this.attributes = {};
@@ -95,8 +81,22 @@ Conversation.create = function(kase, attributes) {
     body: JSON.stringify(conversationMessage)
   }
 
+  const handleResponse = (response) => {
+
+    if (response.ok) {
+      return response.json()
+    } else {
+
+      const msg = `Status Code: ${response.status}, Status Message: ${response.statusText}`
+
+      throw new Error(msg)
+
+    }
+
+  }
+
   return fetch(Conversation.Caseblocks.buildUrl("/case_blocks/messages"), options)
-    .then(response => response.json())
+    .then(handleResponse)
 
 }
 
