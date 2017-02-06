@@ -3,116 +3,112 @@ const Headers = require('node-fetch').Headers
 const inflection = require( 'inflection' );
 const _ = require('underscore')
 
-let Conversation = function(attributes) {
 
-  this.attributes = {};
+class Conversation {
 
-  for(let k in attributes) {
-    this.attributes[k] = attributes[k];
-  }
+  // Static methods
+  static create(caseInstance, attributes) {
 
-  this.id = this.attributes._id;
+    const recipientsList = !Array.isArray(attributes.recipients) ? [] :
+      attributes.recipients.map(
+        recipient => (
+          {
+            email: attributes.recipients[recipient],
+            type: "Custom",
+            display_name: attributes.recipients[recipient]
+          }
+        )
+      )
 
-};
+    const attachments = !Array.isArray(attributes.attachments) ? [] :
+      attributes.attachments.reduce((attachmentList, attachment) => {
 
-// create a new conversation
-Conversation.create = function(kase, attributes) {
+          if (typeof(attachment._id) != 'undefined') {
 
-  let recipientsList = [];
+            return [...attachmentList, attachment._id]
 
-  if (typeof(attributes.recipients) != 'undefined') {
+          } else if (typeof(attachment.file_name) != 'undefined') {
 
-    for (let recipient in attributes.recipients){
+            const doc = caseInstance.attributes._documents.find(
+              d => d.file_name == attachment.file_name
+            )
 
-      recipientsList.push({
-        "email":attributes.recipients[recipient],
-        "type":"Custom",
-        "display_name":attributes.recipients[recipient]
-      });
+            return [...attachmentList, doc._id]
 
+          } else {
+
+            return attachmentList
+
+          }
+
+        },
+        []
+      )
+
+    const conversationMessage = {
+      "message": {
+        "body":attributes.body,
+        "case_id":caseInstance.id,
+        "subject":attributes.subject,
+        "recipients":recipientsList,
+        "attachments":attachments,
+        author_id: attributes.author_id
+      }
+    };
+
+    const options = {
+      method: 'post',
+      body: JSON.stringify(conversationMessage)
     }
 
-  }
+    const handleResponse = (response) => {
 
-  let attachments = [];
-
-  if (typeof(attributes.attachments)=="undefined") {
-
-    attachments = []
-
-  } else {
-
-    attachments = _.map(attributes.attachments, attachment => {
-      if (typeof(attachment._id) != "undefined") {
-
-        return attachment._id
-
-      } else if (typeof(attachment.file_name) != "undefined") {
-
-        let doc = _.find(kase.attributes._documents,
-          d => d.file_name == attachment.file_name
-        )
-        return doc._id
-
+      if (response.ok) {
+        return response.json()
       } else {
 
-        return null
+        const msg = `Status Code: ${response.status}, Status Message: ${response.statusText}`
+
+        throw new Error(msg)
 
       }
-    })
-
-  }
-
-  attachments = _.compact(attachments)
-
-  const conversationMessage = {
-    "message": {
-      "body":attributes.body,
-      "case_id":kase.id,
-      "subject":attributes.subject,
-      "recipients":recipientsList,
-      "attachments":attachments,
-      author_id: attributes.author_id
-    }
-  };
-
-  const options = {
-    method: 'post',
-    body: JSON.stringify(conversationMessage)
-  }
-
-  const handleResponse = (response) => {
-
-    if (response.ok) {
-      return response.json()
-    } else {
-
-      const msg = `Status Code: ${response.status}, Status Message: ${response.statusText}`
-
-      throw new Error(msg)
 
     }
 
+    return fetch(Conversation.Caseblocks.buildUrl("/case_blocks/messages"), options)
+      .then(handleResponse)
+
   }
 
-  return fetch(Conversation.Caseblocks.buildUrl("/case_blocks/messages"), options)
-    .then(handleResponse)
+  // Instance methods
+  constructor(attributes) {
+
+    Object.keys(attributes).forEach(key => {
+      this[key] = attributes[key];
+    });
+
+    this.id = this.attributes._id;
+
+  }
+
+  messages() {
+
+    if (!Conversation.Caseblocks)
+      throw "Must call Caseblocks.setup";
+
+    throw("Not implemented Yet")
+
+  }
+
+  reply() {
+
+    if (!Conversation.Caseblocks)
+      throw "Must call Caseblocks.setup";
+
+    throw("Not implemented Yet")
+
+  }
 
 }
 
-Conversation.prototype.messages = function() {
-  if (!Case.Caseblocks)
-    throw "Must call Caseblocks.setup";
-
-  throw("Not implemented Yet")
-}
-
-Conversation.prototype.reply = function(message, recipients, attachments) {
-  if (!Case.Caseblocks)
-    throw "Must call Caseblocks.setup";
-
-  throw("Not implemented Yet")
-}
-
-
-module.exports = Conversation;
+module.exports = Conversation
