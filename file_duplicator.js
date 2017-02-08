@@ -38,26 +38,11 @@ Caseblocks.Case.get('complaint', '589b07cf64e69638b8000014')
         sourceDoument.copyToCase(complaint1)
 
       )
-      // .then(serverURL => {
-      //   console.log(serverURL)
-      //   return serverURL
-      // })
-      // .then(serverURL =>
-      //
-      //   fetch(serverURL, {
-      //     method: 'post'
-      //   })
-      //
-      // ).then(response => {
-      //
-      //   if (response.ok) {
-      //     return response.json()
-      //   } else {
-      //     const msg = `Status: ${response.status} - Message: ${response.statusText}`
-      //     throw new Error(msg)
-      //   }
-      //
-      // })
+      .then(newDocument => {
+
+        console.log(newDocument)
+
+      })
 
   )
   .then(console.log)

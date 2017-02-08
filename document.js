@@ -243,6 +243,7 @@ class Document {
    * @param attributes Additional attribute values that will be merged
    *  with the current ones.
    * @param otherCaseInstance
+   * @return {Document} The instance of the new document.
    */
   copyToCase(otherCaseInstance) {
 
