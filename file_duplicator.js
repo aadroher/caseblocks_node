@@ -35,33 +35,29 @@ Caseblocks.Case.get('complaint', '589b07cf64e69638b8000014')
     Caseblocks.Case.get('complaint', '589b07cf64e69638b8000016')
       .then(complaint1 =>
 
-        getCreateFromURLServerURL(
-          complaint1,
-          sourceDoument.url,
-          sourceDoument.file_name
-        )
+        sourceDoument.copyToCase({}, complaint1)
 
       )
-      .then(serverURL => {
-        console.log(serverURL)
-        return serverURL
-      })
-      .then(serverURL =>
-
-        fetch(serverURL, {
-          method: 'post'
-        })
-
-      ).then(response => {
-
-        if (response.ok) {
-          return response.json()
-        } else {
-          const msg = `Status: ${response.status} - Message: ${response.statusText}`
-          throw new Error(msg)
-        }
-
-      })
+      // .then(serverURL => {
+      //   console.log(serverURL)
+      //   return serverURL
+      // })
+      // .then(serverURL =>
+      //
+      //   fetch(serverURL, {
+      //     method: 'post'
+      //   })
+      //
+      // ).then(response => {
+      //
+      //   if (response.ok) {
+      //     return response.json()
+      //   } else {
+      //     const msg = `Status: ${response.status} - Message: ${response.statusText}`
+      //     throw new Error(msg)
+      //   }
+      //
+      // })
 
   )
   .then(console.log)

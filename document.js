@@ -27,9 +27,9 @@ const getDocumentCreationFromURLEndpointPath = (caseInstance) =>
       `${caseType.id}/${caseInstance.id}/create_from_url`
     )
 
-const getDecumentCreationFromURLGetQuery = (downloadURL, newFilename) =>
+const getDecumentCreationFromURLGetQuery = (downloadURL, newFilename, host, authToken) =>
   qs.stringify({
-    download_url: `${baseURL}${downloadURL}?auth_token=${authToken}`,
+    download_url: `${host}${downloadURL}?auth_token=${authToken}`,
     file_name: newFilename,
     auth_token: authToken
   })
@@ -253,6 +253,17 @@ class Document {
 
     } else {
 
+
+      return getDocumentCreationFromURLEndpointPath()
+        .then(endPointPath =>
+          `${Document.Caseblocks.buildUrl(endPointPath)}?` +
+          `${getDecumentCreationFromURLGetQuery(
+            this.attributes.url,
+            this.attributes.file_name,
+            Document.Caseblocks.host,
+            Document.Caseblocks.token
+          )}`
+        )
 
 
     }
