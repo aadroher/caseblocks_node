@@ -279,6 +279,11 @@ class Document {
           }
 
         })
+        .then(responsePayload =>
+
+          new Document(responsePayload, otherCaseInstance)
+
+        )
 
     }
 
