@@ -30,8 +30,7 @@ const getDocumentCreationFromURLEndpointPath = (caseInstance) =>
 const getDecumentCreationFromURLGetQuery = (downloadURL, newFilename, host, authToken) =>
   qs.stringify({
     download_url: `${host}${downloadURL}?auth_token=${authToken}`,
-    file_name: newFilename,
-    auth_token: authToken
+    file_name: newFilename
   })
 
 const getBoundary = () => {
@@ -245,7 +244,7 @@ class Document {
    *  with the current ones.
    * @param otherCaseInstance
    */
-  copyToCase(attributes, otherCaseInstance) {
+  copyToCase(otherCaseInstance) {
 
     if (!Document.Caseblocks) {
 
@@ -253,18 +252,33 @@ class Document {
 
     } else {
 
-
-      return getDocumentCreationFromURLEndpointPath()
+      return getDocumentCreationFromURLEndpointPath(otherCaseInstance)
         .then(endPointPath =>
-          `${Document.Caseblocks.buildUrl(endPointPath)}?` +
-          `${getDecumentCreationFromURLGetQuery(
-            this.attributes.url,
-            this.attributes.file_name,
+
+          `${Document.Caseblocks.buildUrl(endPointPath)}&` +
+          getDecumentCreationFromURLGetQuery(
+            this.url,
+            this.file_name,
             Document.Caseblocks.host,
             Document.Caseblocks.token
-          )}`
-        )
+          )
 
+        ).then(endPointURL =>
+
+          fetch(endPointURL, {
+            method: 'post'
+          })
+
+        ).then(response => {
+
+          if (response.ok) {
+            return response.json()
+          } else {
+            const msg = `Status: ${response.status} - Message: ${response.statusText}`
+            throw new Error(msg)
+          }
+
+        })
 
     }
 
