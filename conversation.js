@@ -20,8 +20,7 @@ Conversation.create = function(kase, attributes) {
 
   let recipientsList = [];
   if (typeof(attributes.recipients) != 'undefined') {
-    for (let recipientIndex in attributes.recipients){
-      const recipient = attributes.recipients[recipientIndex]
+    attributes.recipients.forEach((recipient) => {
       if (typeof(recipient)==='object') {
         recipientsList.push(recipient);
       } else {
@@ -31,7 +30,7 @@ Conversation.create = function(kase, attributes) {
           "display_name":recipient
         });
       }
-    }
+    })
   }
 
   let attachments = [];
