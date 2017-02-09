@@ -1,47 +1,61 @@
-const nock = require("nock");
-const chai = require("chai");
-const fs = require("fs");
-const chaiAsPromised = require("chai-as-promised");
+const nock = require('nock')
+const chai = require('chai')
+const fs = require('fs')
+const chaiAsPromised = require('chai-as-promised')
+const _ = require('underscore')
+
+const {
+  caseTypes,
+  people
+} = require('./collections')
 
 chai.use(chaiAsPromised);
 
 // Constants
+const caseBlocksBaseURL = 'https://test-caseblocks-location'
 
-const casePayloadPath = './test/support/case.json'
+const authToken = 'tnqhvzxYaRnVt7zRWYhr'
 
 const htmlDocumentFilename = 'example.html'
 const htmlDocumentPath = `./test/support/${htmlDocumentFilename}`
 
-const caseTypeName = {
-  sing: 'pirate',
-  plu: 'pirates'
+const peopleCaseType = caseTypes[0]
+const peopleCaseTypeNames = {
+  name: peopleCaseType.name,
+  code: peopleCaseType.code
 }
 
-const casePayload = JSON.parse(
-  fs.readFileSync(casePayloadPath, 'utf-8')
-)
+const han = people[0]
+const luke = people[1]
+const letterFromAnakinDocument = luke._documents[0]
 
-const accountId = casePayload.account_id
-const caseTypeId = casePayload.case_type_id
-const caseId = casePayload._id
+const accountId = luke.account_id
+const caseTypeId = peopleCaseType.id
+const lukeCaseId = luke._id
+const hanCaseId = han._id
 
+const caseDocumentsFolderPath = caseId => `/documents/${accountId}/${caseTypeId}/${caseId}/`
+const documentCreationByURLPath = caseId => `/documents/${accountId}/${caseTypeId}/${caseId}/create_from_url`
 
-const documentResourcePath = caseId => `/documents/${accountId}/${caseTypeId}/${caseId}/`
-const caseResourcePath = caseId => `/case_blocks/${caseTypeName.plu}/${caseId}.json`
+const caseResourcePath = caseId => `/case_blocks/${peopleCaseTypeNames.code}/${caseId}.json`
+const personCaseTypeResourcePath = caseTypeId => `/case_blocks/case_types/${caseTypeId}.json`
+
 
 const authQuery = {
-  auth_token: 'tnqhvzxYaRnVt7zRWYhr'
+  auth_token: authToken
 }
 
-const caseBlocksBaseURL = 'https://test-caseblocks-location'
+const documentCreationByURLQuery = (caseId, fileName) => ({
+  download_url: `${caseBlocksBaseURL}${caseDocumentsFolderPath(caseId)}${fileName}?auth_token=${authToken}`,
+  file_name: fileName
+})
 
 const htmlDocumentString = fs.readFileSync(htmlDocumentPath, 'utf-8')
 
 
 // Utility functions to process the multpipart/form-data POST
 // request.
-
-const processDocumentPostRequest = (request, body) => {
+const processDocumentFormPostRequest = (request, body) => {
 
   const headers = request.headers
   const contentTypeHeader = getContentTypeHeader(headers, 'content-type')
@@ -53,9 +67,9 @@ const processDocumentPostRequest = (request, body) => {
     try {
 
       const payload = parseMultipartPayload(contentTypeHeader, body)
-      const validation = getPayloadValidation(payload)
+      const valid = getPayloadValidation(payload)
 
-      if (validation.validates) {
+      if (valid) {
 
         return [200,
           getResponsePayload({
@@ -200,18 +214,35 @@ const parsePart = (chunk, index) => {
 
 }
 
-const getPayloadValidation = multipartPayload => ({
-  validates: true,
-  messages: ''
-})
+const getPayloadValidation = multipartPayload =>
+  [
+    hasTheRightFormFieldName,
+    formDataIsTextPlain
+  ].every(condition => condition(multipartPayload))
+
 
 // Validation rules.
-
 const hasTheRightFormFieldName = payload => {
   const part = payload.find(part =>
     part.preamble['Content-Disposition'].directiveFields.name === 'newFileName'
   )
   return !!part
+}
+
+const formDataIsTextPlain = payload => {
+
+  const part = payload.find(part =>
+    _.isEqual(part.preamble['Content-Disposition'].directiveFields, {
+      name: 'file',
+      filename: 'example.html'
+    })
+  )
+
+  return !!part && _.isEqual(part.preamble['Content-Type'], {
+      directiveName: 'text/plain',
+      directiveFields: { charset: 'utf-8' }
+    })
+
 }
 
 
@@ -234,7 +265,7 @@ const getResponsePayload = ({contentType, fileName, fileContents}) => {
       pages: [],
       size: size,
       uploaded_at: new Date().toISOString(),
-      url: `${documentResourcePath(caseId)}${fileName}`
+      url: `${caseDocumentsFolderPath(lukeCaseId)}${fileName}`
     }
 
   }
@@ -242,163 +273,78 @@ const getResponsePayload = ({contentType, fileName, fileContents}) => {
 }
 
 
-const nockHttp = () => {
+const nockHttp = action => {
 
-  // Documents
+  switch(action) {
+    case 'case_type':
+      // Case Types
+      nock(caseBlocksBaseURL)
+        .get(personCaseTypeResourcePath(peopleCaseType.id))
+        .query(authQuery)
+        .reply(200, {
+          case_type: peopleCaseType
+        })
+      break
 
-  nock(caseBlocksBaseURL, {reqheaders: {'accept': 'application/json'}})
-    .get('/case_blocks/support_requests/case-with-documents.json')
-    .query({auth_token: 'tnqhvzxYaRnVt7zRWYhr'})
-    .reply(200, {
-      "support_request": {
-        _id: 'case-with-documents', systems_involved: '1', "_documents": [{
-          "content_type": "application/pdf",
-          "size": "2952201",
-          "extension": "pdf",
-          "uploaded_at": "2016-05-17T10:49:37.179Z",
-          "pages": [{
-            "page_no": 1,
-            "url": "/documents/2/22/573af72681e9a8296f000023/2016050515064627.pdf-x512-0.jpg?ignoreOnTimeline=true"
-          }, {
-            "url": "/documents/2/22/573af72681e9a8296f000023/2016050515064627.pdf-x512-1.jpg?ignoreOnTimeline=true",
-            "page_no": 2
-          }, {
-            "url": "/documents/2/22/573af72681e9a8296f000023/2016050515064627.pdf-x512-2.jpg?ignoreOnTimeline=true",
-            "page_no": 3
-          }, {
-            "url": "/documents/2/22/573af72681e9a8296f000023/2016050515064627.pdf-x512-3.jpg?ignoreOnTimeline=true",
-            "page_no": 4
-          }, {
-            "page_no": 5,
-            "url": "/documents/2/22/573af72681e9a8296f000023/2016050515064627.pdf-x512-4.jpg?ignoreOnTimeline=true"
-          }, {
-            "url": "/documents/2/22/573af72681e9a8296f000023/2016050515064627.pdf-x512-5.jpg?ignoreOnTimeline=true",
-            "page_no": 6
-          }, {
-            "url": "/documents/2/22/573af72681e9a8296f000023/2016050515064627.pdf-x512-6.jpg?ignoreOnTimeline=true",
-            "page_no": 7
-          }],
-          "_id": "573af74181e9a82979000008",
-          "file_name": "old-filename.pdf",
-          "url": "/documents/2/22/573af72681e9a8296f000023/old-filename.pdf"
-        }],
-        "application_pdf": {
-          "file_name": "old-filename.pdf",
-          "url": "/documents/2/22/573af72681e9a8296f000023/old-filename.pdf",
-          "content_type": "application/pdf",
-          "size": "2952201",
-          "extension": "pdf",
-          "uploaded_at": "2016-05-17T10:49:37.179Z",
-          "used_as_attachment": false,
-          "pages": [{
-            "page_no": 1,
-            "url": "/documents/2/22/573af72681e9a8296f000023/2016050515064627.pdf-x512-0.jpg?ignoreOnTimeline=true"
-          }, {
-            "url": "/documents/2/22/573af72681e9a8296f000023/2016050515064627.pdf-x512-1.jpg?ignoreOnTimeline=true",
-            "page_no": 2
-          }, {
-            "url": "/documents/2/22/573af72681e9a8296f000023/2016050515064627.pdf-x512-2.jpg?ignoreOnTimeline=true",
-            "page_no": 3
-          }, {
-            "url": "/documents/2/22/573af72681e9a8296f000023/2016050515064627.pdf-x512-3.jpg?ignoreOnTimeline=true",
-            "page_no": 4
-          }, {
-            "page_no": 5,
-            "url": "/documents/2/22/573af72681e9a8296f000023/2016050515064627.pdf-x512-4.jpg?ignoreOnTimeline=true"
-          }, {
-            "url": "/documents/2/22/573af72681e9a8296f000023/2016050515064627.pdf-x512-5.jpg?ignoreOnTimeline=true",
-            "page_no": 6
-          }, {
-            "url": "/documents/2/22/573af72681e9a8296f000023/2016050515064627.pdf-x512-6.jpg?ignoreOnTimeline=true",
-            "page_no": 7
-          }],
-          "status": null,
+    case 'luke':
+      nock(caseBlocksBaseURL)
+        .get(caseResourcePath(lukeCaseId))
+        .query(authQuery)
+        .reply(200, {
+          [peopleCaseTypeNames.code]: luke
+        })
+      break
 
-        },
-        "work_type_id": 22
-      }
-    });
+    case 'han':
+      nock(caseBlocksBaseURL)
+        .get(caseResourcePath(hanCaseId))
+        .query(authQuery)
+        .reply(200, {
+          [peopleCaseTypeNames.code]: han
+        })
+      break
 
-  nock(caseBlocksBaseURL)
-    .put('/documents/2/22/573af72681e9a8296f000023/old-filename.pdf', "new_file_name=new-filename.pdf")
-    .query({new_file_name: "new-filename.pdf", auth_token: 'tnqhvzxYaRnVt7zRWYhr'})
-    .reply(200, "{\"file_name\":\"new-filename.pdf\",\"url\":\"/documents/2/22/573af72681e9a8296f000023/new-filename.pdf\"}");
+    case 'post_vader_letter':
+      /**
+       * Respond with 200 + payload if OK or 400 + error message otherwise.
+       */
+      nock(caseBlocksBaseURL)
+        .post(caseDocumentsFolderPath(lukeCaseId))
+        .query(authQuery)
+        .reply(function (uri, requestBody) {
+          return processDocumentFormPostRequest(this.req, requestBody)
+        })
+      break
 
-  nock(caseBlocksBaseURL, {reqheaders: {'accept': 'application/json'}})
-    .put('/case_blocks/support_requests/case-with-documents.json', {
-      "support_request": {
-        "_id": "case-with-documents",
-        "systems_involved": "1",
-        "application_pdf": {
-          "file_name": "new-filename.pdf",
-          "url": "/documents/2/22/573af72681e9a8296f000023/new-filename.pdf",
-          "content_type": "application/pdf",
-          "size": "2952201",
-          "extension": "pdf",
-          "uploaded_at": "2016-05-17T10:49:37.179Z",
-          "used_as_attachment": false,
-          "pages": [{
-            "page_no": 1,
-            "url": "/documents/2/22/573af72681e9a8296f000023/2016050515064627.pdf-x512-0.jpg?ignoreOnTimeline=true"
-          }, {
-            "url": "/documents/2/22/573af72681e9a8296f000023/2016050515064627.pdf-x512-1.jpg?ignoreOnTimeline=true",
-            "page_no": 2
-          }, {
-            "url": "/documents/2/22/573af72681e9a8296f000023/2016050515064627.pdf-x512-2.jpg?ignoreOnTimeline=true",
-            "page_no": 3
-          }, {
-            "url": "/documents/2/22/573af72681e9a8296f000023/2016050515064627.pdf-x512-3.jpg?ignoreOnTimeline=true",
-            "page_no": 4
-          }, {
-            "page_no": 5,
-            "url": "/documents/2/22/573af72681e9a8296f000023/2016050515064627.pdf-x512-4.jpg?ignoreOnTimeline=true"
-          }, {
-            "url": "/documents/2/22/573af72681e9a8296f000023/2016050515064627.pdf-x512-5.jpg?ignoreOnTimeline=true",
-            "page_no": 6
-          }, {
-            "url": "/documents/2/22/573af72681e9a8296f000023/2016050515064627.pdf-x512-6.jpg?ignoreOnTimeline=true",
-            "page_no": 7
-          }],
-          "status": null
-        },
-        "work_type_id": 22
-      }
-    })
-    .query({auth_token: 'tnqhvzxYaRnVt7zRWYhr'})
-    .reply(200, {
-      "support_request": {
-        _id: '550c40d9841976debf000011',
-        systems_involved: "2",
-        calculated_field1: "calculated-result1",
-        calculated_field2: "calculated-result2"
-      }
-    });
+    case 'copy_letter_from_luke_to_han':
+      nockHttp('case_type')
+      nock(caseBlocksBaseURL)
+        .post(documentCreationByURLPath(hanCaseId))
+        .query(receivedQuery =>
+          Object.assign(
+            authQuery,
+            documentCreationByURLQuery(lukeCaseId, letterFromAnakinDocument.file_name)
+          )
+        )
+        .reply(200, letterFromAnakinDocument)
+      break
 
-  nock(caseBlocksBaseURL, {reqheaders: {'accept': 'application/json'}})
-    .get(caseResourcePath(caseId))
-    .query(authQuery)
-    .reply(200, {
-      [caseTypeName.sing]: casePayload
-    })
-
-  /**
-   * Respond with 200 + payload if OK or 400 + error message otherwise.
-   */
-  nock(caseBlocksBaseURL)
-    .post(documentResourcePath(caseId))
-    .query(authQuery)
-    .reply(function (uri, requestBody) {
-      return processDocumentPostRequest(this.req, requestBody)
-    })
+    case 'cleanup':
+    default:
+      nock.cleanAll()
+  }
 
 }
+
 
 
 module.exports = {
   nockHttp,
   authQuery,
-  caseTypeName,
-  casePayload,
+  peopleCaseType,
+  peopleCaseTypeNames,
+  luke,
+  han,
   htmlDocumentFilename,
   htmlDocumentString,
   expect: chai.expect

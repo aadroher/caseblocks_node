@@ -20,14 +20,14 @@ const getDocumentsEndPointPath = (caseTypeId, caseInstance) => {
 
 }
 
-const getDocumentCreationFromURLEndpointPath = (caseInstance) =>
+const getDocumentCreationFromURLEndpointPath = caseInstance =>
   caseInstance.caseType()
     .then(caseType =>
       `/documents/${caseInstance.attributes.account_id}/` +
       `${caseType.id}/${caseInstance.id}/create_from_url`
     )
 
-const getDecumentCreationFromURLGetQuery = (downloadURL, newFilename, host, authToken) =>
+const getDocumentCreationFromURLGetQuery = (downloadURL, newFilename, host, authToken) =>
   qs.stringify({
     download_url: `${host}${downloadURL}?auth_token=${authToken}`,
     file_name: newFilename
@@ -97,12 +97,12 @@ class Document {
 
       const payloadLines = [
         `--${boundary}`,
-        `Content-Disposition: form-data  name="newFileName"`,
+        `Content-Disposition: form-data;  name="newFileName"`,
         '',
         `${fileName}`,
         `--${boundary}`,
-        `Content-Disposition: form-data  name="file"  filename="${fileName}"`,
-        `Content-Type: text/plain  charset=utf-8`,
+        `Content-Disposition: form-data;  name="file";  filename="${fileName}"`,
+        `Content-Type: text/plain;  charset=utf-8`,
         '',
         `${contents}`,
         `--${boundary}--`
@@ -179,13 +179,11 @@ class Document {
   constructor(attributes, caseInstance) {
 
     Object.keys(attributes).forEach(key => {
-      this[key] = attributes[key] 
-    }) 
+      this[key] = attributes[key]
+    })
 
     this.caseInstance = caseInstance 
-    this.id = attributes._id 
-
-    this.debug = [] 
+    this.id = attributes._id
 
   }
 
@@ -233,9 +231,11 @@ class Document {
   }
 
   /**
-   *  with the current ones.
-   * @param {Case} otherCaseInstance
-   * @return {Promise.<Document>} The a promise that resolves into the instance of the new document.
+   * Creates a copy of the file represented by this instance of Document in the right
+   * folder of the documents server and creates its corresponding Document instance
+   * assiged to `otherCaseInstance`.
+   * @param {Case} otherCaseInstance The case the copy of the document should be assigned to.
+   * @return {Promise.<Document>} The a promise that resolves into the instance of the new Document instance.
    */
   copyToCase(otherCaseInstance) {
 
@@ -251,18 +251,23 @@ class Document {
         .then(endPointPath =>
 
           `${Document.Caseblocks.buildUrl(endPointPath)}&` +
-          getDecumentCreationFromURLGetQuery(
+          getDocumentCreationFromURLGetQuery(
             this.url,
             this.file_name,
             Document.Caseblocks.host,
             Document.Caseblocks.token
           )
 
-        ).then(endPointURL =>
+        )
+        .then(endPointURL =>
           fetch(endPointURL, {
-            method: 'post'
+            method: 'post',
+            headers: {
+              'content-type': 'application/json'
+            }
           })
-        ).then(response => {
+        )
+        .then(response => {
 
           if (response.ok) {
             return response.json()
