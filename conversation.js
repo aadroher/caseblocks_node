@@ -19,48 +19,37 @@ let Conversation = function(attributes) {
 Conversation.create = function(kase, attributes) {
 
   let recipientsList = [];
-
   if (typeof(attributes.recipients) != 'undefined') {
-
-    for (let recipient in attributes.recipients){
-
-      recipientsList.push({
-        "email":attributes.recipients[recipient],
-        "type":"Custom",
-        "display_name":attributes.recipients[recipient]
-      });
-
+    for (let recipientIndex in attributes.recipients){
+      const recipient = attributes.recipients[recipientIndex]
+      if (typeof(recipient)==='object') {
+        recipientsList.push(recipient);
+      } else {
+        recipientsList.push({
+          "email":recipient,
+          "type":"Custom",
+          "display_name":recipient
+        });
+      }
     }
-
   }
 
   let attachments = [];
-
   if (typeof(attributes.attachments)=="undefined") {
-
     attachments = []
-
   } else {
-
     attachments = _.map(attributes.attachments, attachment => {
       if (typeof(attachment._id) != "undefined") {
-
         return attachment._id
-
       } else if (typeof(attachment.file_name) != "undefined") {
-
         let doc = _.find(kase.attributes._documents,
           d => d.file_name == attachment.file_name
         )
         return doc._id
-
       } else {
-
         return null
-
       }
     })
-
   }
 
   attachments = _.compact(attachments)
@@ -76,26 +65,29 @@ Conversation.create = function(kase, attributes) {
     }
   };
 
+  if (typeof(attributes.internal_template)!==undefined) {
+    conversationMessage['internal_template'] = attributes.internal_template
+  }
+  if (typeof(attributes.external_template)!==undefined) {
+    conversationMessage['external_template'] = attributes.external_template
+  }
+
   const options = {
     method: 'post',
     body: JSON.stringify(conversationMessage)
   }
 
   const handleResponse = (response) => {
-
     if (response.ok) {
       return response.json()
     } else {
-
       const msg = `Status Code: ${response.status}, Status Message: ${response.statusText}`
-
       throw new Error(msg)
-
     }
-
   }
 
-  return fetch(Conversation.Caseblocks.buildUrl("/case_blocks/messages"), options)
+  const url = Conversation.Caseblocks.buildUrl("/case_blocks/messages")
+  return fetch(url, options)
     .then(handleResponse)
 
 }
