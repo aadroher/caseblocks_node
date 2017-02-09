@@ -33,7 +33,7 @@ const caseTypes = caseTypeFixtures
 // People collection
 // #################
 
-const peopleNumber = 2000
+const peopleNumber = 200
 
 function getPeopleFactory() {
 
@@ -94,7 +94,7 @@ const genericPeople = peopleFactory.buildList(peopleNumber)
 // Weapon collection
 // #################
 
-const weaponsNumber = 3000
+const weaponsNumber = 300
 
 const weaponNames = [
   'Blaster Rifle',

@@ -118,7 +118,7 @@ class Document {
         method: 'POST',
         headers: {
           'Content-Length': payloadBuffer.length,
-          'Content-Type': `multipart/form-data  boundary="${boundary}"`,
+          'Content-Type': `multipart/form-data;  boundary="${boundary}"`,
           'Accept': '*/*',
           'X-Requested-With': 'XMLHttpRequest',
           'Accept-Encoding': 'gzip, deflate, br',
