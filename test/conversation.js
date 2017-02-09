@@ -111,7 +111,7 @@ describe('conversation', function() {
     }
   )
 
-  it.only("should create a new conversation on a case with internal user recipients"
+  it("should create a new conversation on a case with internal user recipients"
     , function(done) {
 
       const verifyNock = nock(caseBlocksBaseURL, {reqheaders: {'accept': '*/*'}})
