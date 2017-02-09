@@ -108,7 +108,6 @@ class Document {
         `--${boundary}--`
       ] 
 
-
       const payload = payloadLines.join(CRLF) 
       const payloadBuffer = Buffer.from(payload) 
 
@@ -133,20 +132,15 @@ class Document {
 
         let req = https.request(requestOptions, res => {
 
-          const statusCode = res.statusCode 
-
+          const statusCode = res.statusCode
           // Accumulate the response on an external variable.
-
-          let respString = '' 
-
-          res.setEncoding('utf-8') 
-
+          let respString = ''
+          res.setEncoding('utf-8')
           res.on('data', chunk => {
             respString += chunk + '\n' 
-          }) 
+          })
 
           res.on('end', () => {
-
             if (![200, 201].includes(statusCode)) {
 
               const msg = `The document server has returned error ${statusCode}:\n` +
@@ -239,11 +233,9 @@ class Document {
   }
 
   /**
-   *
-   * @param attributes Additional attribute values that will be merged
    *  with the current ones.
-   * @param otherCaseInstance
-   * @return {Document} The instance of the new document.
+   * @param {Case} otherCaseInstance
+   * @return {Promise.<Document>} The a promise that resolves into the instance of the new document.
    */
   copyToCase(otherCaseInstance) {
 
@@ -253,7 +245,9 @@ class Document {
 
     } else {
 
-      return getDocumentCreationFromURLEndpointPath(otherCaseInstance)
+      const endPointPathPromise = getDocumentCreationFromURLEndpointPath(otherCaseInstance)
+
+      return endPointPathPromise
         .then(endPointPath =>
 
           `${Document.Caseblocks.buildUrl(endPointPath)}&` +
@@ -265,11 +259,9 @@ class Document {
           )
 
         ).then(endPointURL =>
-
           fetch(endPointURL, {
             method: 'post'
           })
-
         ).then(response => {
 
           if (response.ok) {
@@ -281,9 +273,7 @@ class Document {
 
         })
         .then(responsePayload =>
-
           new Document(responsePayload, otherCaseInstance)
-
         )
 
     }

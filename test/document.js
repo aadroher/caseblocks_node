@@ -298,12 +298,12 @@ describe.only('document', function() {
 
   })
 
-
-  describe.only('copying documents from one case to another one', function(done) {
-
-
-
-
-  })
+  //
+  // describe('copying documents from one case to another one', function(done) {
+  //
+  //
+  //
+  //
+  // })
 
 })
