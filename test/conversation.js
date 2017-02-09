@@ -88,16 +88,53 @@ describe('conversation', function() {
   )
 
 
-  it("should create a new conversation on a case with recipients"
-    // , function() {
-    //   Caseblocks.Conversation.create(new Caseblocks.Case({_id: 123}), {subject: 'test1', body: 'conv-bod', recipients: ["myemail@example.com"]}).then(function(message) {
-    //     message.attributes.id.should.equal("321")
-    //     done()
-    //   }).catch(function(err){
-    //     done(err);
-    //   });
-    // }
+  it("should create a new conversation on a case with custom recipients"
+    , function(done) {
+
+      const verifyNock = nock(caseBlocksBaseURL, {reqheaders: {'accept': '*/*'}})
+        .post('/case_blocks/messages',
+            {"message":
+              {"body":"conv-bod"
+              ,"case_id":"588b1765d94bb156f700002e"
+              ,"subject":"test1"
+              ,"recipients":[{"email":"hello@hello.com","type":"Custom","display_name":"hello@hello.com"}]
+              ,"attachments":[]}})
+        .query({auth_token: authToken})
+        .reply(200, messageReply)
+
+      Caseblocks.Conversation.create(new Caseblocks.Case({_id: "588b1765d94bb156f700002e"}), {subject: 'test1', body: 'conv-bod', recipients: ["hello@hello.com"]}).then(function(message) {
+        verifyNock.done()
+        done()
+      }).catch(function(err){
+        done(err);
+      });
+    }
   )
+
+  it.only("should create a new conversation on a case with internal user recipients"
+    , function(done) {
+
+      const verifyNock = nock(caseBlocksBaseURL, {reqheaders: {'accept': '*/*'}})
+        .post('/case_blocks/messages',
+            {"message":
+              {"body":"conv-bod"
+              ,"case_id":"588b1765d94bb156f700002e"
+              ,"subject":"test1"
+              ,"recipients":[{"id":3,"type":"Users","display_name":"Ijonas","email":"ijonas@emergeadapt.com"}]
+              ,"attachments":[]}})
+        .query({auth_token: authToken})
+        .reply(200, messageReply)
+
+      Caseblocks.Conversation.create(new Caseblocks.Case({_id: "588b1765d94bb156f700002e"}), {subject: 'test1', body: 'conv-bod', recipients: [{"id":3,"type":"Users","display_name":"Ijonas","email":"ijonas@emergeadapt.com"}]}).then(function(message) {
+        verifyNock.done()
+        done()
+      }).catch(function(err){
+        done(err);
+      });
+    }
+  )
+
+
   it("should create a new conversation on a case with attachments"
     // , function() {
     //   Caseblocks.Conversation.create(new Caseblocks.Case({_id: 123}), {subject: 'test1', body: 'conv-bod', attachments: [{filename: "a-file.pdf"}]}).then(function(message) {

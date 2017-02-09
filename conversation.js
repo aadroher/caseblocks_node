@@ -20,12 +20,17 @@ Conversation.create = function(kase, attributes) {
 
   let recipientsList = [];
   if (typeof(attributes.recipients) != 'undefined') {
-    for (let recipient in attributes.recipients){
-      recipientsList.push({
-        "email":attributes.recipients[recipient],
-        "type":"Custom",
-        "display_name":attributes.recipients[recipient]
-      });
+    for (let recipientIndex in attributes.recipients){
+      const recipient = attributes.recipients[recipientIndex]
+      if (typeof(recipient)==='object') {
+        recipientsList.push(recipient);
+      } else {
+        recipientsList.push({
+          "email":recipient,
+          "type":"Custom",
+          "display_name":recipient
+        });
+      }
     }
   }
 
