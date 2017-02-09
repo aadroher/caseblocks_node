@@ -12,7 +12,7 @@ chai.should()
 
 const caseBlocksBaseURL = 'https://test-caseblocks-location'
 
-describe('document', function() {
+describe.only('document', function() {
 
   beforeEach(function() {
     Caseblocks.setup(caseBlocksBaseURL, "tnqhvzxYaRnVt7zRWYhr")
@@ -131,7 +131,7 @@ describe('document', function() {
         .then(caseInstance => {
 
           Caseblocks.Document.fromString(
-            caseInstance.attributes.case_type_id,
+            caseInstance.attributes.case_type_id.toString(),
             caseInstance,
             helper.htmlDocumentFilename,
             helper.htmlDocumentString

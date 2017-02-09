@@ -24,8 +24,10 @@ const casePayload = JSON.parse(
 const accountId = casePayload.account_id
 const caseTypeId = casePayload.case_type_id
 const caseId = casePayload._id
-const caseResourcePath = `/case_blocks/${caseTypeName.plu}/${caseId}.json`
-const documentResourcePath = `/documents/${accountId}/${caseTypeId}/${caseId}/`
+
+
+const documentResourcePath = caseId => `/documents/${accountId}/${caseTypeId}/${caseId}/`
+const caseResourcePath = caseId => `/case_blocks/${caseTypeName.plu}/${caseId}.json`
 
 const authQuery = {
   auth_token: 'tnqhvzxYaRnVt7zRWYhr'
@@ -232,7 +234,7 @@ const getResponsePayload = ({contentType, fileName, fileContents}) => {
       pages: [],
       size: size,
       uploaded_at: new Date().toISOString(),
-      url: `${documentResourcePath}${fileName}`
+      url: `${documentResourcePath(caseId)}${fileName}`
     }
 
   }
@@ -373,7 +375,7 @@ const nockHttp = () => {
     });
 
   nock(caseBlocksBaseURL, {reqheaders: {'accept': 'application/json'}})
-    .get(caseResourcePath)
+    .get(caseResourcePath(caseId))
     .query(authQuery)
     .reply(200, {
       [caseTypeName.sing]: casePayload
@@ -383,7 +385,7 @@ const nockHttp = () => {
    * Respond with 200 + payload if OK or 400 + error message otherwise.
    */
   nock(caseBlocksBaseURL)
-    .post(documentResourcePath)
+    .post(documentResourcePath(caseId))
     .query(authQuery)
     .reply(function (uri, requestBody) {
       return processDocumentPostRequest(this.req, requestBody)
