@@ -11,29 +11,15 @@ const Headers = require('node-fetch').Headers
 const randomStringLength = 15
 const CRLF = '\r\n'
 
-const getDocumentsEndPointPath = (caseTypeId, caseInstance) => {
 
-  const accountId = caseInstance.attributes.account_id
-  const caseId = caseInstance.attributes._id
-
-  return `/documents/${accountId}/${caseTypeId}/${caseId}/`
-
-}
-
-const getDocumentCreationFromURLEndpointPath = caseInstance =>
+const getDocumentsEndPointPath = caseInstance =>
   caseInstance.caseType()
     .then(caseType =>
       `/documents/${caseInstance.attributes.account_id}/` +
-      `${caseType.id}/${caseInstance.id}/create_from_url`
+      `${caseType.id}/${caseInstance.id}/`
     )
 
-const getDocumentCreationFromURLGetQuery = (downloadURL, newFilename, host, authToken) =>
-  qs.stringify({
-    download_url: `${host}${downloadURL}?auth_token=${authToken}`,
-    file_name: newFilename
-  })
-
-const getBoundary = () => {
+const getFormBoundary = () => {
 
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
   const randomString = [...Array(randomStringLength).keys()].reduce((acc, position) =>
@@ -89,87 +75,94 @@ class Document {
 
     } else {
 
-      const documentsEndPointPath = getDocumentsEndPointPath(caseTypeId, caseInstance) 
-      const uri = Document.Caseblocks.buildUrl(documentsEndPointPath) 
+      const documentsEndPointPathPromise = getDocumentsEndPointPath(caseInstance)
 
-      const urlObject = url.parse(uri, true) 
-      const boundary = getBoundary() 
+      return documentsEndPointPathPromise
+        .then(documentsEndPointPath => {
 
-      const payloadLines = [
-        `--${boundary}`,
-        `Content-Disposition: form-data;  name="newFileName"`,
-        '',
-        `${fileName}`,
-        `--${boundary}`,
-        `Content-Disposition: form-data;  name="file";  filename="${fileName}"`,
-        `Content-Type: text/plain;  charset=utf-8`,
-        '',
-        `${contents}`,
-        `--${boundary}--`
-      ] 
+          const uri = Document.Caseblocks.buildUrl(documentsEndPointPath)
 
-      const payload = payloadLines.join(CRLF) 
-      const payloadBuffer = Buffer.from(payload) 
+          const urlObject = url.parse(uri, true)
+          const boundary = getFormBoundary()
 
-      const requestOptions = {
-        protocol: urlObject.protocol,
-        hostname: urlObject.hostname,
-        path: urlObject.path,
-        method: 'POST',
-        headers: {
-          'Content-Length': payloadBuffer.length,
-          'Content-Type': `multipart/form-data;  boundary="${boundary}"`,
-          'Accept': '*/*',
-          'X-Requested-With': 'XMLHttpRequest',
-          'Accept-Encoding': 'gzip, deflate, br',
-          'Accept-Language': 'en-US,en q=0.8',
-          'auth_token': Document.Caseblocks.token
-        },
-      } 
+          const payloadLines = [
+            `--${boundary}`,
+            `Content-Disposition: form-data;  name="newFileName"`,
+            '',
+            `${fileName}`,
+            `--${boundary}`,
+            `Content-Disposition: form-data;  name="file";  filename="${fileName}"`,
+            `Content-Type: text/plain;  charset=utf-8`,
+            '',
+            `${contents}`,
+            `--${boundary}--`
+          ]
 
-      // Here the actual action begins.
-      return new Promise((resolve, reject) => {
+          const payload = payloadLines.join(CRLF)
+          const payloadBuffer = Buffer.from(payload)
 
-        let req = https.request(requestOptions, res => {
+          const requestOptions = {
+            protocol: urlObject.protocol,
+            hostname: urlObject.hostname,
+            path: urlObject.path,
+            method: 'POST',
+            headers: {
+              'Content-Length': payloadBuffer.length,
+              'Content-Type': `multipart/form-data;  boundary="${boundary}"`,
+              'Accept': '*/*',
+              'X-Requested-With': 'XMLHttpRequest',
+              'Accept-Encoding': 'gzip, deflate, br',
+              'Accept-Language': 'en-US,en q=0.8',
+              'auth_token': Document.Caseblocks.token
+            },
+          }
 
-          const statusCode = res.statusCode
-          // Accumulate the response on an external variable.
-          let respString = ''
-          res.setEncoding('utf-8')
-          res.on('data', chunk => {
-            respString += chunk + '\n' 
+          // Here the actual action begins.
+          return new Promise((resolve, reject) => {
+
+            let req = https.request(requestOptions, res => {
+
+              const statusCode = res.statusCode
+              // Accumulate the response on an external variable.
+              let respString = ''
+              res.setEncoding('utf-8')
+              res.on('data', chunk => {
+                respString += chunk + '\n'
+              })
+
+              res.on('end', () => {
+                if (![200, 201].includes(statusCode)) {
+
+                  const msg = `The document server has returned error ${statusCode}:\n` +
+                    `${respString}`
+                  reject(new Error(msg))
+
+                } else {
+
+                  const respBodyObject = JSON.parse(respString)
+                  const document = new Document(respBodyObject, caseInstance)
+                  resolve(document)
+
+                }
+              })
+
+            })
+
+            // Bind the error to reject.
+            req.on('error', err => {
+              reject(new Error(err.message))
+            })
+
+            // Write the payload.
+            req.write(payloadBuffer)
+
+            // Mark the request as complete.
+            req.end()
+
           })
 
-          res.on('end', () => {
-            if (![200, 201].includes(statusCode)) {
 
-              const msg = `The document server has returned error ${statusCode}:\n` +
-                          `${respString}` 
-              reject(new Error(msg)) 
-
-            } else {
-
-              const respBodyObject = JSON.parse(respString) 
-              const document = new Document(respBodyObject, caseInstance) 
-              resolve(document) 
-
-            }
-          }) 
-
-        }) 
-
-        // Bind the error to reject.
-        req.on('error', err => {
-          reject(new Error(err.message)) 
-        }) 
-
-        // Write the payload.
-        req.write(payloadBuffer) 
-
-        // Mark the request as complete.
-        req.end() 
-
-      }) 
+        })
 
     }
 
@@ -235,67 +228,130 @@ class Document {
    * folder of the documents server and creates its corresponding Document instance
    * assiged to `otherCaseInstance`.
    * @param {Case} otherCaseInstance The case the copy of the document should be assigned to.
+   * @param {object} options
    * @return {Promise.<Document>} The a promise that resolves into the instance of the new Document instance.
    */
-  copyToCase(otherCaseInstance) {
+  copyToCase(otherCaseInstance, options={}) {
+
+    const optionDefaults = {
+      targetFileName: this.file_name,
+      overwriteOnFound: false
+    }
+    const finalOptions = Object.assign(optionDefaults, options)
 
     if (!Document.Caseblocks) {
 
-      throw "Must call Caseblocks.setup" 
+      throw "Must call Caseblocks.setup"
+    } else {
+
+      // First check if a file with the same name exists.
+      const documentExists = otherCaseInstance.hasDocumentWithFile(finalOptions.targetFileName)
+
+      if (documentExists && !finalOptions.overwriteOnFound) {
+
+        const msg = `Document with filename "${this.file_name}" already exists in case `
+          + `"${otherCaseInstance.attributes.title}".\n`
+          + 'If you want to overwrite the file please set the `overwriteOnFound` option to `true`.'
+
+        return Promise.reject(new Error(msg))
+
+      } else if (documentExists && finalOptions.overwriteOnFound) {
+
+        // The SDK will behave exactly as the Webclient does. Delete the file and create it anew.
+        const existingDocument = otherCaseInstance.getDocumentWithFilename(finalOptions.targetFileName)
+
+        return existingDocument.delete()
+          .then(deleted =>
+            this._createFromURL(otherCaseInstance, finalOptions)
+          )
+
+      } else {
+        return this._createFromURL(otherCaseInstance, finalOptions)
+      }
+    }
+  }
+
+  // TODO: Find another verb that is not a reserved keyword, such as `destroy`.
+  ['delete']() {
+
+    if(!Document.Caseblocks) {
+
+      throw new Error("Must call Caseblocks.setup")
 
     } else {
 
-      const endPointPathPromise = getDocumentCreationFromURLEndpointPath(otherCaseInstance)
-
-      return endPointPathPromise
-        .then(endPointPath =>
-
-          `${Document.Caseblocks.buildUrl(endPointPath)}&` +
-          getDocumentCreationFromURLGetQuery(
-            this.url,
-            this.file_name,
-            Document.Caseblocks.host,
-            Document.Caseblocks.token
-          )
-
+      const deletionEndPointPathPromise = getDocumentsEndPointPath(this.caseInstance)
+        .then(documentsEnpointPath =>
+          `${documentsEnpointPath}${this.file_name}`
         )
-        .then(endPointURL =>
-          fetch(endPointURL, {
-            method: 'post',
-            headers: {
-              'content-type': 'application/json'
-            }
+
+      return deletionEndPointPathPromise
+        .then(deletionEndPointPath =>
+          Document.Caseblocks.buildUrl(deletionEndPointPath)
+        )
+        .then(deletionURL =>
+          fetch(deletionURL, {
+            method: 'delete',
           })
         )
         .then(response => {
 
           if (response.ok) {
-            return response.json()
+            return true
           } else {
-            const msg = `Status: ${response.status} - Message: ${response.statusText}`
+            const msg = `Document with filename "${this.file_name}" on "${this.caseInstance.attributes.title}" `
+                      + 'could not be renamed.'
             throw new Error(msg)
           }
 
         })
-        .then(responsePayload =>
-          new Document(responsePayload, otherCaseInstance)
-        )
 
     }
-
   }
 
-  delete() {
 
-    if(!Document.Caseblocks) {
+  // #################
+  // "Private" methods
+  // #################
 
-      throw "Must call Caseblocks.setup" 
+  _createFromURL(caseInstance, options) {
 
-    } else {
+    const endPointPathPromise = getDocumentsEndPointPath(caseInstance)
+      .then(documentsEnpointPath =>
+        `${documentsEnpointPath}create_from_url`
+      )
 
-      throw("Not implemented Yet") 
+    const getQuery = qs.stringify({
+      download_url: `${Document.Caseblocks.host}${this.url}?auth_token=${Document.Caseblocks.token}`,
+      file_name: options.targetFileName
+    })
 
-    }
+    return endPointPathPromise
+      .then(endPointPath =>
+        `${Document.Caseblocks.buildUrl(endPointPath)}&${getQuery}`
+      )
+      .then(endPointURL =>
+        fetch(endPointURL, {
+          method: 'post',
+          headers: {
+            'content-type': 'application/json'
+          }
+        })
+      )
+      .then(response => {
+
+        if (response.ok) {
+          return response.json()
+        } else {
+          const msg = `Status: ${response.status} - Message: ${response.statusText}`
+          throw new Error(msg)
+        }
+
+      })
+      .then(responsePayload =>
+        new Document(responsePayload, caseInstance)
+      )
+
   }
 
 }
