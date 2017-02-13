@@ -19,25 +19,7 @@ const getDocumentsEndPointPath = caseInstance =>
       `${caseType.id}/${caseInstance.id}/`
     )
 
-const getDocumentCreationFromURLEndpointPath = caseInstance =>
-  getDocumentsEndPointPath(caseInstance)
-    .then(documentsEnpointPath =>
-      `${documentsEnpointPath}create_from_url`
-    )
-
-const getDocumentDeletionEndpointPath = (document) =>
-  getDocumentsEndPointPath(document.caseInstance)
-    .then(documentsEnpointPath =>
-      `${documentsEnpointPath}${document.file_name}`
-    )
-
-const getDocumentCreationFromURLGetQuery = (downloadURL, newFilename, host, authToken) =>
-  qs.stringify({
-    download_url: `${host}${downloadURL}?auth_token=${authToken}`,
-    file_name: newFilename
-  })
-
-const getBoundary = () => {
+const getFormBoundary = () => {
 
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
   const randomString = [...Array(randomStringLength).keys()].reduce((acc, position) =>
@@ -101,7 +83,7 @@ class Document {
           const uri = Document.Caseblocks.buildUrl(documentsEndPointPath)
 
           const urlObject = url.parse(uri, true)
-          const boundary = getBoundary()
+          const boundary = getFormBoundary()
 
           const payloadLines = [
             `--${boundary}`,
@@ -252,20 +234,18 @@ class Document {
   copyToCase(otherCaseInstance, options={}) {
 
     const optionDefaults = {
-      newFileName: this.file_name,
+      targetFileName: this.file_name,
       overwriteOnFound: false
     }
-
     const finalOptions = Object.assign(optionDefaults, options)
 
     if (!Document.Caseblocks) {
 
-      throw "Must call Caseblocks.setup" 
-
+      throw "Must call Caseblocks.setup"
     } else {
 
       // First check if a file with the same name exists.
-      const documentExists = otherCaseInstance.hasDocument(this)
+      const documentExists = otherCaseInstance.hasDocumentWithFile(finalOptions.targetFileName)
 
       if (documentExists && !finalOptions.overwriteOnFound) {
 
@@ -278,54 +258,17 @@ class Document {
       } else if (documentExists && finalOptions.overwriteOnFound) {
 
         // The SDK will behave exactly as the Webclient does. Delete the file and create it anew.
-        const existingDocument = otherCaseInstance.documents().find(document =>
-          document.file_name === this.file_name
-        )
+        const existingDocument = otherCaseInstance.getDocumentWithFilename(finalOptions.targetFileName)
 
         return existingDocument.delete()
+          .then(deleted =>
+            this._createFromURL(otherCaseInstance, finalOptions)
+          )
 
       } else {
-
-        const endPointPathPromise = getDocumentCreationFromURLEndpointPath(otherCaseInstance)
-
-        return endPointPathPromise
-          .then(endPointPath =>
-
-            `${Document.Caseblocks.buildUrl(endPointPath)}&` +
-            getDocumentCreationFromURLGetQuery(
-              this.url,
-              finalOptions.newFileName,
-              Document.Caseblocks.host,
-              Document.Caseblocks.token
-            )
-
-          )
-          .then(endPointURL =>
-            fetch(endPointURL, {
-              method: 'post',
-              headers: {
-                'content-type': 'application/json'
-              }
-            })
-          )
-          .then(response => {
-
-            if (response.ok) {
-              return response.json()
-            } else {
-              const msg = `Status: ${response.status} - Message: ${response.statusText}`
-              throw new Error(msg)
-            }
-
-          })
-          .then(responsePayload =>
-            new Document(responsePayload, otherCaseInstance)
-          )
-
+        return this._createFromURL(otherCaseInstance, finalOptions)
       }
-
     }
-
   }
 
   // TODO: Find another verb that is not a reserved keyword, such as `destroy`.
@@ -337,7 +280,10 @@ class Document {
 
     } else {
 
-      const deletionEndPointPathPromise = getDocumentDeletionEndpointPath(this)
+      const deletionEndPointPathPromise = getDocumentsEndPointPath(this.caseInstance)
+        .then(documentsEnpointPath =>
+          `${documentsEnpointPath}${this.file_name}`
+        )
 
       return deletionEndPointPathPromise
         .then(deletionEndPointPath =>
@@ -351,16 +297,11 @@ class Document {
         .then(response => {
 
           if (response.ok) {
-
             return true
-
           } else {
-
             const msg = `Document with filename "${this.file_name}" on "${this.caseInstance.attributes.title}" `
                       + 'could not be renamed.'
-
             throw new Error(msg)
-
           }
 
         })
@@ -373,8 +314,45 @@ class Document {
   // "Private" methods
   // #################
 
+  _createFromURL(caseInstance, options) {
 
+    const endPointPathPromise = getDocumentsEndPointPath(caseInstance)
+      .then(documentsEnpointPath =>
+        `${documentsEnpointPath}create_from_url`
+      )
 
+    const getQuery = qs.stringify({
+      download_url: `${Document.Caseblocks.host}${this.url}?auth_token=${Document.Caseblocks.token}`,
+      file_name: options.targetFileName
+    })
+
+    return endPointPathPromise
+      .then(endPointPath =>
+        `${Document.Caseblocks.buildUrl(endPointPath)}&${getQuery}`
+      )
+      .then(endPointURL =>
+        fetch(endPointURL, {
+          method: 'post',
+          headers: {
+            'content-type': 'application/json'
+          }
+        })
+      )
+      .then(response => {
+
+        if (response.ok) {
+          return response.json()
+        } else {
+          const msg = `Status: ${response.status} - Message: ${response.statusText}`
+          throw new Error(msg)
+        }
+
+      })
+      .then(responsePayload =>
+        new Document(responsePayload, caseInstance)
+      )
+
+  }
 
 }
 

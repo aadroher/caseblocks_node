@@ -27,7 +27,8 @@ Caseblocks.Case.get('complaint', '589b07cf64e69638b8000016')
       .then(complaint1 =>
 
         sourceDoument.copyToCase(complaint1, {
-          overwriteOnFound: true
+          overwriteOnFound: true,
+          targetFileName: 'some_file_name1.jpg'
         })
 
       )

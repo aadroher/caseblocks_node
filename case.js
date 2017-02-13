@@ -506,10 +506,14 @@ class Case {
 
   }
 
-  hasDocument(document) {
-    return this.documents().some(caseDocument =>
-      caseDocument.file_name === document.file_name
+  getDocumentWithFilename(filename) {
+    return this.documents().find(caseDocument =>
+      caseDocument.file_name === filename
     )
+  }
+
+  hasDocumentWithFile(filename) {
+    return !!this.getDocumentWithFilename(filename)
   }
 
   // TODO: Do not use a reserved word.
