@@ -89,6 +89,30 @@ describe('document', function() {
 
   })
 
+  describe("deleting documents", function() {
+
+    it("deletes an existing document", function(done) {
+
+      helper.nockHttp('case_type')
+      helper.nockHttp('luke')
+
+      Caseblocks.Case.get(helper.peopleCaseTypeNames.code, helper.luke._id)
+        .then(lukeCase => {
+
+          const mockedEndpoint = helper.nockHttp('delete')
+          return lukeCase.documents().pop().delete()
+            .then(deleted => {
+              deleted.should.be.true
+              const endpointTouched = mockedEndpoint.isDone()
+              endpointTouched.should.be.true
+              done()
+            })
+        })
+
+    })
+
+  })
+
   describe("renaming documents", function() {
 
     // TODO: Implement this.

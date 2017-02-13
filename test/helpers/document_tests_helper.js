@@ -36,6 +36,8 @@ const hanCaseId = han._id
 
 const caseDocumentsFolderPath = caseId => `/documents/${accountId}/${caseTypeId}/${caseId}/`
 const documentCreationByURLPath = caseId => `/documents/${accountId}/${caseTypeId}/${caseId}/create_from_url`
+const documentDeletionPath = caseId =>
+  `/documents/${accountId}/${caseTypeId}/${caseId}/${letterFromAnakinDocument.file_name}`
 
 const caseResourcePath = caseId => `/case_blocks/${peopleCaseTypeNames.code}/${caseId}.json`
 const personCaseTypeResourcePath = caseTypeId => `/case_blocks/case_types/${caseTypeId}.json`
@@ -278,47 +280,59 @@ const nockHttp = action => {
   switch(action) {
     case 'case_type':
       // Case Types
-      nock(caseBlocksBaseURL)
+      return nock(caseBlocksBaseURL)
         .get(personCaseTypeResourcePath(peopleCaseType.id))
         .query(authQuery)
         .reply(200, {
           case_type: peopleCaseType
         })
-      break
 
     case 'luke':
-      nock(caseBlocksBaseURL)
+      return nock(caseBlocksBaseURL)
         .get(caseResourcePath(lukeCaseId))
         .query(authQuery)
         .reply(200, {
           [peopleCaseTypeNames.code]: luke
         })
-      break
 
     case 'han':
-      nock(caseBlocksBaseURL)
+      return nock(caseBlocksBaseURL)
         .get(caseResourcePath(hanCaseId))
         .query(authQuery)
         .reply(200, {
           [peopleCaseTypeNames.code]: han
         })
-      break
+
+    case 'delete':
+      return nock(caseBlocksBaseURL)
+        .delete(documentDeletionPath(lukeCaseId))
+        .query(authQuery)
+        .reply(204)
 
     case 'post_vader_letter':
       /**
        * Respond with 200 + payload if OK or 400 + error message otherwise.
        */
-      nock(caseBlocksBaseURL)
+      return nock(caseBlocksBaseURL)
         .post(caseDocumentsFolderPath(lukeCaseId))
         .query(authQuery)
         .reply(function (uri, requestBody) {
           return processDocumentFormPostRequest(this.req, requestBody)
         })
-      break
 
     case 'copy_letter_from_luke_to_han':
-      nockHttp('case_type')
-      nock(caseBlocksBaseURL)
+      return nockHttp('case_type')
+        .post(documentCreationByURLPath(hanCaseId))
+        .query(receivedQuery =>
+          Object.assign(
+            authQuery,
+            documentCreationByURLQuery(lukeCaseId, letterFromAnakinDocument.file_name)
+          )
+        )
+        .reply(200, letterFromAnakinDocument)
+
+    case 'copy_existing_letter_from_luke_to_han':
+      return nockHttp('case_type')
         .post(documentCreationByURLPath(hanCaseId))
         .query(receivedQuery =>
           Object.assign(
@@ -331,7 +345,7 @@ const nockHttp = action => {
 
     case 'cleanup':
     default:
-      nock.cleanAll()
+      return nock.cleanAll()
   }
 
 }
