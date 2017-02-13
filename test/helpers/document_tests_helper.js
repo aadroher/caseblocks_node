@@ -27,6 +27,9 @@ const peopleCaseTypeNames = {
 
 const han = people[0]
 const luke = people[1]
+const hanWithDocument = Object.assign({}, han, {
+  _documents: luke._documents
+})
 const letterFromAnakinDocument = luke._documents[0]
 
 const accountId = luke.account_id
@@ -333,6 +336,14 @@ const nockHttp = action => {
 
     case 'copy_existing_letter_from_luke_to_han':
       return nockHttp('case_type')
+        .get(caseResourcePath(hanCaseId))
+        .query(authQuery)
+        .reply(200, {
+          [peopleCaseTypeNames.code]: hanWithDocument
+        })
+        .delete(documentDeletionPath(hanCaseId))
+        .query(authQuery)
+        .reply(204)
         .post(documentCreationByURLPath(hanCaseId))
         .query(receivedQuery =>
           Object.assign(
