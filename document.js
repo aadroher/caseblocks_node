@@ -25,8 +25,8 @@ const getDocumentCreationFromURLEndpointPath = caseInstance =>
       `${documentsEnpointPath}create_from_url`
     )
 
-const getDocumentDeletionEndpointPath = (caseInstance, document) =>
-  getDocumentsEndPointPath(caseInstance)
+const getDocumentDeletionEndpointPath = (document) =>
+  getDocumentsEndPointPath(document.caseInstance)
     .then(documentsEnpointPath =>
       `${documentsEnpointPath}${document.file_name}`
     )
@@ -282,34 +282,7 @@ class Document {
           document.file_name === this.file_name
         )
 
-        const deletionEndPointPathPromise = getDocumentDeletionEndpointPath(otherCaseInstance, existingDocument)
-
-        return deletionEndPointPathPromise
-          .then(deletionEndPointPath =>
-            Document.Caseblocks.buildUrl(deletionEndPointPath)
-          )
-          .then(deletionURL =>
-            fetch(deletionURL, {
-              method: 'delete',
-            })
-          )
-          .then(response => {
-
-            if (response.ok) {
-
-              return response.status
-
-            } else {
-
-              const msg = `Document with filename "${this.file_name}" on "${otherCaseInstance.attributes.title}" `
-                        + 'could not be renamed.'
-
-              throw new Error(msg)
-
-            }
-
-          })
-
+        return existingDocument.delete()
 
       } else {
 
@@ -355,15 +328,42 @@ class Document {
 
   }
 
-  delete() {
+  // TODO: Find another verb that is not a reserved keyword, such as `destroy`.
+  ['delete']() {
 
     if(!Document.Caseblocks) {
 
-      throw "Must call Caseblocks.setup" 
+      throw new Error("Must call Caseblocks.setup")
 
     } else {
 
-      throw("Not implemented Yet") 
+      const deletionEndPointPathPromise = getDocumentDeletionEndpointPath(this)
+
+      return deletionEndPointPathPromise
+        .then(deletionEndPointPath =>
+          Document.Caseblocks.buildUrl(deletionEndPointPath)
+        )
+        .then(deletionURL =>
+          fetch(deletionURL, {
+            method: 'delete',
+          })
+        )
+        .then(response => {
+
+          if (response.ok) {
+
+            return true
+
+          } else {
+
+            const msg = `Document with filename "${this.file_name}" on "${this.caseInstance.attributes.title}" `
+                      + 'could not be renamed.'
+
+            throw new Error(msg)
+
+          }
+
+        })
 
     }
   }
@@ -373,9 +373,6 @@ class Document {
   // "Private" methods
   // #################
 
-  _deleteExistingDocument(otherCase) {
-
-  }
 
 
 
