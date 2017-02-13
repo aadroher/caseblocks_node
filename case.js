@@ -506,6 +506,12 @@ class Case {
 
   }
 
+  hasDocument(document) {
+    return this.documents().some(caseDocument =>
+      caseDocument.file_name === document.file_name
+    )
+  }
+
   // TODO: Do not use a reserved word.
   ['delete']() {
 

@@ -103,6 +103,7 @@ describe('document', function() {
 
     it('should resolve into a document instance', function (done) {
 
+      helper.nockHttp('case_type')
       helper.nockHttp('luke')
 
       const caseTypeName = helper.peopleCaseTypeNames
@@ -137,6 +138,7 @@ describe('document', function() {
 
     it('should resolve into the correct metadata object', function(done) {
 
+      helper.nockHttp('case_type')
       helper.nockHttp('luke')
 
       const caseTypeName = helper.peopleCaseTypeNames
@@ -194,6 +196,7 @@ describe('document', function() {
 
     it('should include a correct representation of the case instance', function (done) {
 
+      helper.nockHttp('case_type')
       helper.nockHttp('luke')
 
       const caseTypeName = helper.peopleCaseTypeNames
