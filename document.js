@@ -228,8 +228,16 @@ class Document {
    * folder of the documents server and creates its corresponding Document instance
    * assiged to `otherCaseInstance`.
    * @param {Case} otherCaseInstance The case the copy of the document should be assigned to.
-   * @param {object} options
-   * @return {Promise.<Document>} The a promise that resolves into the instance of the new Document instance.
+   * @param {object} options a plain object whose attributes modify the operations of this function:
+   *  - `{string} targetFilename` The name the file copied should have in the destination case folder.
+   *    Its default value is the name of the source file (`this.file_name`). It should include the file name extension.
+   *  - `{boolean} overwriteOnFound` `true` if the file contents of a destination file with the same
+   *    name are to be overwritten by the ones of the document being copied. Its default value is `false`.
+   * @return {Promise.<Document>} A promise that resolves into the instance of the new instance of `Document`
+   *  attached to `caseInstance`, whose file contents are a copy of the ones found in `this`.
+   *  The promise is rejected if an error occurred at any of the stages of the operation it implements
+   *  or if `caseInstance.documents().some(d => d.file_name === options.targetFilename)`
+   *  and `options.overwriteOnFound === false`.
    */
   copyToCase(otherCaseInstance, options={}) {
 
@@ -273,6 +281,12 @@ class Document {
   }
 
   // TODO: Find another verb that is not a reserved keyword, such as `destroy`.
+  /**
+   * Deletes both de document instance and the file in the server it represents.
+   * @return {Promise.<boolean>} A promise that resolves into `True` if and only if the document instance
+   *  has been successfully deleted.
+   * @throws {Error} When the deletion was not successful.
+   */
   ['delete']() {
 
     if(!Document.Caseblocks) {

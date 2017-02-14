@@ -395,6 +395,64 @@ Caseblocks.Case.get("support_requests", "case-with-documents")
     });
 ```
 
+### `delete()`
+
+- returns: `{Promise.<boolean>}` A promise that resolves into `True` if and only if the document instance has been successfully deleted.
+- throws: `{Error}` When the deletion was not successful. 
+
+Deletes both de document instance and the file in the server it represents.
+
+```javascript
+Caseblocks.Case.get('classified_files', '09eef94cbc3k70046000da1')
+    .then(classifiedFile => 
+        classifiedFile.delete()    
+    )
+    .then(deleted => {
+        if (deleted) {
+            const msg = `Classified file "${classifiedFile}" has been deleted.`
+            console.log(msg)
+        }
+    })
+    .catch(err => {
+      // Handle error
+    })
+```
+
+### `copyToCase(caseInstance, options)`
+
+- arguments:
+    - `{Case} caseInstance` the case to which attach a copy of the file that the document instance represents.
+    - `{object} options` a plain object whose attributes modify the operations of this function:
+        - `{string} targetFilename` The name the file copied should have in the destination case folder. Its default value is the name of the source file (`this.file_name`). It should include the file name extension. 
+        - `{boolean} overwriteOnFound` `true` if the file contents of a destination file with the same name are to be overwritten by the ones of the document being copied. Its default value is `false`. 
+- returns: `{Promise.<Document>}` A promise that resolves into the instance of the new instance of `Document` attached to `caseInstance`, whose file contents are a copy of the ones found in `this`. The promise is rejected if an error occurred at any of the stages of the operation it implements or if `caseInstance.documents().some(d => d.file_name === options.targetFilename)` _and_ `options.overwriteOnFound === false`. 
+
+Copies the `Document` instance that this method is called upon and attaches it to the target `Case` instance, copying as well the contents of the file this it represents. 
+
+```javascript
+Caseblocks.Case.get('capulet_members', '82aef94cbc3d70046000da1')
+    .then(juliet => 
+        Caseblocks.Case.get('montague_members', '09eef94cbc3k70046000da1')
+            .then(romeo => {
+                const document = juliet.documents().find(
+                    document => document.file_name ==== 'desperate_love_letter.md'
+                )
+                return document.copyToCase(romeo, {
+                    newFileName: 'letter_from_juliet.md'
+                })
+            })        
+    )
+    .then(newDocument => {
+        // At this point newDocument belongs to romeo and represents a file attached
+        // to this case with name 'letter_from_juliet.md' and the same contents
+        // as the original 'desperate_love_letter.md' file that is still attached
+        // to the juliet case.  
+    })
+    .catch(err => {
+        // Handle error
+    })
+```           
+
 ## Tasklist
 
 ### Class Methods

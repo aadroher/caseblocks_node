@@ -361,16 +361,12 @@ const nockHttp = action => {
         )
         .reply(200, letterFromAnakinDocument)
 
-      break
-
     case 'cleanup':
     default:
       return nock.cleanAll()
   }
 
 }
-
-
 
 module.exports = {
   nockHttp,
