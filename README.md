@@ -723,6 +723,10 @@ Sends an email using a mandrill template.  The first parameter is a string that 
 
 This data will then be used with the fields in the mandrill template to render the email.
 
+## Conversation
+
+The conversation object methods 
+
 ## Tests
 
 ### Writing
