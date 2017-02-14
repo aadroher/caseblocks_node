@@ -242,6 +242,7 @@ class Document {
     if (!Document.Caseblocks) {
 
       throw "Must call Caseblocks.setup"
+
     } else {
 
       // First check if a file with the same name exists.

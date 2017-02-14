@@ -358,7 +358,7 @@ describe('document', function() {
 
   })
 
-  describe.only('copying documents from one case to another', function() {
+  describe('copying documents from one case to another', function() {
 
     it('should create a new instance of Document with the same attributes', function(done) {
 
@@ -405,20 +405,20 @@ describe('document', function() {
 
     it("should throw an exception if trying to overwrite with default options", function(done) {
 
-      helper.nockHttp('case_type')
       helper.nockHttp('luke')
 
       Caseblocks.Case.get(helper.peopleCaseTypeNames.code, helper.luke._id)
         .then(lukeCase => {
 
-          helper.nockHttp('case_type')
-          helper.nockHttp('han')
+          helper.nockHttp('han_with_document')
 
           Caseblocks.Case.get(helper.peopleCaseTypeNames.code, helper.han._id)
             .then(hanCase => {
+
               helper.nockHttp('copy_existing_letter_from_luke_to_han')
 
-              lukeCase.documents().pop().copyToCase(hanCase)
+              return lukeCase.documents().pop().copyToCase(hanCase)
+
             })
             .catch(err => {
               err.should.be.an.instanceOf(Error)
@@ -431,23 +431,24 @@ describe('document', function() {
 
     it("should overwrite the file if specified in the options", function(done) {
 
-      helper.nockHttp('case_type')
       helper.nockHttp('luke')
 
       Caseblocks.Case.get(helper.peopleCaseTypeNames.code, helper.luke._id)
         .then(lukeCase => {
 
-          const mockedEndpoint = helper.nockHttp('copy_existing_letter_from_luke_to_han')
+          helper.nockHttp('han_with_document')
 
           Caseblocks.Case.get(helper.peopleCaseTypeNames.code, helper.han._id)
-            .then(hanCase =>
-              lukeCase.documents().pop().copyToCase(hanCase, {
-                overwriteOnFound: true
-              })
-            )
-            .then(_ => {
-              mockedEndpoint.isDone().should.be.true
-              done()
+            .then(hanCase => {
+              const mockedEndpoint = helper.nockHttp('copy_existing_letter_from_luke_to_han')
+              return lukeCase.documents().pop()
+                .copyToCase(hanCase, {
+                  overwriteOnFound: true
+                })
+                .then(_ => {
+                  mockedEndpoint.isDone().should.be.true
+                  done()
+                })
             })
 
         })
