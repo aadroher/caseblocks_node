@@ -725,7 +725,57 @@ This data will then be used with the fields in the mandrill template to render t
 
 ## Conversation
 
-The conversation object methods 
+The conversation object methods allow the creation of messages attached to a particular case.
+
+#### `create(caseInstance, attributes)`
+
+- arguments:
+    - `{Case} caseInstance` the case this conversation should be attached to.
+    - `{object} attributes` a plain object with the data to create the conversation to attach to `caseInstance`. The attributes of this object are:
+        - `{string} body` The contents of the message to post.
+        - `{string} subject` The contents to show as the _subject_ of the message.
+        - `{[object|string]} recipients` An array of values that represent the recipients of the message. Each of its elements may take one of the 2 following values:
+            - If it is an `object`, it must have the following attributes:
+                - `{string} email` The email address of the recipient.
+                - `{string} display_name` The name of the recipient.
+                - `{string} type` One of the following 3 values: {`'Users'`, `'Teams'`, `'Custom'`}, which mean the following:
+                    - `'Users'` refers to a recipient that is registered as one of the CaseBlocks account users. Setting this attribute to this value will default to sending the email message with the `internal_conversation` template. 
+                    - `'Teams'` refers to a recipient that is a team, that is, a group of the account's CaseBlocks users. Setting this attribute to this value will default to sending the email message with the `internal_conversation` template.
+                    -  `'Custom'` refers to a recipient that is not registered as one of the account's CaseBlocks users. Setting this attribute to this value will default to sending the email message with the `external_conversation` template.
+            - If it is a `string` it must be the email address of the recipient. In this case, the `diplay_name` used will be the email address itself and the `type` value of the recipient will be `'Custom'`. 
+        - `{[string]} attachments` A list of `Document` instances' ids from those that belong to the `caseInstance`, which will be referenced as an attachment to the conversation message.
+        - `{string} author_id` The id of the user on whose behalf this message should be posted.        
+
+- returns: `{Promise.<object>}` A promise that resolves into a an object that represents the `JSON` payload returned by the server, which contains information on the execution of the request.
+
+Creates a conversation and attaches it to a case.
+
+```javascript
+Caseblocks.Case.get('secret_agents', '09eef94cbc39370046000da1')
+    .then(caseInstance => {
+        const conversationAttributes = {
+            body: '<p>I have doubts about her loyalty.</p>'
+            subject: 'I have some doubts.'
+            recipients: [
+                {
+                    display_name: The Boss
+                    email: theboss@centralintelligence.gov,
+                    type: 'Users' 
+                },
+                'someotherspy@someotheragency.gov'           
+            ],
+            attachments: [],
+            author_id: currentUser.id           
+        }
+        return Conversation.create(caseInstance, conversationAttributes)    
+    })
+    .then(response => {
+        // Handle response
+    })
+    .catch(err => {  
+        // Handle error
+    })
+```    
 
 ## Tests
 
