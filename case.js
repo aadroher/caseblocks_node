@@ -506,6 +506,16 @@ class Case {
 
   }
 
+  getDocumentWithFilename(filename) {
+    return this.documents().find(caseDocument =>
+      caseDocument.file_name === filename
+    )
+  }
+
+  hasDocumentWithFile(filename) {
+    return !!this.getDocumentWithFilename(filename)
+  }
+
   // TODO: Do not use a reserved word.
   ['delete']() {
 
