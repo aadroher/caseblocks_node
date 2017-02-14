@@ -1,5 +1,4 @@
 const fetch = require('node-fetch')
-const Headers = require('node-fetch').Headers
 const inflection = require( 'inflection' );
 const _ = require('underscore')
 
@@ -64,10 +63,10 @@ Conversation.create = function(kase, attributes) {
     }
   };
 
-  if (typeof(attributes.internal_template)!==undefined) {
+  if (typeof(attributes.internal_template) !== 'undefined') {
     conversationMessage['internal_template'] = attributes.internal_template
   }
-  if (typeof(attributes.external_template)!==undefined) {
+  if (typeof(attributes.external_template) !== 'undefined') {
     conversationMessage['external_template'] = attributes.external_template
   }
 
