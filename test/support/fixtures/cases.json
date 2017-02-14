@@ -60,7 +60,17 @@
       187
     ],
     "version": 1,
-    "_documents": [],
+    "_documents": [
+      {
+        "_id": "589b437d64e6963e1e000003",
+        "content_type": "application/x-tex",
+        "extension": ".tex",
+        "file_name": "letter_from_vader.tex",
+        "size": "134167",
+        "uploaded_at": "2016-09-30T23:10:10.354Z",
+        "url": "/documents/21/15/584ebea2f859b1bef62b06f5/letter_from_vader.tex"
+      }
+    ],
     "collection": null,
     "_unread_messages": 4,
     "_no_messages": 4,

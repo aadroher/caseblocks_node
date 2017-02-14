@@ -16,74 +16,107 @@ describe('document', function() {
 
   beforeEach(function() {
     Caseblocks.setup(caseBlocksBaseURL, "tnqhvzxYaRnVt7zRWYhr")
+  })
 
-    helper.nockHttp()
-  });
+  afterEach(function() {
+    helper.nockHttp('cleanup')
+  })
 
   describe("loading documents from cases", function() {
 
     it("should have the correct id", function(done) {
-      Caseblocks.Case.get("support_requests", "case-with-documents").then(function(kase) {
-        docs = kase.documents()
-        docs[0].id.should.equal("573af74181e9a82979000008")
-        done();
-      }).catch(function(err){
-        console.error(err);
-        done(err);
-      });
+
+      helper.nockHttp('luke')
+
+      const caseTypeName = helper.peopleCaseTypeNames
+
+      Caseblocks.Case.get(caseTypeName.code, helper.luke._id)
+        .then(lukeCase => {
+
+          const documents = lukeCase.documents()
+          documents[0].id.should.equal(helper.luke._documents[0]._id)
+          done()
+
+        })
+        .catch(err => {
+          console.error(err)
+          done(err)
+        });
 
     })
 
     it("should have the correct filename", function(done) {
-      Caseblocks.Case.get("support_requests", "case-with-documents").then(function(kase) {
-        docs = kase.documents()
-        docs[0].id.should.equal("573af74181e9a82979000008")
-        done();
-      }).catch(function(err){
-        console.error(err);
-        done(err);
-      });
+
+      helper.nockHttp('luke')
+
+      const caseTypeName = helper.peopleCaseTypeNames
+
+      Caseblocks.Case.get(caseTypeName.code, helper.luke._id)
+        .then(lukeCase => {
+
+          const documents = lukeCase.documents()
+          documents[0].file_name.should.equal(helper.luke._documents[0].file_name)
+          done()
+
+        })
+        .catch(err => {
+          console.error(err)
+          done(err)
+        });
+
     })
 
     it("should have the correct filename", function(done) {
-      Caseblocks.Case.get("support_requests", "case-with-documents").then(function(kase) {
-        docs = kase.documents()
-        docs[0].caseInstance.should.equal(kase)
-        done();
-      }).catch(function(err){
-        console.error(err);
-        done(err);
-      });
+
+      helper.nockHttp('luke')
+
+      const caseTypeName = helper.peopleCaseTypeNames
+
+      Caseblocks.Case.get(caseTypeName.code, helper.luke._id)
+        .then(lukeCase => {
+
+          const documents = lukeCase.documents()
+          documents.length.should.equal(1)
+          done()
+
+        })
+        .catch(err => {
+          console.error(err)
+          done(err)
+        });
+
     })
 
-    it("should load all documents", function(done) {
-      Caseblocks.Case.get("support_requests", "case-with-documents").then(function(kase) {
-        docs = kase.documents()
-        docs.length.should.equal(1)
-        done();
-      }).catch(function(err){
-        console.error(err);
-        done(err);
-      });
+  })
+
+  describe("deleting documents", function() {
+
+    it("deletes an existing document", function(done) {
+
+      helper.nockHttp('case_type')
+      helper.nockHttp('luke')
+
+      Caseblocks.Case.get(helper.peopleCaseTypeNames.code, helper.luke._id)
+        .then(lukeCase => {
+
+          const mockedEndpoint = helper.nockHttp('delete')
+          lukeCase.documents().pop().delete()
+            .then(deleted => {
+              deleted.should.be.true
+              const endpointTouched = mockedEndpoint.isDone()
+              endpointTouched.should.be.true
+              done()
+            })
+        })
+
     })
 
   })
 
   describe("renaming documents", function() {
 
-    it("renames document on document server", function(done) {
-      Caseblocks.Case.get("support_requests", "case-with-documents").then(function(kase) {
-        docs = kase.documents()
-        docs[0].rename("new-filename.pdf").then(function(doc) {
-          doc.file_name.should.equal("new-filename.pdf")
-          done();
-        }).catch(function(err){
-          done(err);
-        })
-      }).catch(function(err){
-        done(err);
-      })
-    })
+    // TODO: Implement this.
+    it("renames document on document server")
 
     // TODO: Implement this.
     it("renames document fields on case")
@@ -94,14 +127,19 @@ describe('document', function() {
 
     it('should resolve into a document instance', function (done) {
 
-      const caseTypeName = helper.caseTypeName
-      const casePayload = helper.casePayload
+      helper.nockHttp('case_type')
+      helper.nockHttp('luke')
 
-      Caseblocks.Case.get(caseTypeName.plu, casePayload._id)
+      const caseTypeName = helper.peopleCaseTypeNames
+      const casePayload = helper.luke
+
+      Caseblocks.Case.get(caseTypeName.code, casePayload._id)
         .then(caseInstance => {
 
+          helper.nockHttp('post_vader_letter')
+
           Caseblocks.Document.fromString(
-            caseInstance.attributes.case_type_id,
+            helper.peopleCaseType.id.toString(),
             caseInstance,
             helper.htmlDocumentFilename,
             helper.htmlDocumentString
@@ -124,20 +162,25 @@ describe('document', function() {
 
     it('should resolve into the correct metadata object', function(done) {
 
-      const caseTypeName = helper.caseTypeName
-      const casePayload = helper.casePayload
+      helper.nockHttp('case_type')
+      helper.nockHttp('luke')
 
-      Caseblocks.Case.get(caseTypeName.plu, casePayload._id)
+      const caseTypeName = helper.peopleCaseTypeNames
+      const casePayload = helper.luke
+
+      Caseblocks.Case.get(caseTypeName.code, casePayload._id)
         .then(caseInstance => {
 
+          helper.nockHttp('post_vader_letter')
+
           Caseblocks.Document.fromString(
-            caseInstance.attributes.case_type_id,
+            helper.peopleCaseType.id.toString(),
             caseInstance,
             helper.htmlDocumentFilename,
             helper.htmlDocumentString
           ).then(document => {
 
-            const caseTypeId = caseInstance.attributes.case_type_id
+            const caseTypeId = helper.peopleCaseType.id
             const documentResourcePath = `/documents/${casePayload.account_id}/${caseTypeId}/${casePayload._id}/`
 
             const filenameChunks = helper.htmlDocumentFilename.split('.')
@@ -177,14 +220,19 @@ describe('document', function() {
 
     it('should include a correct representation of the case instance', function (done) {
 
-      const caseTypeName = helper.caseTypeName
-      const casePayload = helper.casePayload
+      helper.nockHttp('case_type')
+      helper.nockHttp('luke')
 
-      Caseblocks.Case.get(caseTypeName.plu, casePayload._id)
+      const caseTypeName = helper.peopleCaseTypeNames
+      const casePayload = helper.luke
+
+      Caseblocks.Case.get(caseTypeName.code, casePayload._id)
         .then(caseInstance => {
 
+          helper.nockHttp('post_vader_letter')
+
           Caseblocks.Document.fromString(
-            caseInstance.attributes.case_type_id,
+            helper.peopleCaseType.id.toString(),
             caseInstance,
             helper.htmlDocumentFilename,
             helper.htmlDocumentString
@@ -208,8 +256,7 @@ describe('document', function() {
 
     it('should raise and error if case instance is not well formed', function() {
 
-      const caseTypeName = helper.caseTypeName
-      const casePayload = helper.casePayload
+      helper.nockHttp('post_vader_letter')
 
       const wrongCaseInstance = {
         attributes: {
@@ -220,9 +267,8 @@ describe('document', function() {
         }
       }
 
-
       Caseblocks.Document.fromString(
-        casePayload.case_type_id,
+        helper.peopleCaseType.id.toString(),
         wrongCaseInstance,
         helper.htmlDocumentFilename,
         helper.htmlDocumentString
@@ -233,13 +279,17 @@ describe('document', function() {
 
     it('should raise and error if case type ID is not valid', function() {
 
-      const caseTypeName = helper.caseTypeName
-      const casePayload = helper.casePayload
+      helper.nockHttp('luke')
+
+      const caseTypeName = helper.peopleCaseTypeNames
+      const casePayload = helper.luke
 
       const wrongCaseTypeId = '(╯°□°)╯︵ ┻━┻'
 
-      return Caseblocks.Case.get(caseTypeName.plu, casePayload._id)
+      Caseblocks.Case.get(caseTypeName.code, casePayload._id)
         .then(caseInstance => {
+
+          helper.nockHttp('post_vader_letter')
 
           return Caseblocks.Document.fromString(
             wrongCaseTypeId,
@@ -254,47 +304,157 @@ describe('document', function() {
 
     it('should raise and error if account ID is not valid', function() {
 
-      const caseTypeName = helper.caseTypeName
-      const casePayload = helper.casePayload
+      helper.nockHttp('luke')
+
+      const caseTypeName = helper.peopleCaseTypeNames
+      const casePayload = helper.luke
 
       const wrongAccountId = '(╯°□°)╯︵ ┻━┻'
 
-      return Caseblocks.Case.get(caseTypeName.plu, casePayload._id)
+      Caseblocks.Case.get(caseTypeName.code, casePayload._id)
         .then(caseInstance => {
+
+          helper.nockHttp('post_vader_letter')
+
           return Caseblocks.Document.fromString(
-                  caseInstance.attributes.case_type_id,
+                  helper.peopleCaseType.id.toString(),
                   Object.assign(caseInstance.attributes,{
                     account_id: wrongAccountId
                   }),
                   helper.htmlDocumentFilename,
                   helper.htmlDocumentString
                 )
+
         }).should.be.rejectedWith(Error)
 
     })
 
     it('should raise and error if case ID is not valid', function() {
 
-      const caseTypeName = helper.caseTypeName
-      const casePayload = helper.casePayload
+      helper.nockHttp('luke')
+
+      const caseTypeName = helper.peopleCaseTypeNames
+      const casePayload = helper.luke
 
       const wrongCaseId = '(╯°□°)╯︵ ┻━┻'
 
-      return Caseblocks.Case.get(caseTypeName.plu, casePayload._id)
+      Caseblocks.Case.get(caseTypeName.code, casePayload._id)
         .then(caseInstance => {
 
-            return Caseblocks.Document.fromString(
-              caseInstance.attributes.case_type_id,
-              Object.assign(caseInstance.attributes,{
-                _id: wrongCaseId,
-              }),
-              helper.htmlDocumentFilename,
-              helper.htmlDocumentString
-            )
+          helper.nockHttp('post_vader_letter')
+
+          return Caseblocks.Document.fromString(
+            helper.peopleCaseType.id.toString(),
+            Object.assign(caseInstance.attributes,{
+              _id: wrongCaseId,
+            }),
+            helper.htmlDocumentFilename,
+            helper.htmlDocumentString
+          )
 
         }).should.be.rejectedWith(Error)
 
     })
 
   })
+
+  describe('copying documents from one case to another', function() {
+
+    it('should create a new instance of Document with the same attributes', function(done) {
+
+      helper.nockHttp('luke')
+
+      const caseTypeName = helper.peopleCaseTypeNames
+
+      Caseblocks.Case.get(caseTypeName.code, helper.luke._id)
+        .then(lukeCase =>
+          lukeCase.documents().pop()
+        )
+        .then(document => {
+
+          helper.nockHttp('han')
+
+          return Caseblocks.Case.get(caseTypeName.code, helper.han._id)
+            .then(hanCase => {
+
+              helper.nockHttp('copy_letter_from_luke_to_han')
+
+              return document.copyToCase(hanCase)
+
+            })
+            .then(documentCopy => ({document, documentCopy}))
+
+        })
+        .then(({ document, documentCopy }) => {
+
+          const bareDocument = _.omit(document, 'caseInstance')
+          const bareDocumentCopy = _.omit(documentCopy, 'caseInstance')
+
+          bareDocument.should.be.deep.equal(bareDocumentCopy)
+          helper.han.should.be.deep.equal(
+            documentCopy.caseInstance.attributes
+          )
+          done()
+
+        })
+        .catch(err => {
+          console.log(`Error: ${err.message}`)
+        })
+
+    })
+
+    it("should throw an exception if trying to overwrite with default options", function(done) {
+
+      helper.nockHttp('luke')
+
+      Caseblocks.Case.get(helper.peopleCaseTypeNames.code, helper.luke._id)
+        .then(lukeCase => {
+
+          helper.nockHttp('han_with_document')
+
+          Caseblocks.Case.get(helper.peopleCaseTypeNames.code, helper.han._id)
+            .then(hanCase => {
+
+              helper.nockHttp('copy_existing_letter_from_luke_to_han')
+
+              return lukeCase.documents().pop().copyToCase(hanCase)
+
+            })
+            .catch(err => {
+              err.should.be.an.instanceOf(Error)
+              done()
+            })
+
+        })
+
+    })
+
+    it("should overwrite the file if specified in the options", function(done) {
+
+      helper.nockHttp('luke')
+
+      Caseblocks.Case.get(helper.peopleCaseTypeNames.code, helper.luke._id)
+        .then(lukeCase => {
+
+          helper.nockHttp('han_with_document')
+
+          Caseblocks.Case.get(helper.peopleCaseTypeNames.code, helper.han._id)
+            .then(hanCase => {
+              const mockedEndpoint = helper.nockHttp('copy_existing_letter_from_luke_to_han')
+              return lukeCase.documents().pop()
+                .copyToCase(hanCase, {
+                  overwriteOnFound: true
+                })
+                .then(_ => {
+                  mockedEndpoint.isDone().should.be.true
+                  done()
+                })
+            })
+
+        })
+
+    })
+
+  })
+
 })
