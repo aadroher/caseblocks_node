@@ -1,5 +1,4 @@
 const fetch = require('node-fetch')
-const Headers = require('node-fetch').Headers
 const inflection = require( 'inflection' );
 const _ = require('underscore')
 
