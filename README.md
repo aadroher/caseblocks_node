@@ -403,16 +403,21 @@ Caseblocks.Case.get("support_requests", "case-with-documents")
 Deletes both de document instance and the file in the server it represents.
 
 ```javascript
-Caseblocks.Case.get('classified_files', '09eef94cbc3k70046000da1')
-    .then(classifiedFile => 
-        classifiedFile.delete()    
+// Assuming Field Agent case with id '09eef94cbc3k70046000da1' 
+// has one or more documents.
+Caseblocks.Case.get('field_agent', '09eef94cbc3k70046000da1')
+    .then(fieldAgent => 
+        fieldAgent.documents().pop()    
     )
-    .then(deleted => {
-        if (deleted) {
-            const msg = `Classified file "${classifiedFile}" has been deleted.`
-            console.log(msg)
-        }
-    })
+    .then(document => 
+        document.delete()
+            .then(deleted => {
+                if (deleted) {
+                    const msg = `The document "${classifiedFile}" has been deleted.`
+                    console.log(msg)
+                }
+            })
+    )
     .catch(err => {
       // Handle error
     })
